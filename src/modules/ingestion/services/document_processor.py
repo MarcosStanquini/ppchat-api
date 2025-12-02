@@ -13,6 +13,7 @@ class DocumentProcessor:
         self.loader = PdfLoader()
         self.cleaner = TextCleaner()
 
+        ##Nao uso self no base_splitter e no embedding service pq eles só vao ser instanciados no semantic
         base_splitter = TextSplitter(
             chunk_size= config.chunk_size,
             chunk_overlap=config.chunk_overlap

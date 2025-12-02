@@ -8,8 +8,8 @@ class SemanticSplitter:
             self,
             embedding_service: EmbeddingService,
             base_splitter: TextSplitter,
-            similarity_threshold: float = 0.7,
-            max_chunk_size: int = 2000
+            similarity_threshold: float = float(os.getenv("THRESHOLD")),
+            max_chunk_size: int = int(os.getenv("MAX_CHUNK_SIZE")),
     ):
         self.embedding_service = embedding_service
         self.base_splitter = base_splitter  
@@ -18,12 +18,13 @@ class SemanticSplitter:
 
     def split(self, text: str) -> List[str]:
 
+        # initial_chunks = chunks DENTRO da página.
         initial_chunks = self.base_splitter.split(text)
 
         if len(initial_chunks) <= 1:
             return initial_chunks
 
-        embeddings = self.embedding_service.embed_texts(initial_chunks)
+        embeddings = self.embedding_service.embed_texts(initial_chunks) ##Pego os embeddings por pagina
 
         merged_chunks = []
         current_chunk = initial_chunks[0]
@@ -39,6 +40,7 @@ class SemanticSplitter:
 
             if similarity >= self.similarity_threshold and combined_length <= self.max_chunk_size:
                 current_chunk = current_chunk + " " + next_chunk
+                ##Como o embed texts só recebe uma lista, transformo o chunk atual em uma lista de unico elemento e retorno ele mesmo
                 current_embedding = self.embedding_service.embed_texts([current_chunk])[0]
             else:
                 merged_chunks.append(current_chunk)
