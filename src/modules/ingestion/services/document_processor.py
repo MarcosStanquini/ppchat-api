@@ -2,6 +2,8 @@ from src.modules.ingestion.models import DocumentChunk, ProcessingConfig
 from src.modules.ingestion.services.pdf_loader import PdfLoader
 from src.modules.ingestion.services.text_cleaner import TextCleaner
 from src.modules.ingestion.services.text_splitter import TextSplitter
+from src.modules.ingestion.services.semantic_splitter import SemanticSplitter
+from src.modules.shared.services.embedding_service import EmbeddingService
 from typing import List
 
 
@@ -10,9 +12,19 @@ class DocumentProcessor:
         self.config = config
         self.loader = PdfLoader()
         self.cleaner = TextCleaner()
-        self.splitter = TextSplitter(
+
+        base_splitter = TextSplitter(
             chunk_size= config.chunk_size,
             chunk_overlap=config.chunk_overlap
+        )
+        embedding_service = EmbeddingService(config.embedding_model)
+
+        self.splitter = SemanticSplitter(
+            embedding_service=embedding_service,
+            base_splitter=base_splitter,
+            similarity_threshold=config.similarity_threshold,
+            max_chunk_size=config.max_chunk_size
+
         )
     
     def process_pdf(self, pdf_path: str) -> List[DocumentChunk]:
@@ -45,6 +57,6 @@ class DocumentProcessor:
         return chunks
     
 
-        
+    
 
 
