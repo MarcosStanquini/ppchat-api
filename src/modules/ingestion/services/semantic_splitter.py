@@ -1,4 +1,3 @@
-import os
 from typing import List
 from src.modules.shared.services.embedding_service import EmbeddingService
 from src.modules.ingestion.services.text_splitter import TextSplitter
