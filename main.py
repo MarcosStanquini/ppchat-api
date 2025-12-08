@@ -46,7 +46,7 @@ def retrieval_example():
             top_k=3
         )
         
-        query = ""
+        query = "O que eu aprendo em ALGORITMOS E PROGRAMAÇÃO 2"
         print(f"Query: {query}\n")
         
         results = retriever.retrieve(query)
