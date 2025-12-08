@@ -6,7 +6,7 @@ import numpy as np
 
 class EmbeddingService:
     def __init__(self, model_name: str):
-        self.model_name = os.getenv(model_name, "EMBEDDING_MODEL")
+        self.model_name = model_name
         self.client = boto3.client(
             'bedrock-runtime',
             region_name = os.getenv("AWS_DEFAULT_REGION"),
