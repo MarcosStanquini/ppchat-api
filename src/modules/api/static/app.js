@@ -377,7 +377,7 @@ $("#search-results").addEventListener("click", (event) => {
 
 /* Árvore de dependências: "curso inteiro" (state.focus = null) ou centrada numa disciplina */
 const TREE_WIDE = { nodeW: 214, focusW: 250, gapX: 86, gapY: 14, padX: 40, padTop: 58, padBottom: 70 };
-const TREE_COURSE = { nodeW: 178, focusW: 178, gapX: 56, gapY: 10, padX: 28, padTop: 54, padBottom: 40 };
+const TREE_COURSE = { nodeW: 178, focusW: 178, gapX: 30, gapY: 8, padX: 20, padTop: 46, padBottom: 50 };
 const TREE_NARROW = { nodeW: 150, focusW: 168, gapX: 40, gapY: 10, padX: 16, padTop: 54, padBottom: 72 };
 let TREE = TREE_WIDE;
 
@@ -403,10 +403,10 @@ function makeColumns(level) {
   return { levels, columns };
 }
 
-// Curso inteiro: todas as disciplinas, uma coluna por semestre (optativas no fim)
+// Curso inteiro: uma coluna por semestre; optativas sem semestre fixo (LIBRAS) ficam só na Grade
 function buildCourseGraph() {
   const { disciplinas, duracao_semestres } = state.curriculum;
-  const level = new Map(disciplinas.map((d) => [d.codigo, d.semestre || duracao_semestres + 1]));
+  const level = new Map(disciplinas.filter((d) => d.semestre).map((d) => [d.codigo, d.semestre]));
   const edges = [];
   for (const c of level.keys()) for (const p of disc(c).pre_requisitos) if (level.has(p)) edges.push({ from: p, to: c, side: "all" });
   const { levels, columns } = makeColumns(level);
@@ -455,7 +455,8 @@ function buildFocusGraph(code) {
   };
 }
 
-function nodeHtml(code, { side = "", focus = false, direct = false }) {
+// compact: no curso inteiro a coluna já diz o semestre, então o card mostra só a carga horária
+function nodeHtml(code, { side = "", focus = false, direct = false, compact = false }) {
   const d = disc(code);
   const blocks = d.libera_transitivamente.length;
   const inCtx = state.context.includes(code);
@@ -467,7 +468,7 @@ function nodeHtml(code, { side = "", focus = false, direct = false }) {
         ${inCtx ? '<span class="ctx-badge">no chat</span>' : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`}</span>
       <span class="node-name">${escapeHtml(titleCase(d.nome))}</span>
       <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
-      <span class="node-meta"><span>${semesterLabel(d)} · ${hours(d.carga_horaria_total)}</span>
+      <span class="node-meta"><span>${compact ? "" : `${semesterLabel(d)} · `}${hours(d.carga_horaria_total)}</span>
         ${blocks >= 3 && side !== "anc" ? `<span>trava ${blocks}</span>` : ""}</span>
     </button>`;
 }
@@ -511,6 +512,8 @@ function setInfoVisible(visible) {
   toggle.setAttribute("aria-pressed", visible);
   toggle.innerHTML = `${PANEL_ICON}${visible ? "Ocultar painel" : "Mostrar painel"}`;
   storage.set(INFO_KEY, visible);
+  // Redesenha já na largura nova, sem esperar o ResizeObserver (que só roda quando a página pinta)
+  if (state.view === "tree" && $(".node", $("#tree-inner"))) renderTree({ animate: false });
 }
 setInfoVisible(storage.get(INFO_KEY) ?? true);
 $("#toggle-info").addEventListener("click", () => setInfoVisible($("#view-tree").classList.contains("info-hidden")));
@@ -523,6 +526,13 @@ function renderTree({ animate = true } = {}) {
   const graph = state.focus ? buildFocusGraph(state.focus) : buildCourseGraph();
   const { levels, columns, edges, level } = graph;
   TREE = canvas.clientWidth < 640 ? TREE_NARROW : state.focus ? TREE_WIDE : TREE_COURSE;
+  if (!state.focus && canvas.clientWidth >= 640) {
+    // Curso inteiro: as colunas dividem a largura disponível, sem rolagem lateral em telas comuns
+    const reserved = $("#view-tree").classList.contains("info-hidden") ? 40 : 0; // aba "Painel" na borda
+    const available = canvas.clientWidth - 2 * TREE.padX - reserved - (levels.length - 1) * TREE.gapX;
+    const nodeW = Math.max(124, Math.min(210, Math.floor(available / levels.length)));
+    TREE = { ...TREE, nodeW, focusW: nodeW };
+  }
   const widthOf = (l) => (graph.focus && l === 0 ? TREE.focusW : TREE.nodeW);
   const inner = $("#tree-inner");
   inner.classList.toggle("no-anim", !animate);
@@ -533,7 +543,7 @@ function renderTree({ animate = true } = {}) {
   inner.innerHTML = `<svg class="tree-edges" id="tree-edges"></svg>` + levels.map((l) => {
     const [label, cls] = graph.label(l);
     return `<span class="col-label ${cls}" data-level="${l}">${label}</span>` +
-      columns.get(l).map((c) => nodeHtml(c, { side: graph.side(l), focus: c === graph.focus, direct: graph.directs?.has(c) })).join("");
+      columns.get(l).map((c) => nodeHtml(c, { side: graph.side(l), focus: c === graph.focus, direct: graph.directs?.has(c), compact: !graph.focus })).join("");
   }).join("") +
     (graph.focus && levels.length === 1 ? `<p class="tree-empty">Esta disciplina não exige nem libera nenhuma outra: dá para cursá-la a qualquer momento do seu semestre.</p>` : "");
 
@@ -667,7 +677,8 @@ const goChips = (codes, extra = () => "") =>
 function renderCourseInfo() {
   const { disciplinas, cadeia_critica, gargalos, duracao_semestres } = state.curriculum;
   const connected = disciplinas.filter(isConnected);
-  const isolated = disciplinas.filter((d) => !isConnected(d));
+  const isolated = disciplinas.filter((d) => d.semestre && !isConnected(d));
+  const optional = disciplinas.filter((d) => !d.semestre);
   $("#tree-info").innerHTML = `${INFO_CLOSE}
     <span class="info-code">VISÃO GERAL</span>
     <h3>Curso inteiro</h3>
@@ -693,6 +704,7 @@ function renderCourseInfo() {
     ${isolated.length ? `<div class="info-section">
       <p class="small-note">${isolated.length} disciplinas não exigem nem liberam nenhuma outra: aparecem com
         <b>borda tracejada</b> no fim de cada semestre e podem ser cursadas sem travar nada.</p>
+      ${optional.length ? `<p class="small-note">Optativas sem semestre fixo (${optional.map((d) => escapeHtml(nameOf(d.codigo))).join(", ")}) ficam na Grade.</p>` : ""}
     </div>` : ""}`;
 }
 

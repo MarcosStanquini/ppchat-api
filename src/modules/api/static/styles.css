@@ -385,6 +385,7 @@ kbd {
 .tree-wrap { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative; }
 .tree-canvas {
   flex: 1; min-height: 0; overflow: auto; position: relative; contain: strict;
+  scrollbar-gutter: stable; /* a barra vertical, se aparecer, não empurra o conteúdo para os lados */
   background-image: radial-gradient(var(--canvas-dot) 1.2px, transparent 1.3px);
   background-size: 22px 22px;
 }
@@ -487,6 +488,12 @@ button.crumb svg { width: 14px; height: 14px; }
 .node.is-focus .meter { background: color-mix(in oklab, var(--accent-ink) 25%, transparent); }
 .node.is-focus .meter i { background: var(--accent-ink) !important; }
 .node.in-context { box-shadow: 0 0 0 2px var(--anc), var(--shadow-sm); }
+/* Curso inteiro: cards compactos para os 8 semestres caberem na tela sem rolagem */
+.tree-inner.is-course .node { padding: 7px 9px 7px 12px; gap: 3px; border-radius: 11px; }
+.tree-inner.is-course .node-name { font-size: 12px; line-height: 1.22; }
+.tree-inner.is-course .node-code { font-size: 9.5px; }
+.tree-inner.is-course .node-meta { font-size: 10.5px; }
+.tree-inner.is-course .meter { height: 3px; }
 .node.is-solo:not(.is-focus) { border-style: dashed; box-shadow: none; background: color-mix(in oklab, var(--surface) 70%, transparent); }
 .node.is-solo:not(.is-focus)::before { background: var(--line-2); }
 .node .ctx-badge { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; background: var(--anc-soft); color: var(--anc); }
