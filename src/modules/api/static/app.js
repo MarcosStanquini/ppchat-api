@@ -118,13 +118,6 @@ async function loadCurriculum() {
   renderRules();
 }
 
-// Disciplina mais "conectada": bom ponto de partida para a árvore
-function defaultFocus() {
-  return state.context[0] || state.focus || [...state.curriculum.disciplinas].sort((a, b) =>
-    (b.pre_requisitos_transitivos.length + b.libera_transitivamente.length) -
-    (a.pre_requisitos_transitivos.length + a.libera_transitivamente.length))[0].codigo;
-}
-
 /* ───────────── Estado vazio ───────────── */
 function renderEmpty(eyebrow = "Seu PPC, em conversa") {
   const { disciplinas, gargalos } = state.curriculum;
@@ -323,11 +316,8 @@ function openDrawer(view = state.view, code) {
   drawer.classList.add("is-open");
   drawer.setAttribute("aria-hidden", "false");
   setView(view);
-  const target = code || defaultFocus();
-  // Reabrir na mesma disciplina reaproveita a árvore já desenhada
-  if (view === "tree" && (target !== state.focus || !$(".node", $("#tree-inner")))) {
-    focusTree(target, { push: !!code && code !== state.focus });
-  }
+  // Com código, foca na disciplina; sem código, reabre no que estava (reaproveitando o desenho)
+  if (view === "tree" && code && code !== state.focus) focusTree(code, { push: true });
 }
 function closeDrawer() {
   drawer.classList.remove("is-open");
@@ -343,7 +333,7 @@ function setView(view) {
   });
   $("#view-tree").classList.toggle("is-visible", view === "tree");
   $("#view-grid").classList.toggle("is-visible", view === "grid");
-  if (view === "tree" && !state.focus) focusTree(defaultFocus());
+  if (view === "tree" && !$(".node", $("#tree-inner"))) showTree(state.focus); // primeiro desenho
 }
 
 $("#open-structure").addEventListener("click", () => openDrawer());
@@ -385,154 +375,187 @@ $("#search-results").addEventListener("click", (event) => {
   focusTree(item.dataset.code, { push: true });
 });
 
-/* Árvore de dependências */
+/* Árvore de dependências: "curso inteiro" (state.focus = null) ou centrada numa disciplina */
 const TREE_WIDE = { nodeW: 214, focusW: 250, gapX: 86, gapY: 14, padX: 40, padTop: 58, padBottom: 70 };
+const TREE_COURSE = { nodeW: 178, focusW: 178, gapX: 56, gapY: 10, padX: 28, padTop: 54, padBottom: 40 };
 const TREE_NARROW = { nodeW: 150, focusW: 168, gapX: 40, gapY: 10, padX: 16, padTop: 54, padBottom: 72 };
 let TREE = TREE_WIDE;
 
-// Camadas: antecessores à esquerda (pelo caminho mais longo até o foco), sucessores à direita
-function buildLayers(code) {
+const isConnected = (d) => d.pre_requisitos.length > 0 || d.libera_diretamente.length > 0;
+
+// Reordena cada coluna pela posição média dos vizinhos (heurística do baricentro): menos cruzamentos
+function orderColumns(columns, level, edges, downLevels, upLevels) {
+  const pos = (c) => columns.get(level.get(c)).indexOf(c) / Math.max(1, columns.get(level.get(c)).length - 1);
+  const reorder = (l, neighbors) => {
+    const score = (c) => { const n = neighbors(c); return n.length ? n.reduce((s, x) => s + pos(x), 0) / n.length : pos(c); };
+    columns.set(l, columns.get(l).map((c) => [c, score(c)]).sort((a, b) => a[1] - b[1]).map(([c]) => c));
+  };
+  for (let pass = 0; pass < 2; pass++) {
+    for (const l of downLevels) reorder(l, (c) => edges.filter((e) => e.to === c).map((e) => e.from));
+    for (const l of upLevels) reorder(l, (c) => edges.filter((e) => e.from === c).map((e) => e.to));
+  }
+}
+
+function makeColumns(level) {
+  const levels = [...new Set(level.values())].sort((a, b) => a - b);
+  const columns = new Map(levels.map((l) => [l, [...level.keys()].filter((c) => level.get(c) === l)
+    .sort((a, b) => (disc(a).semestre || 99) - (disc(b).semestre || 99) || disc(a).nome.localeCompare(disc(b).nome))]));
+  return { levels, columns };
+}
+
+// Curso inteiro: uma coluna por semestre, só disciplinas que exigem ou liberam alguma outra
+function buildCourseGraph() {
+  const { disciplinas, duracao_semestres } = state.curriculum;
+  const level = new Map(disciplinas.filter(isConnected).map((d) => [d.codigo, d.semestre || duracao_semestres + 1]));
+  const edges = [];
+  for (const c of level.keys()) for (const p of disc(c).pre_requisitos) if (level.has(p)) edges.push({ from: p, to: c, side: "all" });
+  const { levels, columns } = makeColumns(level);
+  orderColumns(columns, level, edges, levels.slice(1), levels.slice(0, -1).reverse());
+  return {
+    levels, columns, edges, level,
+    label: (l) => [l > duracao_semestres ? "Optativas" : `${l}º semestre`, ""],
+    side: () => "",
+  };
+}
+
+// Disciplina em foco: o que vem antes à esquerda (pelo caminho mais longo até ela), o que libera à direita
+function buildFocusGraph(code) {
   const d = disc(code);
   const anc = new Set(d.pre_requisitos_transitivos);
   const desc = new Set(d.libera_transitivamente);
   const level = new Map([[code, 0]]);
-
-  const up = new Map();
-  const distUp = (c) => {
-    if (c === code) return 0;
-    if (up.has(c)) return up.get(c);
-    let best = 1;
-    for (const child of disc(c).libera_diretamente) if (child === code || anc.has(child)) best = Math.max(best, distUp(child) + 1);
-    up.set(c, best);
-    return best;
+  const longest = (start, next, members) => {
+    const memo = new Map();
+    const dist = (c) => {
+      if (c === code) return 0;
+      if (!memo.has(c)) memo.set(c, Math.max(1, ...next(c).filter((n) => n === code || members.has(n)).map((n) => dist(n) + 1)));
+      return memo.get(c);
+    };
+    return dist(start);
   };
-  const down = new Map();
-  const distDown = (c) => {
-    if (c === code) return 0;
-    if (down.has(c)) return down.get(c);
-    let best = 1;
-    for (const p of disc(c).pre_requisitos) if (p === code || desc.has(p)) best = Math.max(best, distDown(p) + 1);
-    down.set(c, best);
-    return best;
-  };
-  anc.forEach((c) => level.set(c, -distUp(c)));
-  desc.forEach((c) => level.set(c, distDown(c)));
+  anc.forEach((c) => level.set(c, -longest(c, (x) => disc(x).libera_diretamente, anc)));
+  desc.forEach((c) => level.set(c, longest(c, (x) => disc(x).pre_requisitos, desc)));
 
   const edges = [];
   for (const c of [code, ...anc]) for (const p of disc(c).pre_requisitos) if (anc.has(p)) edges.push({ from: p, to: c, side: "anc" });
   for (const c of desc) for (const p of disc(c).pre_requisitos) if (p === code || desc.has(p)) edges.push({ from: p, to: c, side: "desc" });
 
-  // Colunas ordenadas e reordenadas pela média dos vizinhos (reduz cruzamentos)
-  const levels = [...new Set(level.values())].sort((a, b) => a - b);
-  const columns = new Map(levels.map((l) => [l, [...level.keys()].filter((c) => level.get(c) === l)
-    .sort((a, b) => (disc(a).semestre || 99) - (disc(b).semestre || 99) || disc(a).nome.localeCompare(disc(b).nome))]));
-  const pos = (c) => columns.get(level.get(c)).indexOf(c) / Math.max(1, columns.get(level.get(c)).length - 1);
-  const reorder = (l, neighbors) => {
-    const col = columns.get(l);
-    const score = (c) => { const n = neighbors(c); return n.length ? n.reduce((s, x) => s + pos(x), 0) / n.length : pos(c); };
-    const scored = col.map((c) => [c, score(c)]);
-    columns.set(l, scored.sort((a, b) => a[1] - b[1]).map(([c]) => c));
+  const { levels, columns } = makeColumns(level);
+  orderColumns(columns, level, edges, levels.filter((l) => l > 0), levels.filter((l) => l < 0).reverse());
+  return {
+    levels, columns, edges, level, focus: code,
+    directs: new Set([...d.pre_requisitos, ...d.libera_diretamente]),
+    label: (l) => (l === 0 ? ["Foco", "focus"] : l < 0 ? [l === -1 ? "Logo antes" : `${-l} etapas antes`, "anc"] : [l === 1 ? "Libera" : `${l} etapas depois`, "desc"]),
+    side: (l) => (l < 0 ? "anc" : l > 0 ? "desc" : ""),
   };
-  for (let pass = 0; pass < 2; pass++) {
-    for (const l of levels.filter((l) => l > 0)) reorder(l, (c) => edges.filter((e) => e.to === c).map((e) => e.from));
-    for (const l of levels.filter((l) => l < 0).reverse()) reorder(l, (c) => edges.filter((e) => e.from === c).map((e) => e.to));
-  }
-  return { levels, columns, edges, level };
 }
 
-function columnLabel(l, total) {
-  if (l === 0) return ["Foco", "focus"];
-  if (l < 0) return [l === -1 ? "Logo antes" : `${-l} etapas antes`, "anc"];
-  return [l === 1 ? "Libera" : `${l} etapas depois`, "desc"];
-}
-
-function nodeHtml(code, l, { direct }) {
+function nodeHtml(code, { side = "", focus = false, direct = false }) {
   const d = disc(code);
-  const side = l < 0 ? "anc" : l > 0 ? "desc" : "";
   const blocks = d.libera_transitivamente.length;
   const inCtx = state.context.includes(code);
   return `
-    <button class="node ${side} ${l === 0 ? "is-focus" : ""} ${direct ? "direct" : ""} ${inCtx ? "in-context" : ""}"
-        data-code="${code}" title="${l === 0 ? "" : "Centralizar a árvore nesta disciplina"}">
+    <button class="node ${side} ${focus ? "is-focus" : ""} ${direct ? "direct" : ""} ${inCtx ? "in-context" : ""}"
+        data-code="${code}" title="${focus ? "" : "Centralizar a árvore nesta disciplina"}">
       <span class="node-top"><span class="node-code">${code}</span>
         ${inCtx ? '<span class="ctx-badge">no chat</span>' : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`}</span>
       <span class="node-name">${escapeHtml(titleCase(d.nome))}</span>
       <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
       <span class="node-meta"><span>${semesterLabel(d)} · ${hours(d.carga_horaria_total)}</span>
-        ${blocks >= 3 && l >= 0 ? `<span>trava ${blocks}</span>` : ""}</span>
+        ${blocks >= 3 && side !== "anc" ? `<span>trava ${blocks}</span>` : ""}</span>
     </button>`;
 }
 
-function focusTree(code, { push = false } = {}) {
-  if (!disc(code)) return;
-  if (push && state.focus && state.focus !== code) state.focusHistory.push(state.focus);
-  state.focus = code;
-  renderTree(code);
-  renderInfo(code);
+// Troca o que a árvore mostra: um código foca na disciplina, null mostra o curso inteiro
+function showTree(code) {
+  state.focus = code && disc(code) ? code : null;
+  renderTree();
+  renderCrumbs();
+  renderInfo(state.focus);
   $("#tree-info").classList.remove("is-mobile-open");
 }
+function focusTree(code, { push = false } = {}) {
+  if (code && !disc(code)) return;
+  if (push && state.focus !== code) state.focusHistory.push(state.focus);
+  showTree(code);
+}
+function showCourse() {
+  state.focusHistory = [];
+  showTree(null);
+}
+
+function renderCrumbs() {
+  const crumbs = $("#tree-crumbs");
+  crumbs.innerHTML = state.focus
+    ? `<button class="crumb" data-crumb="course">${ICON.back}Curso inteiro</button>
+       <span class="crumb-sep">›</span><span class="crumb is-current">${escapeHtml(nameOf(state.focus))}</span>`
+    : `<span class="crumb is-current">Curso inteiro</span>
+       <span class="crumb-hint">Passe o mouse para ver a cadeia de uma disciplina · clique para focar nela</span>`;
+}
+$("#tree-crumbs").addEventListener("click", (event) => {
+  if (event.target.closest("[data-crumb=course]")) showCourse();
+});
 
 let lastTreeSize = "";
 
-function renderTree(code, { animate = true } = {}) {
+function renderTree({ animate = true } = {}) {
   const canvas = $("#tree-canvas");
-  TREE = canvas.clientWidth < 640 ? TREE_NARROW : TREE_WIDE;
-  const { levels, columns, edges, level } = buildLayers(code);
-  const focus = disc(code);
+  const graph = state.focus ? buildFocusGraph(state.focus) : buildCourseGraph();
+  const { levels, columns, edges, level } = graph;
+  TREE = canvas.clientWidth < 640 ? TREE_NARROW : state.focus ? TREE_WIDE : TREE_COURSE;
+  const widthOf = (l) => (graph.focus && l === 0 ? TREE.focusW : TREE.nodeW);
   const inner = $("#tree-inner");
   inner.classList.toggle("no-anim", !animate);
-  const directs = new Set([...focus.pre_requisitos, ...focus.libera_diretamente]);
+  inner.classList.toggle("is-course", !state.focus);
+  inner.classList.remove("is-hovering");
 
-  inner.innerHTML = levels.map((l) => {
-    const [label, cls] = columnLabel(l);
+  // O SVG vem primeiro para as setas ficarem atrás dos cards
+  inner.innerHTML = `<svg class="tree-edges" id="tree-edges"></svg>` + levels.map((l) => {
+    const [label, cls] = graph.label(l);
     return `<span class="col-label ${cls}" data-level="${l}">${label}</span>` +
-      columns.get(l).map((c) => nodeHtml(c, l, { direct: directs.has(c) })).join("");
-  }).join("") + `<svg class="tree-edges" id="tree-edges"></svg>` +
-    (levels.length === 1 ? `<p class="tree-empty">Esta disciplina não exige nem libera nenhuma outra: dá para cursá-la a qualquer momento do seu semestre.</p>` : "");
+      columns.get(l).map((c) => nodeHtml(c, { side: graph.side(l), focus: c === graph.focus, direct: graph.directs?.has(c) })).join("");
+  }).join("") +
+    (graph.focus && levels.length === 1 ? `<p class="tree-empty">Esta disciplina não exige nem libera nenhuma outra: dá para cursá-la a qualquer momento do seu semestre.</p>` : "");
 
   // Posiciona: mede as alturas reais e centraliza cada coluna
   const nodes = new Map($$(".node", inner).map((el) => [el.dataset.code, el]));
-  nodes.forEach((el, c) => el.style.setProperty("--node-w", `${level.get(c) === 0 ? TREE.focusW : TREE.nodeW}px`));
+  nodes.forEach((el, c) => el.style.setProperty("--node-w", `${widthOf(level.get(c))}px`));
   const colX = new Map();
   let x = TREE.padX;
   for (const l of levels) {
     colX.set(l, x);
-    x += (l === 0 ? TREE.focusW : TREE.nodeW) + TREE.gapX;
+    x += widthOf(l) + TREE.gapX;
   }
   const width = x - TREE.gapX + TREE.padX;
   const heights = new Map(levels.map((l) => [l, columns.get(l).reduce((s, c) => s + nodes.get(c).offsetHeight, 0) + TREE.gapY * (columns.get(l).length - 1)]));
-  const maxH = Math.max(...heights.values());
-  const height = Math.max(maxH + TREE.padTop + TREE.padBottom, canvas.clientHeight);
+  const height = Math.max(Math.max(...heights.values()) + TREE.padTop + TREE.padBottom, canvas.clientHeight);
+  const offset = Math.max(0, (canvas.clientWidth - width) / 2); // centraliza quando sobra espaço
   const boxes = new Map();
   for (const l of levels) {
     let y = TREE.padTop + (height - TREE.padTop - TREE.padBottom - heights.get(l)) / 2;
-    const w = l === 0 ? TREE.focusW : TREE.nodeW;
+    const w = widthOf(l);
+    const left = colX.get(l) + offset;
     for (const c of columns.get(l)) {
       const el = nodes.get(c);
       const h = el.offsetHeight;
-      el.style.left = `${colX.get(l)}px`;
+      el.style.left = `${left}px`;
       el.style.top = `${y}px`;
-      el.style.setProperty("--delay", `${Math.abs(l) * 0.04}s`);
-      el.style.setProperty("--from", `${Math.sign(l) * 14}px`);
-      boxes.set(c, { x: colX.get(l), y, w, h });
+      const step = graph.focus ? Math.abs(l) : levels.indexOf(l);
+      el.style.setProperty("--delay", `${step * 0.04}s`);
+      el.style.setProperty("--from", `${(graph.focus ? Math.sign(l) : 1) * 14}px`);
+      boxes.set(c, { x: left, y, w, h });
       y += h + TREE.gapY;
     }
-    const label = $(`.col-label[data-level="${l}"]`, inner);
-    label.style.left = `${colX.get(l) + w / 2}px`;
+    $(`.col-label[data-level="${l}"]`, inner).style.left = `${left + w / 2}px`;
   }
   inner.style.width = `${Math.max(width, canvas.clientWidth)}px`;
   inner.style.height = `${height}px`;
-  // Centraliza o conteúdo quando ele é mais estreito que a tela
-  const offset = Math.max(0, (canvas.clientWidth - width) / 2);
-  if (offset) {
-    $$(".node, .col-label", inner).forEach((el) => (el.style.left = `${parseFloat(el.style.left) + offset}px`));
-    boxes.forEach((b) => (b.x += offset));
-  }
 
   // Setas
   const svg = $("#tree-edges");
   svg.setAttribute("width", inner.offsetWidth);
   svg.setAttribute("height", height);
+  const step = (c) => (graph.focus ? Math.abs(level.get(c)) : levels.indexOf(level.get(c)));
   for (const e of edges) {
     const a = boxes.get(e.from), b = boxes.get(e.to);
     const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
@@ -545,19 +568,23 @@ function renderTree(code, { animate = true } = {}) {
     svg.append(path);
     if (animate) {
       path.style.setProperty("--len", Math.ceil(path.getTotalLength()));
-      path.style.setProperty("--delay", `${0.06 + Math.max(Math.abs(level.get(e.from)), Math.abs(level.get(e.to))) * 0.04}s`);
+      path.style.setProperty("--delay", `${0.06 + Math.max(step(e.from), step(e.to)) * 0.04}s`);
     }
     const dot = document.createElementNS(SVG_NS, "circle");
     dot.setAttribute("cx", x2); dot.setAttribute("cy", y2); dot.setAttribute("r", 3.5);
-    dot.setAttribute("fill", `var(--${e.side})`);
+    dot.setAttribute("class", `e-${e.side}`);
     dot.dataset.from = e.from;
     dot.dataset.to = e.to;
     svg.append(dot);
   }
 
-  // Rola até o foco
-  const f = boxes.get(code);
-  canvas.scrollTo({ left: f.x + f.w / 2 - canvas.clientWidth / 2, top: f.y + f.h / 2 - canvas.clientHeight / 2 });
+  // Foco: centraliza a disciplina; curso inteiro: começa do 1º semestre
+  if (graph.focus) {
+    const f = boxes.get(graph.focus);
+    canvas.scrollTo({ left: f.x + f.w / 2 - canvas.clientWidth / 2, top: f.y + f.h / 2 - canvas.clientHeight / 2 });
+  } else {
+    canvas.scrollTo({ left: 0, top: Math.max(0, (height - canvas.clientHeight) / 2) });
+  }
   lastTreeSize = `${canvas.clientWidth}x${canvas.clientHeight}`;
 }
 
@@ -568,30 +595,95 @@ $("#tree-inner").addEventListener("click", (event) => {
   else focusTree(node.dataset.code, { push: true });
 });
 $("#info-fab").addEventListener("click", () => $("#tree-info").classList.toggle("is-mobile-open"));
+
+// Hover: no foco destaca as setas da disciplina; no curso inteiro destaca a cadeia completa dela
 $("#tree-inner").addEventListener("mouseover", (event) => {
   const node = event.target.closest(".node");
+  const inner = $("#tree-inner");
   const svg = $("#tree-edges");
   if (!svg) return;
-  svg.classList.toggle("has-hover", !!node);
-  $$("path, circle", svg).forEach((el) => el.classList.toggle("is-hot", !!node && (el.dataset.from === node.dataset.code || el.dataset.to === node.dataset.code)));
+  const code = node?.dataset.code;
+  const marks = $$("path, circle", svg);
+  if (!code) {
+    inner.classList.remove("is-hovering");
+    svg.classList.remove("has-hover");
+    return;
+  }
+  if (state.focus) {
+    svg.classList.add("has-hover");
+    marks.forEach((el) => el.classList.toggle("is-hot", el.dataset.from === code || el.dataset.to === code));
+    return;
+  }
+  const d = disc(code);
+  const up = new Set([code, ...d.pre_requisitos_transitivos]);
+  const down = new Set([code, ...d.libera_transitivamente]);
+  inner.classList.add("is-hovering");
+  $$(".node", inner).forEach((el) => el.classList.toggle("is-dim", !up.has(el.dataset.code) && !down.has(el.dataset.code)));
+  marks.forEach((el) => {
+    const anc = up.has(el.dataset.from) && up.has(el.dataset.to);
+    const desc = down.has(el.dataset.from) && down.has(el.dataset.to);
+    el.classList.toggle("is-anc-hot", anc);
+    el.classList.toggle("is-desc-hot", desc && !anc);
+  });
 });
-$("#tree-inner").addEventListener("mouseleave", () => $("#tree-edges")?.classList.remove("has-hover"));
+$("#tree-inner").addEventListener("mouseleave", () => {
+  $("#tree-inner").classList.remove("is-hovering");
+  $("#tree-edges")?.classList.remove("has-hover");
+});
+
 // Só redesenha quando o tamanho realmente muda (janela redimensionada), e sem repetir as animações
 let resizeTimer = 0;
 new ResizeObserver(([entry]) => {
-  const { width } = entry.contentRect;
-  if (!width || !state.focus || state.view !== "tree") return;
+  if (!entry.contentRect.width || state.view !== "tree" || !$(".node", $("#tree-inner"))) return;
   if (`${$("#tree-canvas").clientWidth}x${$("#tree-canvas").clientHeight}` === lastTreeSize) return;
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => renderTree(state.focus, { animate: false }), 120);
+  resizeTimer = setTimeout(() => renderTree({ animate: false }), 120);
 }).observe($("#tree-canvas"));
 
+const goChips = (codes, extra = () => "") =>
+  `<div class="chips">${codes.map((c) => `<button class="chip-go" data-goto="${c}"><i class="dot ${levelClass(disc(c).nivel_estimado)}"></i>${escapeHtml(nameOf(c))}${extra(c)}</button>`).join("")}</div>`;
+
+function renderCourseInfo() {
+  const { disciplinas, cadeia_critica, gargalos, duracao_semestres } = state.curriculum;
+  const connected = disciplinas.filter(isConnected);
+  const isolated = disciplinas.filter((d) => !isConnected(d));
+  $("#tree-info").innerHTML = `
+    <span class="info-code">VISÃO GERAL</span>
+    <h3>Curso inteiro</h3>
+    <div class="pills">
+      <span class="pill">${duracao_semestres} semestres</span>
+      <span class="pill">${disciplinas.length} disciplinas</span>
+      <span class="pill">${hours(state.curriculum.carga_horaria_total_curso)}</span>
+    </div>
+    <div class="info-section">
+      <div class="stat-grid">
+        <div class="stat-card anc"><b>${connected.length}</b><span>com pré-requisitos ou dependentes</span></div>
+        <div class="stat-card desc"><b>${cadeia_critica.length}</b><span>etapas na cadeia mais longa</span></div>
+      </div>
+    </div>
+    <div class="info-section">
+      <h4>Cadeia mais longa</h4>
+      <ol class="chain">${cadeia_critica.map((c) => `<li><button class="link" data-goto="${c}">${escapeHtml(nameOf(c))}</button></li>`).join("")}</ol>
+    </div>
+    <div class="info-section">
+      <h4>Mais travam o curso se reprovadas</h4>
+      ${goChips(gargalos.slice(0, 6), (c) => ` <b>${disc(c).libera_transitivamente.length}</b>`)}
+    </div>
+    ${isolated.length ? `<div class="info-section">
+      <h4>Sem pré-requisitos nem dependentes (${isolated.length})</h4>
+      <p class="small-note" style="margin:0 0 8px">Não aparecem na árvore: podem ser cursadas sem travar nada.</p>
+      ${goChips(isolated.map((d) => d.codigo))}
+    </div>` : ""}`;
+}
+
 function renderInfo(code) {
+  if (!code) return renderCourseInfo();
   const d = disc(code);
   const inCtx = state.context.includes(code);
   const name = titleCase(d.nome);
+  const back = state.focusHistory.at(-1);
   $("#tree-info").innerHTML = `
-    ${state.focusHistory.length ? `<button class="btn btn-sm back-btn" data-act="back">${ICON.back}<span>Voltar para ${escapeHtml(nameOf(state.focusHistory.at(-1)))}</span></button>` : ""}
+    ${state.focusHistory.length ? `<button class="btn btn-sm back-btn" data-act="back">${ICON.back}<span>Voltar para ${back ? escapeHtml(nameOf(back)) : "o curso inteiro"}</span></button>` : ""}
     <span class="info-code">${d.codigo}</span>
     <h3>${escapeHtml(name)}</h3>
     <div class="pills">
@@ -627,10 +719,11 @@ function renderInfo(code) {
 }
 
 $("#tree-info").addEventListener("click", (event) => {
-  const target = event.target.closest("[data-act], [data-ask]");
+  const target = event.target.closest("[data-act], [data-ask], [data-goto]");
   if (!target) return;
-  if (target.dataset.act === "context") toggleContext(state.focus);
-  else if (target.dataset.act === "back") focusTree(state.focusHistory.pop());
+  if (target.dataset.goto) focusTree(target.dataset.goto, { push: true });
+  else if (target.dataset.act === "context") toggleContext(state.focus);
+  else if (target.dataset.act === "back") showTree(state.focusHistory.pop() ?? null);
   else if (target.dataset.ask) {
     toggleContext(state.focus, { force: true });
     closeDrawer();
