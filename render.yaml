@@ -1,0 +1,26 @@
+# Blueprint do Render: no painel, "New" → "Blueprint" e aponte para este repositório.
+services:
+  - type: web
+    name: ppchat
+    runtime: python
+    plan: free  # dorme após 15 min sem uso; o front mostra "acordando o servidor"
+    buildCommand: pip install -r requirements.txt
+    # A base processada (src/data/processed) vai no repositório, então não precisa rodar a ingestão aqui
+    startCommand: python main.py serve --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.2
+      - key: ANTHROPIC_API_KEY
+        sync: false  # secreta: o Render pede o valor ao criar o serviço
+      - key: LLM_MODEL
+        value: claude-haiku-5-5
+      - key: FALLBACK_MODEL
+        value: claude-sonnet-5-5
+      - key: CHAT_EFFORT
+        value: medium
+      - key: RATE_LIMIT_PER_HOUR
+        value: "30"
+      - key: GLOBAL_RATE_LIMIT_PER_HOUR
+        value: "400"

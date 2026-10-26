@@ -1,4 +1,4 @@
-from typing import AsyncIterator, List, Literal, Tuple
+from typing import AsyncIterator, List, Literal, Sequence, Tuple, TypedDict
 
 from anthropic import BetaFallbackState
 from anthropic.types.beta import BetaMessage, BetaMessageParam
@@ -11,6 +11,12 @@ from src.modules.shared.services.settings import get_settings
 StreamEvent = Tuple[Literal["thinking", "text"], str]
 
 
+class HistoryTurn(TypedDict, total=False):
+    role: Literal["user", "assistant"]
+    text: str
+    disciplinas: List[str]  # só em turnos do usuário
+
+
 class ChatSession:
     """Uma conversa multi-turno sobre o PPC.
 
@@ -18,15 +24,26 @@ class ChatSession:
     primeira pergunta paga a leitura completa; as seguintes leem do cache (~10% do preço).
     O `cache_control` de topo move um segundo ponto de cache para o fim do histórico a cada turno.
 
+    A API é sem estado: cada requisição cria uma sessão com o `history` enviado pelo navegador.
+    O histórico é remontado sempre do mesmo jeito, então o prefixo continua batendo com o cache.
+
     É assíncrona para que uma resposta possa ser interrompida a qualquer momento (inclusive
     enquanto o modelo ainda pensa) cancelando a task que consome `stream_events`.
     """
 
-    def __init__(self, knowledge_base: KnowledgeBase | None = None):
+    def __init__(self, knowledge_base: KnowledgeBase | None = None, history: Sequence[HistoryTurn] = ()):
         self.settings = get_settings()
         self.client = get_async_llm_client()
         self.knowledge_base = knowledge_base or get_knowledge_base()
-        self.messages: List[BetaMessageParam] = []
+        self.messages: List[BetaMessageParam] = [
+            {
+                "role": turn["role"],
+                "content": self._user_content(turn["text"], turn.get("disciplinas") or ())
+                if turn["role"] == "user"
+                else turn["text"],
+            }
+            for turn in history
+        ]
         self.fallback_state = BetaFallbackState()  # fixa a conversa no modelo de fallback se houver recusa
         self.last_message: BetaMessage | None = None
         self.system = [
@@ -38,9 +55,26 @@ class ChatSession:
             },
         ]
 
-    async def stream_events(self, question: str) -> AsyncIterator[StreamEvent]:
-        """Envia a pergunta e devolve ("thinking", resumo) e ("text", resposta) à medida que chegam."""
-        self.messages.append({"role": "user", "content": question})
+    def _user_content(self, question: str, focus: Sequence[str]) -> str | list:
+        focus_sheet = self.knowledge_base.render_disciplinas(list(focus)) if focus else ""
+        if not focus_sheet:
+            return question
+        # As disciplinas escolhidas no chat entram na própria mensagem (depois do prefixo em cache)
+        return [
+            {
+                "type": "text",
+                "text": "O estudante selecionou estas disciplinas como foco da pergunta:\n"
+                f"<disciplinas_selecionadas>\n{focus_sheet}\n</disciplinas_selecionadas>",
+            },
+            {"type": "text", "text": question},
+        ]
+
+    async def stream_events(self, question: str, focus: Sequence[str] = ()) -> AsyncIterator[StreamEvent]:
+        """Envia a pergunta e devolve ("thinking", resumo) e ("text", resposta) à medida que chegam.
+
+        `focus` são códigos de disciplinas selecionadas no chat; a ficha delas vai junto da pergunta.
+        """
+        self.messages.append({"role": "user", "content": self._user_content(question, focus)})
         try:
             with self.fallback_state:
                 async with self.client.beta.messages.stream(
@@ -74,11 +108,11 @@ class ChatSession:
         elif message.stop_reason == "max_tokens":
             yield "text", "\n\n[Resposta interrompida pelo limite de tokens.]"
 
-    async def stream(self, question: str) -> AsyncIterator[str]:
+    async def stream(self, question: str, focus: Sequence[str] = ()) -> AsyncIterator[str]:
         """Só o texto da resposta, em pedaços."""
-        async for kind, text in self.stream_events(question):
+        async for kind, text in self.stream_events(question, focus):
             if kind == "text":
                 yield text
 
-    async def ask(self, question: str) -> str:
-        return "".join([chunk async for chunk in self.stream(question)])
+    async def ask(self, question: str, focus: Sequence[str] = ()) -> str:
+        return "".join([chunk async for chunk in self.stream(question, focus)])

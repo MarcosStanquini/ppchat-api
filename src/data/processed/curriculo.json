@@ -1,0 +1,1223 @@
+{
+  "curso": "Bacharelado em Engenharia de Software",
+  "campus": "São Carlos",
+  "vigencia": "1º Semestre/2023",
+  "duracao_semestres": 8,
+  "carga_horaria_total_curso": 3207.2,
+  "disciplinas": [
+    {
+      "codigo": "SCLAPR1",
+      "nome": "ALGORITMOS E PROGRAMAÇÃO 1",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 6,
+      "total_aulas": 120,
+      "carga_horaria_ensino": 100.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 100.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Lógica de programação",
+        "Algoritmos",
+        "Tipos de dados e operadores",
+        "Estruturas de fluxo de controle",
+        "Arranjos",
+        "Modularização",
+        "Registros e arquivos",
+        "Recursividade"
+      ],
+      "pagina_plano_ensino": 63
+    },
+    {
+      "codigo": "SCLPPSW",
+      "nome": "PROCESSOS DE PRODUÇÃO DE SOFTWARE",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Engenharia de Software/Fundamentos de Engenharia de Software",
+        "Engenharia de Software/Processo de Software"
+      ],
+      "topicos_principais": [
+        "Fundamentos da Engenharia de Software",
+        "Contexto histórico",
+        "Modelos de processo lineares, iterativos e ágeis",
+        "Etapas do processo de produção de software",
+        "Ferramentas de apoio",
+        "Atuação profissional"
+      ],
+      "pagina_plano_ensino": 65
+    },
+    {
+      "codigo": "SCLIWEB",
+      "nome": "INTRODUÇÃO À WEB",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Estrutura de documento HTML",
+        "Usabilidade e acessibilidade na Web",
+        "Sintaxe HTML",
+        "CSS",
+        "Elementos de design"
+      ],
+      "pagina_plano_ensino": 67
+    },
+    {
+      "codigo": "SCLARCO",
+      "nome": "ARQUITETURA E ORGANIZAÇÃO DE COMPUTADORES",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Arquitetura de Von Neumann",
+        "Unidade central de processamento",
+        "Aritmética binária e ULA",
+        "RISC e CISC",
+        "Linguagem de máquina",
+        "Memória e cache",
+        "Pipeline e paralelismo"
+      ],
+      "pagina_plano_ensino": 69
+    },
+    {
+      "codigo": "SCLMATC",
+      "nome": "MATEMÁTICA PARA COMPUTAÇÃO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Matemática"
+      ],
+      "topicos_principais": [
+        "Lógica formal",
+        "Demonstração e recursão",
+        "Relações e matrizes",
+        "Teoria dos grafos",
+        "Álgebra booleana",
+        "Métodos quantitativos"
+      ],
+      "pagina_plano_ensino": 71
+    },
+    {
+      "codigo": "SCLING1",
+      "nome": "INGLÊS PARA COMPUTAÇÃO 1",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Estratégias de leitura",
+        "Cognatos e falsos cognatos",
+        "Skimming e scanning",
+        "Grupos nominais",
+        "Verbos modais",
+        "Vocabulário técnico de programação",
+        "Documentação de código"
+      ],
+      "pagina_plano_ensino": 73
+    },
+    {
+      "codigo": "SCLAPR2",
+      "nome": "ALGORITMOS E PROGRAMAÇÃO 2",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 6,
+      "total_aulas": 120,
+      "carga_horaria_ensino": 100.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 100.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLAPR1"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Manipulação e gerenciamento de memória",
+        "Análise de algoritmos",
+        "Métodos de ordenação",
+        "Métodos de busca",
+        "Paradigmas de projeto de algoritmos"
+      ],
+      "pagina_plano_ensino": 75
+    },
+    {
+      "codigo": "SCLIHCO",
+      "nome": "INTERAÇÃO HUMANO COMPUTADOR",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Interação Humano-Computador",
+        "Habilidades e Práticas Profissionais Complementares/Temas transversais"
+      ],
+      "topicos_principais": [
+        "Paradigmas de interação",
+        "Fatores humanos e cognição",
+        "Design centrado no usuário e inclusivo",
+        "Prototipação",
+        "Usabilidade e heurísticas",
+        "Acessibilidade e direitos humanos"
+      ],
+      "pagina_plano_ensino": 77
+    },
+    {
+      "codigo": "SCLPRW1",
+      "nome": "PROGRAMAÇÃO PARA A WEB 1",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLAPR1",
+        "SCLIWEB"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Linguagem client-side scripting",
+        "Estruturas de controle e funções",
+        "Tratamento de exceções",
+        "HTML DOM",
+        "Eventos",
+        "Bibliotecas de script",
+        "Chamadas assíncronas"
+      ],
+      "pagina_plano_ensino": 79
+    },
+    {
+      "codigo": "SCLSOPE",
+      "nome": "SISTEMAS OPERACIONAIS",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLARCO"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Sistemas Operacionais"
+      ],
+      "topicos_principais": [
+        "Gerência de processos",
+        "Threads e paralelismo",
+        "Gerência de memória",
+        "Gerência de armazenamento",
+        "Entrada e saída",
+        "Virtualização e sistemas distribuídos"
+      ],
+      "pagina_plano_ensino": 81
+    },
+    {
+      "codigo": "SCLFADM",
+      "nome": "FUNDAMENTOS DA ADMINISTRAÇÃO",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Administração"
+      ],
+      "topicos_principais": [
+        "Fundamentos da administração",
+        "Teorias das organizações",
+        "Funções da administração",
+        "Engenharia econômica",
+        "Engenharia de produto",
+        "Pesquisa operacional",
+        "Responsabilidade social"
+      ],
+      "pagina_plano_ensino": 83
+    },
+    {
+      "codigo": "SCLING2",
+      "nome": "INGLÊS PARA COMPUTAÇÃO 2",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Tempos verbais",
+        "Verbos modais",
+        "Pronúncia e entonação",
+        "Tutoriais escritos e orais",
+        "Documentação e comentários de código",
+        "Abstracts"
+      ],
+      "pagina_plano_ensino": 85
+    },
+    {
+      "codigo": "SCLESDD",
+      "nome": "ESTRUTURA DE DADOS",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLAPR2"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Tipo abstrato de dados",
+        "Listas, filas e pilhas",
+        "Hash",
+        "Árvores",
+        "Grafos"
+      ],
+      "pagina_plano_ensino": 87
+    },
+    {
+      "codigo": "SCLBDD1",
+      "nome": "BANCO DE DADOS 1",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Banco de Dados"
+      ],
+      "topicos_principais": [
+        "Introdução a banco de dados",
+        "Modelo Entidade-Relacionamento",
+        "Projeto de banco de dados",
+        "SQL (DDL, DML, DQL)",
+        "Normalização",
+        "Engenharia reversa"
+      ],
+      "pagina_plano_ensino": 89
+    },
+    {
+      "codigo": "SCLPROO",
+      "nome": "PROGRAMAÇÃO ORIENTADA A OBJETOS",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLAPR2"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Classes, atributos e métodos",
+        "Encapsulamento",
+        "Herança",
+        "Polimorfismo",
+        "Coleções",
+        "Tratamento de exceção",
+        "Interfaces gráficas",
+        "Manipulação de arquivos e banco de dados"
+      ],
+      "pagina_plano_ensino": 91
+    },
+    {
+      "codigo": "SCLRQSW",
+      "nome": "REQUISITOS DE SOFTWARE",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Engenharia de Software/Análise e Projeto de Software"
+      ],
+      "topicos_principais": [
+        "Fundamentos da engenharia de requisitos",
+        "Técnicas de elicitação",
+        "Análise e negociação",
+        "Especificação e documentação",
+        "Validação de requisitos",
+        "Requisitos em contextos ágeis e tradicionais",
+        "Gerenciamento de requisitos"
+      ],
+      "pagina_plano_ensino": 93
+    },
+    {
+      "codigo": "SCLPRW2",
+      "nome": "PROGRAMAÇÃO PARA A WEB 2",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLPRW1"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Execução de scripts fora do navegador",
+        "Frameworks front-end",
+        "Rotas e navegação",
+        "Frameworks back-end em script",
+        "Lógica de negócio",
+        "Integração front-end e back-end"
+      ],
+      "pagina_plano_ensino": 95
+    },
+    {
+      "codigo": "SCLSINF",
+      "nome": "SISTEMAS DE INFORMAÇÃO",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Gestão de Sistemas de Informação",
+        "Habilidades e Práticas Profissionais Complementares/Temas Transversais"
+      ],
+      "topicos_principais": [
+        "Introdução a sistemas de informação",
+        "Sistemas integrados de gestão e suporte à decisão",
+        "Governança e ética",
+        "Infraestrutura de TI",
+        "Gestão da informação e conhecimento",
+        "Segurança de SI",
+        "TI verde"
+      ],
+      "pagina_plano_ensino": 97
+    },
+    {
+      "codigo": "SCLBDD2",
+      "nome": "BANCO DE DADOS 2",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLBDD1"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Banco de Dados"
+      ],
+      "topicos_principais": [
+        "SGBD relacional",
+        "Linguagem procedural",
+        "Procedimentos e funções",
+        "Triggers e views",
+        "Transações",
+        "Índices",
+        "Bancos não relacionais"
+      ],
+      "pagina_plano_ensino": 99
+    },
+    {
+      "codigo": "SCLAPOO",
+      "nome": "ANÁLISE E PROJETO ORIENTADO A OBJETOS",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLPROO"
+      ],
+      "grupos_conhecimento": [
+        "Engenharia de Software/Análise e Projeto de Software"
+      ],
+      "topicos_principais": [
+        "UML",
+        "Casos de uso",
+        "Modelo conceitual",
+        "Diagramas de sequência, atividades e classes",
+        "Diagramas de comunicação e estados",
+        "Princípios de projeto",
+        "Padrões de projeto"
+      ],
+      "pagina_plano_ensino": 101
+    },
+    {
+      "codigo": "SCLPRW3",
+      "nome": "PROGRAMAÇÃO PARA A WEB 3",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLIWEB",
+        "SCLPROO"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Frameworks Web back-end",
+        "Desenvolvimento de APIs",
+        "APIs REST",
+        "Validação de dados",
+        "Persistência com ORM",
+        "Gerenciamento de sessão",
+        "Autenticação e autorização"
+      ],
+      "pagina_plano_ensino": 103
+    },
+    {
+      "codigo": "SCLPRES",
+      "nome": "PROBABILIDADE E ESTATÍSTICA",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Matemática"
+      ],
+      "topicos_principais": [
+        "Estatística descritiva",
+        "Análise combinatória",
+        "Probabilidade",
+        "Distribuições de probabilidade",
+        "Testes de hipótese"
+      ],
+      "pagina_plano_ensino": 105
+    },
+    {
+      "codigo": "SCLAXB1",
+      "nome": "ATIVIDADES DE EXTENSÃO 1",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLPROO",
+        "SCLBDD1",
+        "SCLPRW1"
+      ],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Desenvolvimento front-end",
+        "Desenvolvimento back-end",
+        "Construção e gestão de bancos de dados",
+        "Interação com stakeholders"
+      ],
+      "pagina_plano_ensino": 107
+    },
+    {
+      "codigo": "SCLVVTS",
+      "nome": "VERIFICAÇÃO, VALIDAÇÃO E TESTE DE SOFTWARE",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLPROO"
+      ],
+      "grupos_conhecimento": [
+        "Engenharia de Software/Teste e Qualidade de Software"
+      ],
+      "topicos_principais": [
+        "Qualidade de produto e processo",
+        "Verificação e validação",
+        "Análise estática e revisão",
+        "Técnicas e critérios de teste",
+        "Testes de unidade, integração e sistema",
+        "Teste de regressão e aceitação",
+        "TDD",
+        "Ferramentas de teste"
+      ],
+      "pagina_plano_ensino": 109
+    },
+    {
+      "codigo": "SCLGCSW",
+      "nome": "GESTÃO DE CONFIGURAÇÃO DE SOFTWARE",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Engenharia de Software/Construção de Software"
+      ],
+      "topicos_principais": [
+        "Fundamentos da gerência de configuração",
+        "Gestão de mudanças",
+        "Controle de versões e linhas de base",
+        "Estratégias de versionamento",
+        "Integração e entrega contínuas",
+        "Ferramentas de controle de versão"
+      ],
+      "pagina_plano_ensino": 111
+    },
+    {
+      "codigo": "SCLPRDM",
+      "nome": "PROGRAMAÇÃO PARA DISPOSITIVOS MÓVEIS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLPROO"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Computação móvel",
+        "Plataforma de desenvolvimento",
+        "Interface gráfica",
+        "Persistência de dados",
+        "Recursos de hardware e software",
+        "HTTP e WebService"
+      ],
+      "pagina_plano_ensino": 113
+    },
+    {
+      "codigo": "SCLRCO1",
+      "nome": "REDES DE COMPUTADORES 1",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [
+        "SCLSOPE"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Redes de Computadores"
+      ],
+      "topicos_principais": [
+        "Modelos ISO/OSI e TCP/IP",
+        "Camada física",
+        "Camada de enlace",
+        "Camada de rede",
+        "Camada de transporte",
+        "Camada de aplicação",
+        "Protocolos TCP/IP"
+      ],
+      "pagina_plano_ensino": 115
+    },
+    {
+      "codigo": "SCLAMMD",
+      "nome": "APRENDIZADO DE MÁQUINA E MINERAÇÃO DE DADOS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLPRES"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Redes de Computadores/Inteligência Computacional"
+      ],
+      "topicos_principais": [
+        "Análise exploratória de dados",
+        "Preparação de dados",
+        "Descoberta de conhecimento",
+        "Mineração de dados",
+        "Algoritmos de aprendizado de máquina",
+        "Análise de resultados experimentais"
+      ],
+      "pagina_plano_ensino": 117
+    },
+    {
+      "codigo": "SCLMPQC",
+      "nome": "METODOLOGIA DE PESQUISA CIENTÍFICA",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Habilidades e Práticas Profissionais Complementares/Metodologia de Pesquisa Científica"
+      ],
+      "topicos_principais": [
+        "Conhecimento científico",
+        "Método e metodologia",
+        "Estudos primários e secundários",
+        "Gêneros acadêmicos",
+        "Projeto de pesquisa",
+        "Normas ABNT",
+        "Experimentação em Engenharia de Software"
+      ],
+      "pagina_plano_ensino": 119
+    },
+    {
+      "codigo": "SCLARSW",
+      "nome": "ARQUITETURA DE SOFTWARE",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [
+        "SCLAPOO"
+      ],
+      "grupos_conhecimento": [
+        "Engenharia de Software/Análise e Projeto de Software"
+      ],
+      "topicos_principais": [
+        "Conceitos e terminologia",
+        "Propriedades de arquiteturas",
+        "Características de qualidade",
+        "Padrões e estilos arquiteturais",
+        "Decisões arquiteturais",
+        "Documentação e avaliação de arquiteturas"
+      ],
+      "pagina_plano_ensino": 121
+    },
+    {
+      "codigo": "SCLGPSW",
+      "nome": "GESTÃO DE PROJETOS DE SOFTWARE",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Engenharia de Software/Gestão de Projetos"
+      ],
+      "topicos_principais": [
+        "Conceito de projeto",
+        "Gerenciamento clássico",
+        "Gerenciamento ágil",
+        "Direitos humanos e sustentabilidade",
+        "Gestão de pessoas e comunicação",
+        "Qualidade de processo",
+        "Ferramentas de gestão"
+      ],
+      "pagina_plano_ensino": 123
+    },
+    {
+      "codigo": "SCLRCO2",
+      "nome": "REDES DE COMPUTADORES 2",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLRCO1"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Redes de Computadores"
+      ],
+      "topicos_principais": [
+        "Infraestrutura de rede",
+        "Sistemas operacionais de rede",
+        "Redes com e sem fio",
+        "Linguagens de script",
+        "Firewall",
+        "Serviços de rede",
+        "Proxy e cache",
+        "Backup"
+      ],
+      "pagina_plano_ensino": 125
+    },
+    {
+      "codigo": "SCLEMPC",
+      "nome": "EMPREENDEDORISMO EM COMPUTAÇÃO",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Empreendedorismo e Inovação/Empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Perfil do empreendedor",
+        "Negócios sociais e digitais",
+        "Startups e aceleradoras",
+        "Plano de negócio e Business Model Canvas",
+        "Planejamento estratégico",
+        "Legislação em Computação",
+        "Ética e aspectos étnico-raciais"
+      ],
+      "pagina_plano_ensino": 127
+    },
+    {
+      "codigo": "SCLAXB2",
+      "nome": "ATIVIDADES DE EXTENSÃO 2",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLAXB1"
+      ],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Requisitos de software",
+        "Análise e projeto",
+        "Desenvolvimento de software",
+        "Verificação, validação e teste",
+        "Interação com stakeholders"
+      ],
+      "pagina_plano_ensino": 129
+    },
+    {
+      "codigo": "SCLCOSS",
+      "nome": "COMPUTAÇÃO, SOCIEDADE E SUSTENTABILIDADE",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Habilidades e Práticas Profissionais Complementares/Temas Transversais"
+      ],
+      "topicos_principais": [
+        "Percepção pública da Computação",
+        "Questões éticas e sociais",
+        "Aspectos legais",
+        "Ética na internet e privacidade",
+        "Educação ambiental e TI verde",
+        "História e Cultura Afro-brasileira e Indígena"
+      ],
+      "pagina_plano_ensino": 131
+    },
+    {
+      "codigo": "SCLASEG",
+      "nome": "AUDITORIA E SEGURANÇA DE SISTEMAS",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLRCO2"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Segurança de Sistemas"
+      ],
+      "topicos_principais": [
+        "Fundamentos de segurança da informação",
+        "Criptografia",
+        "Certificados digitais",
+        "Auditoria de sistemas",
+        "Análise de riscos",
+        "Engenharia social",
+        "Políticas de segurança",
+        "Testes de invasão"
+      ],
+      "pagina_plano_ensino": 133
+    },
+    {
+      "codigo": "SCLDMDM",
+      "nome": "DESENVOLVIMENTO MULTIPLATAFORMA PARA DISPOSITIVOS MÓVEIS",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLPRDM"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Aplicações móveis multiplataforma",
+        "Componentes visuais de interface",
+        "Persistência em arquivos e bancos de dados",
+        "Sincronização de dados e WebServices"
+      ],
+      "pagina_plano_ensino": 135
+    },
+    {
+      "codigo": "SCLTCDD",
+      "nome": "TÓPICOS EM CIÊNCIA DE DADOS",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLAMMD"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Redes de Computadores/Inteligência Computacional",
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Algoritmos de aprendizado de máquina",
+        "Processamento de Língua Natural",
+        "Redes Complexas",
+        "Ciência de Dados na Engenharia de Software"
+      ],
+      "pagina_plano_ensino": 137
+    },
+    {
+      "codigo": "SCLAXB3",
+      "nome": "ATIVIDADES DE EXTENSÃO 3",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLAXB2"
+      ],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Arquitetura de software",
+        "Desenvolvimento de software",
+        "Gerência de configuração",
+        "Gestão de projetos",
+        "Redes de computadores",
+        "Segurança e auditoria",
+        "Interação com stakeholders"
+      ],
+      "pagina_plano_ensino": 139
+    },
+    {
+      "codigo": "SCLTAED",
+      "nome": "TÓPICOS EM ALGORITMOS E ESTRUTURA DE DADOS",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLESDD"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Solução de problemas computacionais",
+        "Problemas clássicos da computação",
+        "Programação competitiva",
+        "Paradigmas de projeto de algoritmos",
+        "Escolha de estruturas de dados",
+        "Análise de complexidade",
+        "Aplicações na Engenharia de Software"
+      ],
+      "pagina_plano_ensino": 141
+    },
+    {
+      "codigo": "SCLTTEC",
+      "nome": "TÓPICOS EM TECNOLOGIAS EMERGENTES",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [
+        "SCLAPR2",
+        "SCLBDD1"
+      ],
+      "grupos_conhecimento": [
+        "Fundamentos da Computação, Matemática e Produção/Algoritmos e Programação"
+      ],
+      "topicos_principais": [
+        "Engenharia de software aplicada",
+        "Tecnologias do mercado de trabalho",
+        "Técnicas e ferramentas de engenharia de software",
+        "Tópicos de pesquisa em Computação"
+      ],
+      "pagina_plano_ensino": 143
+    },
+    {
+      "codigo": "SCLAXB4",
+      "nome": "ATIVIDADES DE EXTENSÃO 4",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 8,
+      "total_aulas": 160,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 133.3,
+      "carga_horaria_total": 133.3,
+      "abordagem": "pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Habilidades e Práticas Profissionais Complementares/Temas Transversais"
+      ],
+      "topicos_principais": [
+        "Relação entre Ensino, Pesquisa e Extensão",
+        "Legislação da Extensão",
+        "Elaboração de projetos de extensão",
+        "Desenvolvimento de projetos de extensão"
+      ],
+      "pagina_plano_ensino": 144
+    },
+    {
+      "codigo": "SCLCLIBR",
+      "nome": "LIBRAS",
+      "semestre": null,
+      "tipo": "optativa",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Habilidades e Práticas Profissionais Complementares/Língua Brasileira de Sinais"
+      ],
+      "topicos_principais": [
+        "Abordagem histórica da surdez",
+        "Educação inclusiva bilíngue",
+        "Introdução à LIBRAS",
+        "Alfabeto, numerais e cumprimentos",
+        "Fonologia em LIBRAS",
+        "Expressões faciais e verbos",
+        "Vocabulário básico e diálogos"
+      ],
+      "pagina_plano_ensino": 146
+    }
+  ],
+  "requisitos_gerais": [
+    {
+      "item": "Integralização",
+      "descricao": "Integralização mínima em 8 semestres (semestres de 20 semanas, aulas de 50 min, turno integral). Carga horária total mínima de 3207,2 h (componentes obrigatórios + 640 h de atividades complementares); carga horária máxima de 3240,5 h com a optativa LIBRAS (33,3 h).",
+      "pagina": 24
+    },
+    {
+      "item": "Atividades Complementares",
+      "descricao": "640 h obrigatórias, realizáveis ao longo de toda a graduação. Regulamento, controle e contabilização feitos pelo Colegiado de Curso, com limites de horas por tipo de atividade. Projetos desenvolvidos nas disciplinas de Atividades de Extensão não contam para as ACs. Resultado registrado como cumpriu/não cumpriu.",
+      "pagina": 31
+    },
+    {
+      "item": "Estágio Curricular Supervisionado",
+      "descricao": "Não é componente obrigatório isolado; insere-se nas Atividades Complementares. Podem ser feitos até dois estágios em momentos distintos, de até 280 h cada (14 h semanais), com objetivos distintos, na área do curso, sob orientação de docente do IFSP e supervisão na empresa, com relatórios parciais e final. O parecer final de aprovação é usado para contabilizar horas nas ACs (100 h sem comprovação explícita, limite de 280 h por estágio).",
+      "pagina": 28
+    },
+    {
+      "item": "Trabalho de Conclusão de Curso (TCC)",
+      "descricao": "Insere-se nas Atividades Complementares. Podem ser feitos até dois TCCs em momentos distintos, de até 280 h cada (14 h semanais), com objetivos distintos. Exige monografia e defesa perante banca; a ata de defesa com aprovação é usada para contabilizar horas nas ACs. A disciplina Metodologia de Pesquisa Científica fornece a base para o TCC.",
+      "pagina": 30
+    },
+    {
+      "item": "Curricularização da Extensão",
+      "descricao": "333,4 h de extensão (10,4% da carga horária, mínimo exigido de 10%) cumpridas nos componentes obrigatórios Atividades de Extensão 1 (4º sem), 2 (6º sem), 3 (7º sem) e 4 (8º sem). AXB1 exige POO, Banco de Dados 1 e Programação para a Web 1; AXB2 exige AXB1; AXB3 exige AXB2. Projetos de extensão duram no mínimo um semestre e devem ser aprovados no semestre anterior ao oferecimento.",
+      "pagina": 44
+    },
+    {
+      "item": "Pré-requisitos",
+      "descricao": "Sistema de pré-requisitos definido no quadro da seção 6.4 condiciona a matrícula em diversas disciplinas ao cumprimento de componentes de semestres anteriores.",
+      "pagina": 26
+    },
+    {
+      "item": "Critérios de aprovação",
+      "descricao": "Aprovação com nota semestral ≥ 6,0 e frequência mínima de 75%. Nota entre 4,0 e 6,0 com frequência ≥ 75% dá direito a Instrumento Final de Avaliação, exigindo nota mínima 6,0.",
+      "pagina": 41
+    },
+    {
+      "item": "Aproveitamento de estudos",
+      "descricao": "Concedido quando conteúdo e carga horária equivalem a no mínimo 80% do componente; aproveitamento de disciplinas de outras instituições limitado a 50% da carga horária do curso. Não é permitido para dependências. Possibilidade de Extraordinário Aproveitamento de Estudos.",
+      "pagina": 47
+    }
+  ]
+}

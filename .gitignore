@@ -107,5 +107,3 @@ dmypy.json
 
 # ChromaDB
 src/data/chroma_db/
-# Base processada (gerada por `python main.py ingest`)
-src/data/processed/

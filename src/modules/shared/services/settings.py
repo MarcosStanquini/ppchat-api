@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     extraction_effort: Effort = "high"
     max_output_tokens: int = 64000
 
+    # Proteção dos créditos da API quando o site é público (0 desliga)
+    rate_limit_per_hour: int = 30  # perguntas por IP
+    global_rate_limit_per_hour: int = 400  # teto para o site inteiro, vale mesmo se alguém forjar o IP
+
     # Arquivos
     pdf_path: Path = ROOT_DIR / "src" / "data" / "documents" / "PPCENGSOFTWARE.pdf"
     processed_dir: Path = ROOT_DIR / "src" / "data" / "processed"
