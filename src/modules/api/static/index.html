@@ -104,11 +104,17 @@
 
     <section class="view view-tree is-visible" id="view-tree">
       <div class="tree-wrap">
-        <nav class="tree-crumbs" id="tree-crumbs" aria-label="Navegação da árvore"></nav>
+        <div class="tree-bar">
+          <nav class="tree-crumbs" id="tree-crumbs" aria-label="Navegação da árvore"></nav>
+          <button class="chip-btn panel-toggle" id="toggle-info" aria-pressed="true"></button>
+        </div>
         <div class="tree-canvas" id="tree-canvas">
           <div class="tree-inner" id="tree-inner"></div>
         </div>
         <button class="btn btn-primary info-fab" id="info-fab">Detalhes da disciplina</button>
+        <button class="panel-tab" id="open-info" title="Abrir o painel de detalhes" aria-label="Abrir o painel de detalhes">
+          <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg><span>Painel</span>
+        </button>
         <div class="tree-legend">
           <span><i class="sw sw-anc"></i>Vem antes</span>
           <span><i class="sw sw-sel"></i>Foco</span>
