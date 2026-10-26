@@ -389,13 +389,37 @@ kbd {
   background-size: 22px 22px;
 }
 .tree-inner { position: relative; margin: auto; }
-.tree-edges { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.tree-edges { position: absolute; inset: 0; overflow: visible; pointer-events: none; z-index: 0; }
+.tree-inner .node, .tree-inner .col-label { z-index: 1; }
+.tree-crumbs {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line); background: var(--surface-2); font-size: 13px;
+}
+.crumb { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 4px 8px; border-radius: 8px; font-weight: 600; color: var(--muted); }
+button.crumb:hover { background: var(--surface); color: var(--ink); }
+button.crumb svg { width: 14px; height: 14px; }
+.crumb.is-current { color: var(--ink); padding-left: 2px; }
+.crumb-sep { color: var(--muted); }
+.crumb-hint { color: var(--muted); font-size: 12px; }
 .tree-edges path { fill: none; stroke-width: 2; stroke-linecap: round; transition: opacity .2s, stroke-width .2s; }
 .tree-edges .e-anc { stroke: var(--anc); }
 .tree-edges .e-desc { stroke: var(--desc); }
 .tree-edges path.e-anim { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw .32s ease forwards; animation-delay: var(--delay, 0s); }
 /* Re-layout (redimensionar a janela) não repete as animações */
 .tree-inner.no-anim .node, .tree-inner.no-anim .tree-edges path { animation: none; opacity: 1; transform: none; stroke-dasharray: none; stroke-dashoffset: 0; }
+.tree-edges circle.e-anc { fill: var(--anc); }
+.tree-edges circle.e-desc { fill: var(--desc); }
+/* Curso inteiro: setas neutras; o hover pinta a cadeia da disciplina */
+.tree-edges .e-all { stroke: color-mix(in oklab, var(--muted) 55%, transparent); stroke-width: 1.5; }
+.tree-edges circle.e-all { fill: color-mix(in oklab, var(--muted) 70%, transparent); stroke: none; }
+.tree-inner.is-hovering .tree-edges path, .tree-inner.is-hovering .tree-edges circle { opacity: .12; }
+.tree-inner.is-hovering .tree-edges .is-anc-hot { opacity: 1; stroke: var(--anc); stroke-width: 2.4; }
+.tree-inner.is-hovering .tree-edges .is-desc-hot { opacity: 1; stroke: var(--desc); stroke-width: 2.4; }
+.tree-inner.is-hovering .tree-edges circle.is-anc-hot { fill: var(--anc); stroke: none; }
+.tree-inner.is-hovering .tree-edges circle.is-desc-hot { fill: var(--desc); stroke: none; }
+/* filter em vez de opacity: a animação de entrada (fill forwards) prende a opacidade em 1 */
+.tree-inner.is-hovering .node.is-dim { filter: opacity(.28) saturate(.6); }
+.tree-inner .node { transition: box-shadow .18s, border-color .18s, translate .18s, filter .15s; }
 .tree-edges.has-hover path { opacity: .15; }
 .tree-edges.has-hover path.is-hot { opacity: 1; stroke-width: 2.8; }
 .tree-edges circle { transition: opacity .2s; }
@@ -494,6 +518,17 @@ kbd {
 .topics { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
 .topics li { margin: 2px 0; }
 .small-note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+.chip-go {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border-radius: 99px;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-2); text-align: left;
+}
+.chip-go:hover { border-color: var(--muted); color: var(--ink); }
+.chip-go b { color: var(--desc); font-weight: 600; }
+.chain { margin: 0; padding-left: 20px; font-size: 13px; }
+.chain li { margin: 3px 0; }
+.chain li::marker { color: var(--muted); font-size: 11px; }
+.link { border: 0; background: none; padding: 0; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; text-align: left; }
+.link:hover { color: var(--accent); text-decoration-color: currentColor; }
 
 /* Grade */
 .view-grid { flex-direction: column; }
@@ -598,6 +633,7 @@ kbd {
   .search input { width: 100%; }
   .search-results { left: 0; right: auto; width: calc(100vw - 28px); }
   .tree-legend { display: none; }
+  .crumb-hint { display: none; }
   .node { padding: 8px 10px 8px 12px; }
   .node-name { font-size: 12px; }
   .node.is-focus .node-name { font-size: 14px; }
