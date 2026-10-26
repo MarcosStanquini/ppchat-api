@@ -1,3 +1,3 @@
-from src.modules.ingestion.services.document_processor import DocumentProcessor
+from src.modules.ingestion.services.ingestion_pipeline import IngestionPipeline
 
-__all__ = ["DocumentProcessor"]
+__all__ = ["IngestionPipeline"]

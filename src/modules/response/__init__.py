@@ -1,3 +1,3 @@
-from src.modules.response.services.generator import Generator
+from src.modules.response.services.chat_service import ChatSession
 
-__all__ = ["Generator"]
+__all__ = ["ChatSession"]
