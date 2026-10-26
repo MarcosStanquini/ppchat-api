@@ -1,66 +1,85 @@
-from src.modules.retrieval.services.retriever import Retriever
-from src.modules.response.services.generator import Generator
-from src.modules.shared.services.vector_store import VectorStore
-import os
-from src.modules.ingestion.models.document import ProcessingConfig
-from src.modules.ingestion.services.document_processor import DocumentProcessor
-from src.modules.shared.services.embedding_service import EmbeddingService
-from dotenv import load_dotenv
-load_dotenv()
+import argparse
+import asyncio
+import sys
 
-def ingestion():
-    try:
-    #Cria o Banco
-        vector_store = VectorStore()
-        #Ingestion:
-        if vector_store.get_count() <= 0:
-            config = ProcessingConfig()
-            print("Configuração feita!")
-            processor = DocumentProcessor(config)
-            print("Processando chunks...")
-            chunks = processor.process_pdf("src/data/documents/PPCENGSOFTWARE.pdf")
-            print("Chunks Processados!")
-            embedding_service = EmbeddingService(os.getenv("EMBEDDING_MODEL"))
-
-            chunk_texts = [chunk.text for chunk in chunks]
-            print("Gerando embeddings...")
-            embeddings = embedding_service.embed_texts(chunk_texts)
-            print("Embeddings gerados!")
-            print(f"Generated {len(embeddings)} embeddings")
-
-            vector_store.add_chunks_embeddings(chunks, embeddings)
-    except Exception as e:
-        print(e)
+from src.modules.ingestion.services.ingestion_pipeline import IngestionPipeline
 
 
-
-def retrieval_example():
-    try:
-        generator = Generator(os.getenv("LLM_MODEL", "anthropic.claude-3-haiku-20240307-v1:0"))
-        vector_store = VectorStore()
-        embedding_service = EmbeddingService(os.getenv("EMBEDDING_MODEL"))
-        
-        retriever = Retriever(
-            embedding_service=embedding_service,
-            vector_store=vector_store,
-            top_k=3
-        )
-        
-        query = "O que eu aprendo em ALGORITMOS E PROGRAMAÇÃO 2"
-        print(f"Query: {query}\n")
-        
-        results = retriever.retrieve(query)
-        
-        response = generator.generate(query, results)
-        
-        print(f"RESPOSTA:\n{response}\n")
-            
-    except Exception as e:
-        print(f"Erro: {e}")
+def ingest(force: bool) -> None:
+    IngestionPipeline().run(force=force)
 
 
-ingestion()
-retrieval_example()
+async def chat() -> None:
+    from src.modules.response.services.chat_service import ChatSession
+
+    session = ChatSession()
+    print("PPChat — pergunte sobre o PPC de Engenharia de Software (Ctrl+C ou 'sair' para encerrar)\n")
+    while True:
+        try:
+            # input() roda numa thread para não travar o loop do asyncio
+            question = (await asyncio.to_thread(input, "Você: ")).strip()
+        except (EOFError, KeyboardInterrupt):
+            break
+        if question.lower() in {"sair", "exit", "quit"}:
+            break
+        if not question:
+            continue
+        print("\nPPChat: ", end="", flush=True)
+        async for chunk in session.stream(question):
+            print(chunk, end="", flush=True)
+        usage = session.last_message.usage if session.last_message else None
+        if usage:
+            print(
+                f"\n\n  [tokens — cache lido: {usage.cache_read_input_tokens or 0:,} · "
+                f"cache gravado: {usage.cache_creation_input_tokens or 0:,} · "
+                f"entrada: {usage.input_tokens:,} · saída: {usage.output_tokens:,}]"
+            )
+        print()
 
 
+async def ask(question: str) -> None:
+    from src.modules.response.services.chat_service import ChatSession
 
+    async for chunk in ChatSession().stream(question):
+        print(chunk, end="", flush=True)
+    print()
+
+
+def serve(host: str, port: int) -> None:
+    import uvicorn
+
+    uvicorn.run("src.modules.api.app:app", host=host, port=port)
+
+
+def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
+    parser = argparse.ArgumentParser(description="PPChat — chat sobre o PPC do curso")
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    ingest_parser = commands.add_parser("ingest", help="Processa o PDF e extrai o currículo estruturado")
+    ingest_parser.add_argument("--force", action="store_true", help="Refaz mesmo se o PDF não mudou")
+    commands.add_parser("chat", help="Chat interativo no terminal")
+    ask_parser = commands.add_parser("ask", help="Faz uma única pergunta")
+    ask_parser.add_argument("question")
+    serve_parser = commands.add_parser("serve", help="Sobe a API HTTP (FastAPI)")
+    serve_parser.add_argument("--host", default="127.0.0.1")
+    serve_parser.add_argument("--port", type=int, default=8000)
+
+    args = parser.parse_args()
+    if args.command == "ingest":
+        ingest(args.force)
+    elif args.command == "chat":
+        try:
+            asyncio.run(chat())
+        except KeyboardInterrupt:
+            pass
+    elif args.command == "ask":
+        asyncio.run(ask(args.question))
+    elif args.command == "serve":
+        serve(args.host, args.port)
+
+
+if __name__ == "__main__":
+    main()

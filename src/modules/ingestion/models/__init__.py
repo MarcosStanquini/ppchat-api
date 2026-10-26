@@ -1,6 +1,8 @@
-from src.modules.ingestion.models.document import ProcessingConfig, DocumentChunk
+from src.modules.ingestion.models.curriculum import Curriculo, Disciplina, PageText, RequisitoGeral
 
 __all__ = [
-    "ProcessingConfig",
-    "DocumentChunk",
+    "Curriculo",
+    "Disciplina",
+    "PageText",
+    "RequisitoGeral",
 ]

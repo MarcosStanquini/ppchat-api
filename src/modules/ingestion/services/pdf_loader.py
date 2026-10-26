@@ -1,9 +1,16 @@
-from langchain_community.document_loaders import PyMuPDFLoader
+from pathlib import Path
 from typing import List
-from langchain_core.documents import Document
+
+import fitz  # PyMuPDF
+
+from src.modules.ingestion.models.curriculum import PageText
+
 
 class PdfLoader:
     @staticmethod
-    def load(pdf_path: str) -> List[Document]:
-        loader = PyMuPDFLoader(pdf_path) #Extrai texto bruto e cria Document(Por página)
-        return loader.load()
+    def load(pdf_path: Path) -> List[PageText]:
+        with fitz.open(pdf_path) as document:
+            return [
+                PageText(page_number=index, text=page.get_text())
+                for index, page in enumerate(document, start=1)
+            ]
