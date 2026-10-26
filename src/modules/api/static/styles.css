@@ -391,10 +391,30 @@ kbd {
 .tree-inner { position: relative; margin: auto; }
 .tree-edges { position: absolute; inset: 0; overflow: visible; pointer-events: none; z-index: 0; }
 .tree-inner .node, .tree-inner .col-label { z-index: 1; }
-.tree-crumbs {
-  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; flex-wrap: wrap;
-  border-bottom: 1px solid var(--line); background: var(--surface-2); font-size: 13px;
+.tree-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 6px 12px 6px 16px;
+  border-bottom: 1px solid var(--line); background: var(--surface-2);
 }
+.tree-crumbs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; min-width: 0; }
+.panel-toggle { display: inline-flex; align-items: center; gap: 6px; flex: none; height: 32px; }
+.panel-toggle svg { width: 15px; height: 15px; }
+/* Painel de detalhes fechado: a árvore ocupa a largura toda */
+.view-tree.info-hidden .tree-info { display: none; }
+/* Aba na borda direita para reabrir o painel (só aparece com ele fechado) */
+.panel-tab {
+  display: none; position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 3;
+  flex-direction: column; align-items: center; gap: 8px; padding: 14px 8px; border: 1px solid var(--line-2); border-right: 0;
+  border-radius: 12px 0 0 12px; background: var(--surface); color: var(--ink-2); box-shadow: var(--shadow-md);
+  font-size: 12px; font-weight: 600; letter-spacing: .04em; transition: padding .15s, color .15s, background .15s;
+}
+.panel-tab span { writing-mode: vertical-rl; transform: rotate(180deg); }
+.panel-tab:hover { padding-right: 12px; color: var(--accent); background: var(--surface-2); }
+.view-tree.info-hidden .panel-tab { display: flex; }
+.view-tree.info-hidden .panel-toggle { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.tree-info { position: relative; }
+.info-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; }
+.tree-info h3 { padding-right: 30px; }
+.tree-info .back-btn { max-width: calc(100% - 40px); }
 .crumb { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 4px 8px; border-radius: 8px; font-weight: 600; color: var(--muted); }
 button.crumb:hover { background: var(--surface); color: var(--ink); }
 button.crumb svg { width: 14px; height: 14px; }
@@ -467,6 +487,8 @@ button.crumb svg { width: 14px; height: 14px; }
 .node.is-focus .meter { background: color-mix(in oklab, var(--accent-ink) 25%, transparent); }
 .node.is-focus .meter i { background: var(--accent-ink) !important; }
 .node.in-context { box-shadow: 0 0 0 2px var(--anc), var(--shadow-sm); }
+.node.is-solo:not(.is-focus) { border-style: dashed; box-shadow: none; background: color-mix(in oklab, var(--surface) 70%, transparent); }
+.node.is-solo:not(.is-focus)::before { background: var(--line-2); }
 .node .ctx-badge { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; background: var(--anc-soft); color: var(--anc); }
 .node.is-focus .ctx-badge { background: color-mix(in oklab, var(--accent-ink) 20%, transparent); color: var(--accent-ink); }
 .tree-empty { position: absolute; left: 50%; transform: translateX(-50%); font-size: 13px; color: var(--muted); text-align: center; width: 320px; }
@@ -634,6 +656,7 @@ button.crumb svg { width: 14px; height: 14px; }
   .search-results { left: 0; right: auto; width: calc(100vw - 28px); }
   .tree-legend { display: none; }
   .crumb-hint { display: none; }
+  .panel-toggle, .view-tree.info-hidden .panel-tab { display: none; }
   .node { padding: 8px 10px 8px 12px; }
   .node-name { font-size: 12px; }
   .node.is-focus .node-name { font-size: 14px; }

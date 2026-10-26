@@ -403,14 +403,19 @@ function makeColumns(level) {
   return { levels, columns };
 }
 
-// Curso inteiro: uma coluna por semestre, só disciplinas que exigem ou liberam alguma outra
+// Curso inteiro: todas as disciplinas, uma coluna por semestre (optativas no fim)
 function buildCourseGraph() {
   const { disciplinas, duracao_semestres } = state.curriculum;
-  const level = new Map(disciplinas.filter(isConnected).map((d) => [d.codigo, d.semestre || duracao_semestres + 1]));
+  const level = new Map(disciplinas.map((d) => [d.codigo, d.semestre || duracao_semestres + 1]));
   const edges = [];
   for (const c of level.keys()) for (const p of disc(c).pre_requisitos) if (level.has(p)) edges.push({ from: p, to: c, side: "all" });
   const { levels, columns } = makeColumns(level);
   orderColumns(columns, level, edges, levels.slice(1), levels.slice(0, -1).reverse());
+  // As sem ligação ficam no fim da coluna, para não cruzar as setas das outras
+  for (const l of levels) {
+    const col = columns.get(l);
+    columns.set(l, [...col.filter((c) => isConnected(disc(c))), ...col.filter((c) => !isConnected(disc(c)))]);
+  }
   return {
     levels, columns, edges, level,
     label: (l) => [l > duracao_semestres ? "Optativas" : `${l}º semestre`, ""],
@@ -454,8 +459,9 @@ function nodeHtml(code, { side = "", focus = false, direct = false }) {
   const d = disc(code);
   const blocks = d.libera_transitivamente.length;
   const inCtx = state.context.includes(code);
+  const solo = !isConnected(d); // sem pré-requisitos nem dependentes: borda tracejada
   return `
-    <button class="node ${side} ${focus ? "is-focus" : ""} ${direct ? "direct" : ""} ${inCtx ? "in-context" : ""}"
+    <button class="node ${side} ${focus ? "is-focus" : ""} ${direct ? "direct" : ""} ${inCtx ? "in-context" : ""} ${solo ? "is-solo" : ""}"
         data-code="${code}" title="${focus ? "" : "Centralizar a árvore nesta disciplina"}">
       <span class="node-top"><span class="node-code">${code}</span>
         ${inCtx ? '<span class="ctx-badge">no chat</span>' : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`}</span>
@@ -495,6 +501,20 @@ function renderCrumbs() {
 $("#tree-crumbs").addEventListener("click", (event) => {
   if (event.target.closest("[data-crumb=course]")) showCourse();
 });
+
+// Painel de detalhes ao lado da árvore: pode ser fechado para a árvore ocupar a tela toda
+const INFO_KEY = "ppchat-tree-info";
+const PANEL_ICON = '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>';
+function setInfoVisible(visible) {
+  $("#view-tree").classList.toggle("info-hidden", !visible);
+  const toggle = $("#toggle-info");
+  toggle.setAttribute("aria-pressed", visible);
+  toggle.innerHTML = `${PANEL_ICON}${visible ? "Ocultar painel" : "Mostrar painel"}`;
+  storage.set(INFO_KEY, visible);
+}
+setInfoVisible(storage.get(INFO_KEY) ?? true);
+$("#toggle-info").addEventListener("click", () => setInfoVisible($("#view-tree").classList.contains("info-hidden")));
+$("#open-info").addEventListener("click", () => setInfoVisible(true));
 
 let lastTreeSize = "";
 
@@ -583,7 +603,7 @@ function renderTree({ animate = true } = {}) {
     const f = boxes.get(graph.focus);
     canvas.scrollTo({ left: f.x + f.w / 2 - canvas.clientWidth / 2, top: f.y + f.h / 2 - canvas.clientHeight / 2 });
   } else {
-    canvas.scrollTo({ left: 0, top: Math.max(0, (height - canvas.clientHeight) / 2) });
+    canvas.scrollTo({ left: 0, top: 0 }); // do topo, para os títulos dos semestres aparecerem
   }
   lastTreeSize = `${canvas.clientWidth}x${canvas.clientHeight}`;
 }
@@ -640,6 +660,7 @@ new ResizeObserver(([entry]) => {
   resizeTimer = setTimeout(() => renderTree({ animate: false }), 120);
 }).observe($("#tree-canvas"));
 
+const INFO_CLOSE = `<button class="icon-btn info-close" data-act="hide-info" title="Fechar painel" aria-label="Fechar painel">${ICON.close}</button>`;
 const goChips = (codes, extra = () => "") =>
   `<div class="chips">${codes.map((c) => `<button class="chip-go" data-goto="${c}"><i class="dot ${levelClass(disc(c).nivel_estimado)}"></i>${escapeHtml(nameOf(c))}${extra(c)}</button>`).join("")}</div>`;
 
@@ -647,7 +668,7 @@ function renderCourseInfo() {
   const { disciplinas, cadeia_critica, gargalos, duracao_semestres } = state.curriculum;
   const connected = disciplinas.filter(isConnected);
   const isolated = disciplinas.filter((d) => !isConnected(d));
-  $("#tree-info").innerHTML = `
+  $("#tree-info").innerHTML = `${INFO_CLOSE}
     <span class="info-code">VISÃO GERAL</span>
     <h3>Curso inteiro</h3>
     <div class="pills">
@@ -670,9 +691,8 @@ function renderCourseInfo() {
       ${goChips(gargalos.slice(0, 6), (c) => ` <b>${disc(c).libera_transitivamente.length}</b>`)}
     </div>
     ${isolated.length ? `<div class="info-section">
-      <h4>Sem pré-requisitos nem dependentes (${isolated.length})</h4>
-      <p class="small-note" style="margin:0 0 8px">Não aparecem na árvore: podem ser cursadas sem travar nada.</p>
-      ${goChips(isolated.map((d) => d.codigo))}
+      <p class="small-note">${isolated.length} disciplinas não exigem nem liberam nenhuma outra: aparecem com
+        <b>borda tracejada</b> no fim de cada semestre e podem ser cursadas sem travar nada.</p>
     </div>` : ""}`;
 }
 
@@ -682,7 +702,7 @@ function renderInfo(code) {
   const inCtx = state.context.includes(code);
   const name = titleCase(d.nome);
   const back = state.focusHistory.at(-1);
-  $("#tree-info").innerHTML = `
+  $("#tree-info").innerHTML = `${INFO_CLOSE}
     ${state.focusHistory.length ? `<button class="btn btn-sm back-btn" data-act="back">${ICON.back}<span>Voltar para ${back ? escapeHtml(nameOf(back)) : "o curso inteiro"}</span></button>` : ""}
     <span class="info-code">${d.codigo}</span>
     <h3>${escapeHtml(name)}</h3>
@@ -722,6 +742,11 @@ $("#tree-info").addEventListener("click", (event) => {
   const target = event.target.closest("[data-act], [data-ask], [data-goto]");
   if (!target) return;
   if (target.dataset.goto) focusTree(target.dataset.goto, { push: true });
+  else if (target.dataset.act === "hide-info") {
+    // No celular o painel é uma camada por cima da árvore; no desktop, fecha a coluna lateral
+    if (matchMedia("(max-width: 900px)").matches) $("#tree-info").classList.remove("is-mobile-open");
+    else setInfoVisible(false);
+  }
   else if (target.dataset.act === "context") toggleContext(state.focus);
   else if (target.dataset.act === "back") showTree(state.focusHistory.pop() ?? null);
   else if (target.dataset.ask) {
