@@ -71,12 +71,18 @@ Ao rodar `serve`, abra <http://localhost:8000>. Não há build nem login: é HTM
 
 - **Chat com streaming:** respostas em markdown com tabelas; enquanto o modelo pensa, aparece uma
   linha com o resumo do raciocínio, que vira "Raciocinou por Xs" e pode ser expandida. O resumo vem em inglês.
+- **Disciplinas no contexto:** digite `@` (ou use o botão do livro) para escolher disciplinas. Elas viram chips
+  acima do campo, e a ficha completa de cada uma (pré-requisitos, o que libera, tópicos, complexidade) vai
+  junto da pergunta.
 - **Citações clicáveis:** `[Página N]` vira um chip que abre o PDF naquela página; códigos como `SCLPROO`
-  viram chips que destacam a disciplina no mapa.
-- **Mapa curricular interativo:** grade por semestre com nível de complexidade estimada. Ao clicar numa
-  disciplina, aparecem setas para os pré-requisitos (azul) e para o que ela libera (laranja), além de um painel
-  com detalhes e atalhos de pergunta. Há busca, destaque da cadeia crítica e o modal "Regras do curso".
-- **Detalhes:** botão para parar a resposta, conversa salva no navegador, tema claro/escuro e layout com abas no celular.
+  abrem a árvore da disciplina.
+- **Estrutura curricular** (botão no topo, em painel lateral):
+  - **Árvore:** a disciplina em foco fica no centro, o que vem antes ramifica para a esquerda (azul, em camadas
+    "logo antes", "2 etapas antes"…) e o que ela libera ramifica para a direita (laranja). Clicar num nó
+    centraliza a árvore nele; o painel ao lado traz detalhes, "Adicionar ao chat" e atalhos de pergunta.
+  - **Grade:** todas as disciplinas por semestre; clicar abre a árvore.
+  - Busca e o modal "Regras do curso".
+- **Detalhes:** botão para parar a resposta, conversa salva no navegador e tema claro/escuro.
 
 ### API
 
@@ -85,12 +91,27 @@ Ao rodar `serve`, abra <http://localhost:8000>. Não há build nem login: é HTM
 | GET | `/health` | — | status e número de disciplinas |
 | GET | `/curriculum` | — | currículo estruturado com a análise do grafo (usado pelo mapa) |
 | GET | `/pdf` | — | o PPC em PDF (aceita `#page=N`) |
-| POST | `/chat` | `{"question": "...", "session_id": null}` | `{"session_id", "answer", "usage"}` |
-| POST | `/chat/stream` | igual ao `/chat` | NDJSON: `thinking`, `text`, e por fim `done` (com `usage`) ou `error`; `session_id` no header `X-Session-Id` |
-| POST | `/chat/{session_id}/cancel` | — | 204; interrompe a resposta em andamento e descarta a pergunta |
+| POST | `/chat` | `{"question", "history", "disciplinas", "request_id"}` (só `question` é obrigatório) | `{"answer", "usage"}` |
+| POST | `/chat/stream` | igual ao `/chat` | NDJSON: `thinking`, `text`, e por fim `done` (com `usage`) ou `error` |
+| POST | `/chat/cancel/{request_id}` | — | 204; interrompe a resposta em andamento |
 
-Mande o `session_id` recebido nas próximas perguntas para continuar a conversa. As sessões ficam em memória
-no processo da API. Uma sessão responde uma pergunta por vez; enquanto responde, outra pergunta recebe 409.
+A API **não guarda conversas**: para continuar uma, mande em `history` as trocas anteriores
+(`[{"role": "user", "text": "...", "disciplinas": []}, {"role": "assistant", "text": "..."}]`, até 30 mensagens).
+O front faz isso sozinho com a conversa salva no navegador. Perguntas acima do limite por IP ou do teto global
+recebem 429.
+
+## Deploy no Render (plano gratuito)
+
+O `render.yaml` já descreve o serviço. A base processada (`src/data/processed/`) está no repositório, então o
+deploy não roda a ingestão nem gasta API.
+
+1. Faça push do repositório para o GitHub.
+2. No Render: **New → Blueprint**, escolha o repositório e confirme.
+3. Quando ele pedir, cole a `ANTHROPIC_API_KEY`.
+4. Defina um **limite de gastos** no console da Anthropic: o site é público e não tem login.
+
+O plano gratuito dorme após 15 min sem uso; o primeiro acesso depois disso leva até 1 minuto, e o front mostra
+"Acordando o servidor…". Se mudar o PDF, rode `python main.py ingest --force` localmente e commite a base nova.
 
 ## Configuração (`.env`)
 
@@ -101,6 +122,7 @@ no processo da API. Uma sessão responde uma pergunta por vez; enquanto responde
 | `EXTRACTION_MODEL` | igual ao `LLM_MODEL` | modelo da extração do currículo (roda uma vez por PDF) |
 | `FALLBACK_MODEL` | `claude-opus-4-8` | usado só se o principal recusar |
 | `CHAT_EFFORT` / `EXTRACTION_EFFORT` | `medium` / `high` | profundidade de raciocínio (`low` a `max`) |
+| `RATE_LIMIT_PER_HOUR` / `GLOBAL_RATE_LIMIT_PER_HOUR` | `30` / `400` | perguntas por IP e teto do site inteiro por hora (`0` desliga) |
 
 ## Estrutura
 

@@ -94,6 +94,12 @@ class KnowledgeBase:
         ]
         return "\n".join(parts)
 
+    def render_disciplinas(self, codes: List[str]) -> str:
+        """Ficha das disciplinas que o usuário selecionou no chat (códigos desconhecidos são ignorados)."""
+        return "\n\n".join(
+            self._render_disciplina(self.graph.by_code[code]) for code in codes if code in self.graph.by_code
+        )
+
     @cached_property
     def full_context(self) -> str:
         return (

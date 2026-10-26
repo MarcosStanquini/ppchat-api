@@ -1,9 +1,10 @@
-// PPChat — front sem build: chat com streaming + mapa curricular interativo.
+// PPChat — front sem build: chat com disciplinas no contexto + árvore de dependências.
 
 const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 const SVG_NS = "http://www.w3.org/2000/svg";
 const STORE_KEY = "ppchat-conversation-v1";
+const MAX_CONTEXT = 12;
 const LOGO = '<svg viewBox="0 0 24 24"><path d="M6 8h12M6 12h7M6 16h9"/></svg>';
 const ICON = {
   copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>',
@@ -14,26 +15,25 @@ const ICON = {
   gauge: '<svg viewBox="0 0 24 24"><path d="M12 14l4-4"/><path d="M3.3 19a10 10 0 1 1 17.4 0"/></svg>',
   rules: '<svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>',
   close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  tree: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h4m0 0c2 0 2-6 6-6M11 12c2 0 2 6 6 6"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  back: '<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>',
   ask: '<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
 };
-const THINKING_STEPS = [
-  "Lendo o PPC…",
-  "Consultando o grafo de pré-requisitos…",
-  "Cruzando com os planos de ensino…",
-  "Escrevendo a resposta…",
-];
+const THINKING_STEPS = ["Lendo o PPC…", "Consultando o grafo de pré-requisitos…", "Cruzando com os planos de ensino…", "Escrevendo a resposta…"];
 const ABORDAGEM = { teorica: "Teórica", pratica: "Prática", teorico_pratica: "Teórico-prática" };
 
 const state = {
   curriculum: null,
   byCode: new Map(),
-  sessionId: null,
-  history: [], // {role: "user"|"assistant", text, usage?, stopped?}
+  requestId: null, // resposta em andamento, para o botão "parar"
+  history: [], // {role: "user", text, disciplinas} | {role: "assistant", text, thinking?, usage?, stopped?}
+  context: [], // disciplinas selecionadas para a próxima pergunta
   busy: false,
   controller: null,
-  selected: null,
-  showAllEdges: false,
-  showCritical: false,
+  focus: null, // disciplina em foco na árvore
+  focusHistory: [],
+  view: "tree",
 };
 
 /* ───────────── Utilidades ───────────── */
@@ -42,7 +42,6 @@ const storage = {
   set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} },
   remove(key) { try { localStorage.removeItem(key); } catch {} },
 };
-
 const SMALL_WORDS = new Set(["de", "da", "do", "das", "dos", "e", "a", "o", "à", "para", "em", "na", "no"]);
 function titleCase(name) {
   return name.toLowerCase().split(" ").map((word, i) =>
@@ -53,8 +52,11 @@ const normalize = (s) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLow
 const levelClass = (nivel) => "lvl-" + normalize(nivel);
 const hours = (h) => `${Number(h).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} h`;
 const compact = (n) => (n >= 1000 ? `${(n / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k` : String(n));
-const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const isMobile = () => matchMedia("(max-width: 900px)").matches;
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const disc = (code) => state.byCode.get(code);
+const nameOf = (code) => titleCase(disc(code)?.nome || code);
+const semesterLabel = (d) => (d.semestre ? `${d.semestre}º sem` : "Optativa");
 
 let toastTimer;
 function toast(message) {
@@ -65,30 +67,41 @@ function toast(message) {
   toastTimer = setTimeout(() => el.classList.remove("show"), 3200);
 }
 
-/* ───────────── Tema e abas ───────────── */
+/* ───────────── Tema ───────────── */
 $("#theme-toggle").addEventListener("click", () => {
   const root = document.documentElement;
   const current = root.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   root.dataset.theme = current === "dark" ? "light" : "dark";
   try { localStorage.setItem("ppchat-theme", root.dataset.theme); } catch {}
-  requestAnimationFrame(drawEdges);
 });
 
-function setPane(name) {
-  $$(".tab").forEach((tab) => {
-    const active = tab.dataset.pane === name;
-    tab.classList.toggle("is-active", active);
-    tab.setAttribute("aria-selected", active);
-  });
-  $("#pane-chat").classList.toggle("is-visible", name === "chat");
-  $("#pane-map").classList.toggle("is-visible", name === "map");
-  if (name === "map") requestAnimationFrame(drawEdges);
+/* ───────────── Servidor acordando (plano grátis do Render) ───────────── */
+// O plano grátis dorme após 15 min sem uso; enquanto acorda, o proxy responde 502/503 ou derruba a conexão.
+// Tenta de novo por até ~90 s mostrando um aviso, em vez de falhar na primeira tentativa.
+async function fetchWithWake(url, options = {}) {
+  const deadline = Date.now() + 90_000;
+  const banner = $("#wake");
+  const showTimer = setTimeout(() => (banner.hidden = false), 1500);
+  try {
+    for (;;) {
+      try {
+        const response = await fetch(url, options);
+        if (![502, 503, 504].includes(response.status) || Date.now() > deadline) return response;
+      } catch (error) {
+        if (error.name === "AbortError" || Date.now() > deadline) throw error;
+      }
+      banner.hidden = false;
+      await sleep(2500);
+    }
+  } finally {
+    clearTimeout(showTimer);
+    banner.hidden = true;
+  }
 }
-$$(".tab").forEach((tab) => tab.addEventListener("click", () => setPane(tab.dataset.pane)));
 
 /* ───────────── Currículo ───────────── */
 async function loadCurriculum() {
-  const response = await fetch("/curriculum");
+  const response = await fetchWithWake("/curriculum");
   if (!response.ok) throw new Error("Não foi possível carregar o currículo");
   const data = await response.json();
   state.curriculum = data;
@@ -101,303 +114,575 @@ async function loadCurriculum() {
     [hours(data.carga_horaria_total_curso), "no total"],
   ].map(([value, label]) => `<span class="stat"><b>${value}</b>${label}</span>`).join("");
 
-  renderSuggestions();
-  renderBoard();
+  renderGrid();
   renderRules();
 }
 
-function renderSuggestions() {
+// Disciplina mais "conectada": bom ponto de partida para a árvore
+function defaultFocus() {
+  return state.context[0] || state.focus || [...state.curriculum.disciplinas].sort((a, b) =>
+    (b.pre_requisitos_transitivos.length + b.libera_transitivamente.length) -
+    (a.pre_requisitos_transitivos.length + a.libera_transitivamente.length))[0].codigo;
+}
+
+/* ───────────── Estado vazio ───────────── */
+function renderEmpty(eyebrow = "Seu PPC, em conversa") {
   const { disciplinas, gargalos } = state.curriculum;
   const deepest = [...disciplinas].sort((a, b) => b.profundidade - a.profundidade || b.indice_complexidade - a.indice_complexidade)
     .find((d) => d.tipo === "obrigatoria" && !/extens/i.test(d.nome)) || disciplinas[0];
-  const gate = state.byCode.get(gargalos[1] || gargalos[0]);
+  const gate = disc(gargalos[1] || gargalos[0]);
+  const pair = [gargalos[2], "SCLBDD1"].filter((c) => disc(c));
   const items = [
     { icon: ICON.chain, tag: "Dependências", text: `Quais são todos os pré-requisitos de ${titleCase(deepest.nome)}?` },
-    { icon: ICON.route, tag: "Planejamento", text: `Reprovei em ${titleCase(gate.nome)}. Como fica o resto do meu curso?` },
+    { icon: ICON.route, tag: "Com disciplinas no contexto", text: "Em que ordem devo cursar estas disciplinas e por quê?", context: pair },
     { icon: ICON.gauge, tag: "Dificuldade", text: "Quais são as disciplinas mais difíceis do curso e por quê?" },
-    { icon: ICON.rules, tag: "Regras", text: "Como funcionam o estágio, o TCC e as atividades complementares?" },
+    { icon: ICON.rules, tag: "Planejamento", text: `Reprovei em ${titleCase(gate.nome)}. Como fica o resto do meu curso?` },
   ];
-  $("#suggestions").innerHTML = items.map((item, i) => `
-    <button class="suggestion" style="animation-delay:${80 + i * 60}ms" data-q="${escapeHtml(item.text)}">
-      <span class="s-tag">${item.icon}${item.tag}</span>
-      <span class="s-text">${escapeHtml(item.text)}</span>
-    </button>`).join("");
-  $$(".suggestion").forEach((btn) => btn.addEventListener("click", () => ask(btn.dataset.q)));
+  $("#messages").innerHTML = `
+    <div class="empty" id="empty">
+      <p class="eyebrow">${eyebrow}</p>
+      <h1>Pergunte qualquer coisa <em>sobre o seu curso.</em></h1>
+      <p class="lede">Respostas baseadas no Projeto Pedagógico inteiro, com a página de cada informação.
+        Digite <kbd>@</kbd> para colocar disciplinas no contexto da pergunta.</p>
+      <div class="suggestions">${items.map((item, i) => `
+        <button class="suggestion" style="animation-delay:${80 + i * 60}ms" data-i="${i}">
+          <span class="s-tag">${item.icon}${item.tag}</span>
+          <span class="s-text">${escapeHtml(item.text)}</span>
+          ${item.context ? `<span class="s-chips">${item.context.map((c) => staticChip(c)).join("")}</span>` : ""}
+        </button>`).join("")}
+      </div>
+    </div>`;
+  $$(".suggestion").forEach((btn) => btn.addEventListener("click", () => {
+    const item = items[btn.dataset.i];
+    if (item.context) state.context = [...item.context];
+    ask(item.text);
+  }));
 }
 
-function renderBoard() {
-  const { disciplinas, duracao_semestres } = state.curriculum;
-  const inner = $("#board-inner");
-  const columns = [];
-  for (let s = 1; s <= duracao_semestres; s++) {
-    columns.push({ title: `${s}º semestre`, items: disciplinas.filter((d) => d.semestre === s) });
+/* ───────────── Chips de disciplina ───────────── */
+function staticChip(code) {
+  const d = disc(code);
+  if (!d) return "";
+  return `<span class="dchip is-static" data-tree="${code}" title="Ver árvore de ${escapeHtml(nameOf(code))}">
+    <i class="dot ${levelClass(d.nivel_estimado)}"></i><span class="dchip-name">${escapeHtml(nameOf(code))}</span></span>`;
+}
+
+function renderContext() {
+  const box = $("#context");
+  box.hidden = !state.context.length;
+  box.innerHTML = state.context.length ? `<span class="context-label">No contexto</span>` + state.context.map((code) => {
+    const d = disc(code);
+    return `<span class="dchip" data-code="${code}">
+      <i class="dot ${levelClass(d.nivel_estimado)}"></i>
+      <span class="dchip-name">${escapeHtml(nameOf(code))}</span>
+      <button type="button" data-tree="${code}" title="Ver árvore" aria-label="Ver árvore de ${escapeHtml(nameOf(code))}">${ICON.tree}</button>
+      <button type="button" data-remove="${code}" title="Remover" aria-label="Remover ${escapeHtml(nameOf(code))}">${ICON.close}</button>
+    </span>`;
+  }).join("") : "";
+  $$(".node, .card").forEach((el) => el.classList.toggle("in-context", state.context.includes(el.dataset.code)));
+  updateSendState();
+}
+
+function toggleContext(code, { force } = {}) {
+  const has = state.context.includes(code);
+  const add = force ?? !has;
+  if (add && !has) {
+    if (state.context.length >= MAX_CONTEXT) return toast(`Até ${MAX_CONTEXT} disciplinas por pergunta.`);
+    state.context.push(code);
+  } else if (!add && has) {
+    state.context = state.context.filter((c) => c !== code);
   }
+  renderContext();
+  if (state.focus) renderInfo(state.focus);
+}
+
+$("#context").addEventListener("click", (event) => {
+  const target = event.target.closest("[data-tree], [data-remove]");
+  if (!target) return;
+  if (target.dataset.remove) toggleContext(target.dataset.remove, { force: false });
+  else openDrawer("tree", target.dataset.tree);
+});
+
+// Chips estáticos (sugestões, bolhas do usuário) abrem a árvore
+document.addEventListener("click", (event) => {
+  const chip = event.target.closest(".dchip.is-static[data-tree]");
+  if (chip && !chip.closest(".suggestion")) openDrawer("tree", chip.dataset.tree);
+});
+
+/* ───────────── Seletor de disciplinas (@) ───────────── */
+const input = $("#input");
+const picker = { open: false, start: -1, items: [], active: 0 };
+
+function mentionQuery() {
+  if (picker.start < 0) return "";
+  return input.value.slice(picker.start + 1, input.selectionStart);
+}
+
+function openPicker(start) {
+  picker.open = true;
+  picker.start = start;
+  picker.active = 0;
+  $("#picker").hidden = false;
+  $("#add-discipline").setAttribute("aria-expanded", "true");
+  renderPicker();
+}
+
+function closePicker() {
+  picker.open = false;
+  picker.start = -1;
+  $("#picker").hidden = true;
+  $("#add-discipline").setAttribute("aria-expanded", "false");
+}
+
+function highlight(text, query) {
+  if (!query) return escapeHtml(text);
+  const i = normalize(text).indexOf(normalize(query));
+  if (i < 0) return escapeHtml(text);
+  return escapeHtml(text.slice(0, i)) + `<mark>${escapeHtml(text.slice(i, i + query.length))}</mark>` + escapeHtml(text.slice(i + query.length));
+}
+
+function renderPicker() {
+  const query = mentionQuery().trim();
+  const q = normalize(query);
+  const list = state.curriculum.disciplinas.filter((d) => !q || normalize(`${d.nome} ${d.codigo}`).includes(q));
+  picker.items = list.map((d) => d.codigo);
+  picker.active = Math.min(picker.active, Math.max(0, list.length - 1));
+
+  let html = "", lastGroup = null, index = 0;
+  for (const d of list) {
+    const group = d.semestre ? `${d.semestre}º semestre` : "Optativas";
+    if (!q && group !== lastGroup) { html += `<div class="picker-group">${group}</div>`; lastGroup = group; }
+    const selected = state.context.includes(d.codigo);
+    html += `<button type="button" class="picker-item ${index === picker.active ? "is-active" : ""} ${selected ? "is-selected" : ""}"
+        data-code="${d.codigo}" data-index="${index}" role="option" aria-selected="${selected}">
+      <i class="dot ${levelClass(d.nivel_estimado)}"></i>
+      <span class="p-code">${d.codigo}</span>
+      <span class="p-name">${highlight(titleCase(d.nome), query)}</span>
+      <span class="p-meta">${q ? semesterLabel(d) : hours(d.carga_horaria_total)}</span>
+      <svg class="p-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>
+    </button>`;
+    index++;
+  }
+  $("#picker-list").innerHTML = html || `<div class="picker-empty">Nenhuma disciplina encontrada para “${escapeHtml(query)}”.</div>`;
+  $(".picker-item.is-active")?.scrollIntoView({ block: "nearest" });
+}
+
+function choosePicker(code) {
+  // Remove o "@consulta" digitado e coloca a disciplina no contexto
+  let end = input.selectionStart;
+  if (picker.start >= 0) {
+    if (input.value[picker.start - 1] === " " && input.value[end] === " ") end++; // evita espaço duplo
+    input.value = input.value.slice(0, picker.start) + input.value.slice(end);
+  }
+  const caret = Math.max(0, picker.start);
+  closePicker();
+  toggleContext(code);
+  input.focus();
+  input.setSelectionRange(caret, caret);
+  autosize();
+}
+
+function syncPicker() {
+  const caret = input.selectionStart;
+  const before = input.value.slice(0, caret);
+  const at = before.lastIndexOf("@");
+  const valid = at >= 0 && (at === 0 || /\s/.test(before[at - 1])) && !/[\n@]/.test(before.slice(at + 1)) && caret - at <= 40;
+  if (valid) {
+    if (!picker.open || picker.start !== at) openPicker(at);
+    else renderPicker();
+  } else if (picker.open) {
+    closePicker();
+  }
+}
+
+$("#add-discipline").addEventListener("click", () => {
+  if (picker.open) { closePicker(); input.focus(); return; }
+  // Insere "@" no cursor: o mesmo fluxo de digitar
+  const pos = input.selectionStart ?? input.value.length;
+  const needsSpace = pos > 0 && !/\s/.test(input.value[pos - 1]);
+  input.value = input.value.slice(0, pos) + (needsSpace ? " @" : "@") + input.value.slice(pos);
+  const caret = pos + (needsSpace ? 2 : 1);
+  input.focus();
+  input.setSelectionRange(caret, caret);
+  syncPicker();
+});
+$("#picker-list").addEventListener("mousedown", (event) => event.preventDefault()); // não tira o foco do textarea
+$("#picker-list").addEventListener("click", (event) => {
+  const item = event.target.closest(".picker-item");
+  if (item) choosePicker(item.dataset.code);
+});
+document.addEventListener("click", (event) => {
+  if (picker.open && !event.target.closest(".composer-box")) closePicker();
+});
+
+/* ───────────── Painel: árvore e grade ───────────── */
+const drawer = $("#drawer");
+
+function openDrawer(view = state.view, code) {
+  closePicker();
+  drawer.classList.add("is-open");
+  drawer.setAttribute("aria-hidden", "false");
+  setView(view);
+  const target = code || defaultFocus();
+  // Reabrir na mesma disciplina reaproveita a árvore já desenhada
+  if (view === "tree" && (target !== state.focus || !$(".node", $("#tree-inner")))) {
+    focusTree(target, { push: !!code && code !== state.focus });
+  }
+}
+function closeDrawer() {
+  drawer.classList.remove("is-open");
+  drawer.setAttribute("aria-hidden", "true");
+  $("#search-results").hidden = true;
+}
+function setView(view) {
+  state.view = view;
+  $$(".seg").forEach((seg) => {
+    const active = seg.dataset.view === view;
+    seg.classList.toggle("is-active", active);
+    seg.setAttribute("aria-selected", active);
+  });
+  $("#view-tree").classList.toggle("is-visible", view === "tree");
+  $("#view-grid").classList.toggle("is-visible", view === "grid");
+  if (view === "tree" && !state.focus) focusTree(defaultFocus());
+}
+
+$("#open-structure").addEventListener("click", () => openDrawer());
+$("#close-drawer").addEventListener("click", closeDrawer);
+$$(".seg").forEach((seg) => seg.addEventListener("click", () => setView(seg.dataset.view)));
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape" || rulesModal.open) return;
+  if (picker.open) return closePicker();
+  if (drawer.classList.contains("is-open")) closeDrawer();
+});
+
+/* Busca no painel */
+const search = $("#search");
+search.addEventListener("input", () => {
+  const q = normalize(search.value.trim());
+  const results = $("#search-results");
+  $("#board").classList.toggle("is-filtering", !!q);
+  $$(".card").forEach((card) => card.classList.toggle("is-match", !!q && normalize(`${disc(card.dataset.code).nome} ${card.dataset.code}`).includes(q)));
+  if (!q) { results.hidden = true; return; }
+  const list = state.curriculum.disciplinas.filter((d) => normalize(`${d.nome} ${d.codigo}`).includes(q)).slice(0, 8);
+  results.innerHTML = list.length ? list.map((d, i) => `
+    <button type="button" class="picker-item ${i === 0 ? "is-active" : ""}" data-code="${d.codigo}">
+      <i class="dot ${levelClass(d.nivel_estimado)}"></i>
+      <span class="p-name">${highlight(titleCase(d.nome), search.value.trim())}</span>
+      <span class="p-meta">${semesterLabel(d)}</span>
+    </button>`).join("") : '<div class="picker-empty">Nada encontrado.</div>';
+  results.hidden = false;
+});
+search.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") $("#search-results .picker-item")?.click();
+  if (event.key === "Escape") { search.value = ""; search.dispatchEvent(new Event("input")); event.stopPropagation(); }
+});
+$("#search-results").addEventListener("click", (event) => {
+  const item = event.target.closest(".picker-item");
+  if (!item) return;
+  search.value = "";
+  search.dispatchEvent(new Event("input"));
+  setView("tree");
+  focusTree(item.dataset.code, { push: true });
+});
+
+/* Árvore de dependências */
+const TREE_WIDE = { nodeW: 214, focusW: 250, gapX: 86, gapY: 14, padX: 40, padTop: 58, padBottom: 70 };
+const TREE_NARROW = { nodeW: 150, focusW: 168, gapX: 40, gapY: 10, padX: 16, padTop: 54, padBottom: 72 };
+let TREE = TREE_WIDE;
+
+// Camadas: antecessores à esquerda (pelo caminho mais longo até o foco), sucessores à direita
+function buildLayers(code) {
+  const d = disc(code);
+  const anc = new Set(d.pre_requisitos_transitivos);
+  const desc = new Set(d.libera_transitivamente);
+  const level = new Map([[code, 0]]);
+
+  const up = new Map();
+  const distUp = (c) => {
+    if (c === code) return 0;
+    if (up.has(c)) return up.get(c);
+    let best = 1;
+    for (const child of disc(c).libera_diretamente) if (child === code || anc.has(child)) best = Math.max(best, distUp(child) + 1);
+    up.set(c, best);
+    return best;
+  };
+  const down = new Map();
+  const distDown = (c) => {
+    if (c === code) return 0;
+    if (down.has(c)) return down.get(c);
+    let best = 1;
+    for (const p of disc(c).pre_requisitos) if (p === code || desc.has(p)) best = Math.max(best, distDown(p) + 1);
+    down.set(c, best);
+    return best;
+  };
+  anc.forEach((c) => level.set(c, -distUp(c)));
+  desc.forEach((c) => level.set(c, distDown(c)));
+
+  const edges = [];
+  for (const c of [code, ...anc]) for (const p of disc(c).pre_requisitos) if (anc.has(p)) edges.push({ from: p, to: c, side: "anc" });
+  for (const c of desc) for (const p of disc(c).pre_requisitos) if (p === code || desc.has(p)) edges.push({ from: p, to: c, side: "desc" });
+
+  // Colunas ordenadas e reordenadas pela média dos vizinhos (reduz cruzamentos)
+  const levels = [...new Set(level.values())].sort((a, b) => a - b);
+  const columns = new Map(levels.map((l) => [l, [...level.keys()].filter((c) => level.get(c) === l)
+    .sort((a, b) => (disc(a).semestre || 99) - (disc(b).semestre || 99) || disc(a).nome.localeCompare(disc(b).nome))]));
+  const pos = (c) => columns.get(level.get(c)).indexOf(c) / Math.max(1, columns.get(level.get(c)).length - 1);
+  const reorder = (l, neighbors) => {
+    const col = columns.get(l);
+    const score = (c) => { const n = neighbors(c); return n.length ? n.reduce((s, x) => s + pos(x), 0) / n.length : pos(c); };
+    const scored = col.map((c) => [c, score(c)]);
+    columns.set(l, scored.sort((a, b) => a[1] - b[1]).map(([c]) => c));
+  };
+  for (let pass = 0; pass < 2; pass++) {
+    for (const l of levels.filter((l) => l > 0)) reorder(l, (c) => edges.filter((e) => e.to === c).map((e) => e.from));
+    for (const l of levels.filter((l) => l < 0).reverse()) reorder(l, (c) => edges.filter((e) => e.from === c).map((e) => e.to));
+  }
+  return { levels, columns, edges, level };
+}
+
+function columnLabel(l, total) {
+  if (l === 0) return ["Foco", "focus"];
+  if (l < 0) return [l === -1 ? "Logo antes" : `${-l} etapas antes`, "anc"];
+  return [l === 1 ? "Libera" : `${l} etapas depois`, "desc"];
+}
+
+function nodeHtml(code, l, { direct }) {
+  const d = disc(code);
+  const side = l < 0 ? "anc" : l > 0 ? "desc" : "";
+  const blocks = d.libera_transitivamente.length;
+  const inCtx = state.context.includes(code);
+  return `
+    <button class="node ${side} ${l === 0 ? "is-focus" : ""} ${direct ? "direct" : ""} ${inCtx ? "in-context" : ""}"
+        data-code="${code}" title="${l === 0 ? "" : "Centralizar a árvore nesta disciplina"}">
+      <span class="node-top"><span class="node-code">${code}</span>
+        ${inCtx ? '<span class="ctx-badge">no chat</span>' : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`}</span>
+      <span class="node-name">${escapeHtml(titleCase(d.nome))}</span>
+      <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
+      <span class="node-meta"><span>${semesterLabel(d)} · ${hours(d.carga_horaria_total)}</span>
+        ${blocks >= 3 && l >= 0 ? `<span>trava ${blocks}</span>` : ""}</span>
+    </button>`;
+}
+
+function focusTree(code, { push = false } = {}) {
+  if (!disc(code)) return;
+  if (push && state.focus && state.focus !== code) state.focusHistory.push(state.focus);
+  state.focus = code;
+  renderTree(code);
+  renderInfo(code);
+  $("#tree-info").classList.remove("is-mobile-open");
+}
+
+let lastTreeSize = "";
+
+function renderTree(code, { animate = true } = {}) {
+  const canvas = $("#tree-canvas");
+  TREE = canvas.clientWidth < 640 ? TREE_NARROW : TREE_WIDE;
+  const { levels, columns, edges, level } = buildLayers(code);
+  const focus = disc(code);
+  const inner = $("#tree-inner");
+  inner.classList.toggle("no-anim", !animate);
+  const directs = new Set([...focus.pre_requisitos, ...focus.libera_diretamente]);
+
+  inner.innerHTML = levels.map((l) => {
+    const [label, cls] = columnLabel(l);
+    return `<span class="col-label ${cls}" data-level="${l}">${label}</span>` +
+      columns.get(l).map((c) => nodeHtml(c, l, { direct: directs.has(c) })).join("");
+  }).join("") + `<svg class="tree-edges" id="tree-edges"></svg>` +
+    (levels.length === 1 ? `<p class="tree-empty">Esta disciplina não exige nem libera nenhuma outra: dá para cursá-la a qualquer momento do seu semestre.</p>` : "");
+
+  // Posiciona: mede as alturas reais e centraliza cada coluna
+  const nodes = new Map($$(".node", inner).map((el) => [el.dataset.code, el]));
+  nodes.forEach((el, c) => el.style.setProperty("--node-w", `${level.get(c) === 0 ? TREE.focusW : TREE.nodeW}px`));
+  const colX = new Map();
+  let x = TREE.padX;
+  for (const l of levels) {
+    colX.set(l, x);
+    x += (l === 0 ? TREE.focusW : TREE.nodeW) + TREE.gapX;
+  }
+  const width = x - TREE.gapX + TREE.padX;
+  const heights = new Map(levels.map((l) => [l, columns.get(l).reduce((s, c) => s + nodes.get(c).offsetHeight, 0) + TREE.gapY * (columns.get(l).length - 1)]));
+  const maxH = Math.max(...heights.values());
+  const height = Math.max(maxH + TREE.padTop + TREE.padBottom, canvas.clientHeight);
+  const boxes = new Map();
+  for (const l of levels) {
+    let y = TREE.padTop + (height - TREE.padTop - TREE.padBottom - heights.get(l)) / 2;
+    const w = l === 0 ? TREE.focusW : TREE.nodeW;
+    for (const c of columns.get(l)) {
+      const el = nodes.get(c);
+      const h = el.offsetHeight;
+      el.style.left = `${colX.get(l)}px`;
+      el.style.top = `${y}px`;
+      el.style.setProperty("--delay", `${Math.abs(l) * 0.04}s`);
+      el.style.setProperty("--from", `${Math.sign(l) * 14}px`);
+      boxes.set(c, { x: colX.get(l), y, w, h });
+      y += h + TREE.gapY;
+    }
+    const label = $(`.col-label[data-level="${l}"]`, inner);
+    label.style.left = `${colX.get(l) + w / 2}px`;
+  }
+  inner.style.width = `${Math.max(width, canvas.clientWidth)}px`;
+  inner.style.height = `${height}px`;
+  // Centraliza o conteúdo quando ele é mais estreito que a tela
+  const offset = Math.max(0, (canvas.clientWidth - width) / 2);
+  if (offset) {
+    $$(".node, .col-label", inner).forEach((el) => (el.style.left = `${parseFloat(el.style.left) + offset}px`));
+    boxes.forEach((b) => (b.x += offset));
+  }
+
+  // Setas
+  const svg = $("#tree-edges");
+  svg.setAttribute("width", inner.offsetWidth);
+  svg.setAttribute("height", height);
+  for (const e of edges) {
+    const a = boxes.get(e.from), b = boxes.get(e.to);
+    const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
+    const bend = Math.max(40, (x2 - x1) * 0.5);
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", `M${x1},${y1} C${x1 + bend},${y1} ${x2 - bend},${y2} ${x2},${y2}`);
+    path.setAttribute("class", `e-${e.side} e-anim`);
+    path.dataset.from = e.from;
+    path.dataset.to = e.to;
+    svg.append(path);
+    if (animate) {
+      path.style.setProperty("--len", Math.ceil(path.getTotalLength()));
+      path.style.setProperty("--delay", `${0.06 + Math.max(Math.abs(level.get(e.from)), Math.abs(level.get(e.to))) * 0.04}s`);
+    }
+    const dot = document.createElementNS(SVG_NS, "circle");
+    dot.setAttribute("cx", x2); dot.setAttribute("cy", y2); dot.setAttribute("r", 3.5);
+    dot.setAttribute("fill", `var(--${e.side})`);
+    dot.dataset.from = e.from;
+    dot.dataset.to = e.to;
+    svg.append(dot);
+  }
+
+  // Rola até o foco
+  const f = boxes.get(code);
+  canvas.scrollTo({ left: f.x + f.w / 2 - canvas.clientWidth / 2, top: f.y + f.h / 2 - canvas.clientHeight / 2 });
+  lastTreeSize = `${canvas.clientWidth}x${canvas.clientHeight}`;
+}
+
+$("#tree-inner").addEventListener("click", (event) => {
+  const node = event.target.closest(".node");
+  if (!node) return;
+  if (node.dataset.code === state.focus) $("#tree-info").classList.toggle("is-mobile-open");
+  else focusTree(node.dataset.code, { push: true });
+});
+$("#info-fab").addEventListener("click", () => $("#tree-info").classList.toggle("is-mobile-open"));
+$("#tree-inner").addEventListener("mouseover", (event) => {
+  const node = event.target.closest(".node");
+  const svg = $("#tree-edges");
+  if (!svg) return;
+  svg.classList.toggle("has-hover", !!node);
+  $$("path, circle", svg).forEach((el) => el.classList.toggle("is-hot", !!node && (el.dataset.from === node.dataset.code || el.dataset.to === node.dataset.code)));
+});
+$("#tree-inner").addEventListener("mouseleave", () => $("#tree-edges")?.classList.remove("has-hover"));
+// Só redesenha quando o tamanho realmente muda (janela redimensionada), e sem repetir as animações
+let resizeTimer = 0;
+new ResizeObserver(([entry]) => {
+  const { width } = entry.contentRect;
+  if (!width || !state.focus || state.view !== "tree") return;
+  if (`${$("#tree-canvas").clientWidth}x${$("#tree-canvas").clientHeight}` === lastTreeSize) return;
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => renderTree(state.focus, { animate: false }), 120);
+}).observe($("#tree-canvas"));
+
+function renderInfo(code) {
+  const d = disc(code);
+  const inCtx = state.context.includes(code);
+  const name = titleCase(d.nome);
+  $("#tree-info").innerHTML = `
+    ${state.focusHistory.length ? `<button class="btn btn-sm back-btn" data-act="back">${ICON.back}<span>Voltar para ${escapeHtml(nameOf(state.focusHistory.at(-1)))}</span></button>` : ""}
+    <span class="info-code">${d.codigo}</span>
+    <h3>${escapeHtml(name)}</h3>
+    <div class="pills">
+      <span class="pill">${d.semestre ? `${d.semestre}º semestre` : "Optativa"}</span>
+      <span class="pill">${hours(d.carga_horaria_total)}</span>
+      <span class="pill">${d.aulas_semanais} aulas/semana</span>
+      <span class="pill">${ABORDAGEM[d.abordagem]}</span>
+      ${d.usa_laboratorio ? '<span class="pill">Laboratório</span>' : ""}
+    </div>
+    <div class="info-actions">
+      <button class="btn ${inCtx ? "" : "btn-primary"}" data-act="context">${inCtx ? `${ICON.check}No contexto do chat · remover` : `${ICON.plus}Adicionar ao chat`}</button>
+      <div class="row">
+        <button class="btn btn-sm" data-ask="O que eu vou aprender em ${escapeHtml(name)}? Resuma a ementa e os objetivos.">${ICON.ask}O que aprendo?</button>
+        <button class="btn btn-sm" data-ask="O que acontece com o meu curso se eu reprovar em ${escapeHtml(name)}?">E se reprovar?</button>
+      </div>
+    </div>
+    <div class="info-section">
+      <div class="stat-grid">
+        <div class="stat-card anc"><b>${d.pre_requisitos_transitivos.length}</b><span>vêm antes (${d.pre_requisitos.length} direto${d.pre_requisitos.length === 1 ? "" : "s"})</span></div>
+        <div class="stat-card desc"><b>${d.libera_transitivamente.length}</b><span>dependem dela</span></div>
+      </div>
+    </div>
+    <div class="info-section">
+      <h4>Complexidade estimada</h4>
+      <div class="complexity">
+        <span class="score">${d.indice_complexidade.toLocaleString("pt-BR")}</span>
+        <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
+      </div>
+      <p class="small-note">${d.nivel_estimado} · ${d.profundidade} etapa(s) de pré-requisito até ela. Estimativa, não é dado oficial do PPC.</p>
+    </div>
+    ${d.topicos_principais.length ? `<div class="info-section"><h4>Tópicos</h4><ul class="topics">${d.topicos_principais.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul></div>` : ""}
+    ${d.pagina_plano_ensino ? `<div class="info-section"><a class="btn btn-sm" href="/pdf#page=${d.pagina_plano_ensino}" target="_blank" rel="noopener">${ICON.page}Plano de ensino · p. ${d.pagina_plano_ensino}</a></div>` : ""}`;
+}
+
+$("#tree-info").addEventListener("click", (event) => {
+  const target = event.target.closest("[data-act], [data-ask]");
+  if (!target) return;
+  if (target.dataset.act === "context") toggleContext(state.focus);
+  else if (target.dataset.act === "back") focusTree(state.focusHistory.pop());
+  else if (target.dataset.ask) {
+    toggleContext(state.focus, { force: true });
+    closeDrawer();
+    ask(target.dataset.ask);
+  }
+});
+
+/* Grade por semestre */
+function renderGrid() {
+  const { disciplinas, duracao_semestres } = state.curriculum;
+  const columns = [];
+  for (let s = 1; s <= duracao_semestres; s++) columns.push({ title: `${s}º semestre`, items: disciplinas.filter((d) => d.semestre === s) });
   const optional = disciplinas.filter((d) => !d.semestre);
   if (optional.length) columns.push({ title: "Optativas", items: optional });
 
-  const html = columns.map((col) => `
+  $("#board-inner").innerHTML = columns.map((col) => `
     <div class="column">
       <div class="col-head"><b>${col.title}</b><span>${hours(col.items.reduce((sum, d) => sum + d.carga_horaria_total, 0))}</span></div>
-      ${col.items.map(cardHtml).join("")}
+      ${col.items.map((d) => {
+        const blocks = d.libera_transitivamente.length;
+        return `<button class="card" data-code="${d.codigo}">
+          <span class="card-top"><span class="card-code">${d.codigo}</span><i class="dot ${levelClass(d.nivel_estimado)}"></i></span>
+          <span class="card-name">${escapeHtml(titleCase(d.nome))}</span>
+          <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
+          <span class="card-meta"><span>${hours(d.carga_horaria_total)}</span>
+            ${blocks >= 4 ? `<span class="badge-gate">trava ${blocks}</span>` : ""}</span>
+        </button>`;
+      }).join("")}
     </div>`).join("");
-  inner.insertAdjacentHTML("beforeend", html);
-
-  $$(".card", inner).forEach((card) => card.addEventListener("click", (event) => {
-    event.stopPropagation();
-    select(state.selected === card.dataset.code ? null : card.dataset.code);
-  }));
-  $("#board").addEventListener("click", () => select(null));
-  new ResizeObserver(() => drawEdges()).observe(inner);
 }
-
-function cardHtml(d) {
-  const blocks = d.libera_transitivamente.length;
-  return `
-    <button class="card" data-code="${d.codigo}" title="${escapeHtml(titleCase(d.nome))}">
-      <span class="card-top">
-        <span class="card-code">${d.codigo}</span>
-        <i class="dot ${levelClass(d.nivel_estimado)}" title="Complexidade ${d.nivel_estimado}"></i>
-      </span>
-      <span class="card-name">${escapeHtml(d.nome)}</span>
-      <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
-      <span class="card-meta">
-        <span>${hours(d.carga_horaria_total)} · ${ABORDAGEM[d.abordagem].split("-")[0]}</span>
-        ${blocks >= 4 ? `<span class="badge-gate" title="Trava ${blocks} disciplinas se reprovada">trava ${blocks}</span>` : ""}
-      </span>
-    </button>`;
-}
+$("#board-inner").addEventListener("click", (event) => {
+  const card = event.target.closest(".card");
+  if (!card) return;
+  setView("tree");
+  focusTree(card.dataset.code, { push: true });
+});
 
 function renderRules() {
   const rules = state.curriculum.requisitos_gerais;
   $("#rules-body").innerHTML = rules.length
-    ? rules.map((r) => `
-      <div class="rule">
-        <b>${escapeHtml(r.item)}</b>
-        <p>${escapeHtml(r.descricao)} ${r.pagina ? pageChip(r.pagina) : ""}</p>
-      </div>`).join("")
-    : '<p class="none">Nenhuma regra extraída.</p>';
+    ? rules.map((r) => `<div class="rule"><b>${escapeHtml(r.item)}</b><p>${escapeHtml(r.descricao)} ${r.pagina ? pageChip(r.pagina) : ""}</p></div>`).join("")
+    : '<p class="muted">Nenhuma regra extraída.</p>';
 }
-
-/* ───────────── Seleção e setas ───────────── */
-function select(code, { scroll = false } = {}) {
-  state.selected = code;
-  const d = code ? state.byCode.get(code) : null;
-  const anc = new Set(d ? d.pre_requisitos_transitivos : []);
-  const desc = new Set(d ? d.libera_transitivamente : []);
-
-  $("#board").classList.toggle("has-selection", !!d);
-  $$(".card").forEach((card) => {
-    const c = card.dataset.code;
-    card.classList.toggle("is-sel", c === code);
-    card.classList.toggle("is-anc", anc.has(c));
-    card.classList.toggle("is-desc", desc.has(c));
-  });
-  renderDetail(d);
-  drawEdges({ animate: true });
-
-  if (d) {
-    const card = $(`.card[data-code="${code}"]`);
-    revealCard(card, scroll);
-    if (scroll) {
-      card.classList.remove("is-pulse");
-      void card.offsetWidth;
-      card.classList.add("is-pulse");
-    }
-  }
-}
-
-// Mantém o card visível na faixa do mapa que o painel de detalhes não cobre
-function revealCard(card, center) {
-  const board = $("#board");
-  const panel = $("#detail");
-  const b = board.getBoundingClientRect();
-  const r = card.getBoundingClientRect();
-  const visibleBottom = panel.hidden ? b.bottom : panel.getBoundingClientRect().top - 12;
-  const top = board.scrollTop + r.top - b.top - 44; // 44 = cabeçalho fixo da coluna
-  const left = board.scrollLeft + r.left - b.left - (b.width - r.width) / 2;
-
-  const outY = r.bottom > visibleBottom || r.top < b.top + 40;
-  const outX = r.left < b.left || r.right > b.right;
-  if (center || (outX && outY)) board.scrollTo({ top, left, behavior: "smooth" });
-  else if (outY) board.scrollTo({ top, behavior: "smooth" });
-  else if (outX) board.scrollTo({ left, behavior: "smooth" });
-}
-
-function edgeList() {
-  const edges = [];
-  const add = (from, to, cls) => edges.push({ from, to, cls });
-  const prereqs = (c) => state.byCode.get(c)?.pre_requisitos || [];
-
-  if (state.showAllEdges) {
-    state.curriculum.disciplinas.forEach((d) => d.pre_requisitos.forEach((p) => add(p, d.codigo, "e-faint")));
-  }
-  if (state.showCritical) {
-    const path = state.curriculum.cadeia_critica;
-    for (let i = 1; i < path.length; i++) add(path[i - 1], path[i], "e-crit");
-  }
-  if (state.selected) {
-    const d = state.byCode.get(state.selected);
-    const up = new Set([...d.pre_requisitos_transitivos, d.codigo]);
-    const down = new Set([...d.libera_transitivamente, d.codigo]);
-    up.forEach((c) => prereqs(c).forEach((p) => up.has(p) && add(p, c, "e-anc")));
-    d.libera_transitivamente.forEach((c) => prereqs(c).forEach((p) => down.has(p) && add(p, c, "e-desc")));
-  }
-  return edges;
-}
-
-function drawEdges({ animate = false } = {}) {
-  const svg = $("#edges");
-  const inner = $("#board-inner");
-  if (!state.curriculum || !inner.offsetParent) return; // mapa oculto (aba do celular)
-  svg.setAttribute("width", inner.scrollWidth);
-  svg.setAttribute("height", inner.scrollHeight);
-  svg.replaceChildren();
-
-  const base = inner.getBoundingClientRect();
-  const box = (code) => {
-    const card = $(`.card[data-code="${code}"]`, inner);
-    if (!card) return null;
-    const r = card.getBoundingClientRect();
-    return { left: r.left - base.left, right: r.right - base.left, mid: r.top - base.top + r.height / 2 };
-  };
-
-  for (const { from, to, cls } of edgeList()) {
-    const a = box(from), b = box(to);
-    if (!a || !b) continue;
-    const x1 = a.right, y1 = a.mid, x2 = b.left, y2 = b.mid;
-    const bend = Math.max(36, Math.abs(x2 - x1) / 2);
-    const path = document.createElementNS(SVG_NS, "path");
-    path.setAttribute("d", `M${x1},${y1} C${x1 + bend},${y1} ${x2 - bend},${y2} ${x2},${y2}`);
-    path.setAttribute("class", cls);
-    svg.append(path);
-    if (animate && (cls === "e-anc" || cls === "e-desc")) {
-      path.style.setProperty("--len", path.getTotalLength());
-      path.classList.add("e-anim");
-    }
-    if (cls !== "e-faint") {
-      const dot = document.createElementNS(SVG_NS, "circle");
-      dot.setAttribute("cx", x2); dot.setAttribute("cy", y2); dot.setAttribute("r", 3.2);
-      dot.setAttribute("fill", getComputedStyle(path).stroke);
-      svg.append(dot);
-    }
-  }
-}
-
-function chipList(codes, cls) {
-  if (!codes.length) return '<span class="none">Nenhuma</span>';
-  return `<div class="chips">${codes.map((c) => {
-    const d = state.byCode.get(c);
-    return `<button class="chip ${cls}" data-goto="${c}" title="${c}">${escapeHtml(d ? d.nome : c)}</button>`;
-  }).join("")}</div>`;
-}
-
-function renderDetail(d) {
-  const panel = $("#detail");
-  const board = $("#board");
-  if (!d) {
-    panel.hidden = true;
-    board.style.paddingBottom = "";
-    return;
-  }
-  const name = titleCase(d.nome);
-  const blocks = d.libera_transitivamente.length;
-  panel.innerHTML = `
-    <div class="detail-head">
-      <div>
-        <span class="card-code">${d.codigo}</span>
-        <h3>${escapeHtml(d.nome)}</h3>
-        <div class="detail-sub">
-          <span class="pill">${d.semestre ? `${d.semestre}º semestre` : "Optativa"}</span>
-          <span class="pill">${hours(d.carga_horaria_total)}${d.carga_horaria_extensao ? ` (extensão ${hours(d.carga_horaria_extensao)})` : ""}</span>
-          <span class="pill">${d.aulas_semanais} aulas/semana</span>
-          <span class="pill">${ABORDAGEM[d.abordagem]}</span>
-          ${d.usa_laboratorio ? '<span class="pill">Laboratório</span>' : ""}
-        </div>
-      </div>
-      <button class="icon-btn" data-close-detail aria-label="Fechar">${ICON.close}</button>
-    </div>
-    <div class="detail-grid">
-      <div>
-        <h4>Pré-requisitos diretos</h4>
-        ${chipList(d.pre_requisitos, "anc")}
-        ${d.pre_requisitos_transitivos.length > d.pre_requisitos.length
-          ? `<h4 style="margin-top:12px">Base acumulada</h4>${chipList(d.pre_requisitos_transitivos.filter((c) => !d.pre_requisitos.includes(c)), "anc")}`
-          : ""}
-        <h4 style="margin-top:12px">Libera</h4>
-        ${chipList(d.libera_diretamente, "desc")}
-        ${blocks > d.libera_diretamente.length ? `<p class="trava">Se reprovada, trava ${blocks} disciplinas no total.</p>` : ""}
-      </div>
-      <div>
-        <h4>Complexidade estimada</h4>
-        <div class="complexity">
-          <span class="score">${d.indice_complexidade.toLocaleString("pt-BR")}</span>
-          <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
-        </div>
-        <p class="muted small" style="margin:4px 0 12px">${d.nivel_estimado} · profundidade ${d.profundidade} na cadeia · não é dado oficial</p>
-        ${d.topicos_principais.length ? `<h4>Tópicos</h4><ul class="topics">${d.topicos_principais.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>` : ""}
-      </div>
-    </div>
-    <div class="detail-actions">
-      <button class="btn btn-sm btn-primary" data-ask="O que eu vou aprender em ${escapeHtml(name)}? Resuma a ementa e os objetivos.">${ICON.ask}O que vou aprender?</button>
-      <button class="btn btn-sm" data-ask="Como devo me preparar para ${escapeHtml(name)}? Considere os pré-requisitos e o conteúdo.">Como me preparar?</button>
-      <button class="btn btn-sm" data-ask="O que acontece com o meu curso se eu reprovar em ${escapeHtml(name)}?">E se eu reprovar?</button>
-      ${d.pagina_plano_ensino ? `<a class="btn btn-sm" href="/pdf#page=${d.pagina_plano_ensino}" target="_blank" rel="noopener">${ICON.page}Plano de ensino · p. ${d.pagina_plano_ensino}</a>` : ""}
-    </div>`;
-  panel.hidden = false;
-  panel.scrollTop = 0;
-  board.style.paddingBottom = `${panel.offsetHeight + 24}px`;
-}
-
-$("#detail").addEventListener("click", (event) => {
-  const target = event.target.closest("[data-goto], [data-ask], [data-close-detail]");
-  if (!target) return;
-  if (target.dataset.goto) select(target.dataset.goto, { scroll: true });
-  else if (target.dataset.ask) { ask(target.dataset.ask); if (isMobile()) setPane("chat"); }
-  else select(null);
-});
-
-/* Toggles, busca e modal */
-function bindToggle(id, key) {
-  $(id).addEventListener("click", (event) => {
-    state[key] = !state[key];
-    event.currentTarget.setAttribute("aria-pressed", state[key]);
-    if (key === "showCritical") {
-      const path = new Set(state.curriculum.cadeia_critica);
-      $$(".card").forEach((card) => card.classList.toggle("is-crit", state.showCritical && path.has(card.dataset.code)));
-    }
-    drawEdges({ animate: true });
-  });
-}
-bindToggle("#toggle-edges", "showAllEdges");
-bindToggle("#toggle-critical", "showCritical");
-
-$("#search").addEventListener("input", (event) => {
-  const query = normalize(event.target.value.trim());
-  $("#board").classList.toggle("is-filtering", !!query);
-  $$(".card").forEach((card) => {
-    const d = state.byCode.get(card.dataset.code);
-    card.classList.toggle("is-match", !!query && normalize(`${d.nome} ${d.codigo}`).includes(query));
-  });
-});
-$("#search").addEventListener("keydown", (event) => {
-  if (event.key !== "Enter") return;
-  const match = $(".card.is-match");
-  if (match) select(match.dataset.code, { scroll: true });
-});
-
 const rulesModal = $("#rules-modal");
 $("#open-rules").addEventListener("click", () => rulesModal.showModal());
 rulesModal.addEventListener("click", (event) => {
   if (event.target === rulesModal || event.target.closest("[data-close]")) rulesModal.close();
 });
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && state.selected && !rulesModal.open) select(null);
-});
 
 /* ───────────── Respostas: markdown + chips ───────────── */
 const pageChip = (from, to) =>
   `<a class="page-ref" href="/pdf#page=${from}" target="_blank" rel="noopener" title="Abrir o PPC na página ${from}">${ICON.page}p. ${from}${to ? `–${to}` : ""}</a>`;
-
 const REF_PATTERN = /\[(?:Páginas?|p\.)\s*(\d+)(?:\s*[–-]\s*(\d+))?\]|\b(SCL[A-Z0-9]{4,5})\b/g;
 
 function enhance(root) {
@@ -408,7 +693,6 @@ function enhance(root) {
     wrap.append(table);
   });
   $$("a", root).forEach((a) => { a.target = "_blank"; a.rel = "noopener"; });
-
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (node) => node.parentElement.closest("a, code, pre") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
   });
@@ -417,13 +701,11 @@ function enhance(root) {
     REF_PATTERN.lastIndex = 0; // regex com /g guarda estado entre chamadas de test()
     if (REF_PATTERN.test(walker.currentNode.data)) nodes.push(walker.currentNode);
   }
-
   for (const node of nodes) {
     REF_PATTERN.lastIndex = 0;
     const html = escapeHtml(node.data).replace(REF_PATTERN, (match, from, to, code) => {
       if (from) return pageChip(from, to);
-      const d = state.byCode.get(code);
-      return d ? `<button class="code-ref" data-code="${code}" title="${escapeHtml(titleCase(d.nome))} — ver no mapa">${code}</button>` : match;
+      return disc(code) ? `<button class="code-ref" data-code="${code}" title="${escapeHtml(nameOf(code))} — ver árvore">${code}</button>` : match;
     });
     const span = document.createElement("span");
     span.innerHTML = html;
@@ -443,14 +725,11 @@ function renderMarkdown(el, text, { streaming = false } = {}) {
 
 $("#messages").addEventListener("click", (event) => {
   const chip = event.target.closest(".code-ref");
-  if (!chip) return;
-  if (isMobile()) setPane("map");
-  requestAnimationFrame(() => select(chip.dataset.code, { scroll: true }));
+  if (chip) openDrawer("tree", chip.dataset.code);
 });
 
 /* ───────────── Chat ───────────── */
 const messagesEl = $("#messages");
-const input = $("#input");
 const composer = $("#composer");
 
 function scrollToBottom(force = false) {
@@ -458,10 +737,13 @@ function scrollToBottom(force = false) {
   if (force || nearBottom) messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-function addUserMessage(text) {
+function addUserMessage(text, disciplinas = []) {
   $("#empty")?.remove();
-  messagesEl.insertAdjacentHTML("beforeend",
-    `<div class="msg msg-user"><div class="bubble">${escapeHtml(text)}</div></div>`);
+  messagesEl.insertAdjacentHTML("beforeend", `
+    <div class="msg msg-user"><div class="bubble-wrap">
+      ${disciplinas.length ? `<div class="bubble-chips">${disciplinas.map(staticChip).join("")}</div>` : ""}
+      <div class="bubble">${escapeHtml(text)}</div>
+    </div></div>`);
 }
 
 function addBotMessage() {
@@ -480,12 +762,8 @@ function addBotMessage() {
     </div>`);
   const msg = messagesEl.lastElementChild;
   return {
-    answer: $(".answer", msg),
-    footer: $(".msg-footer", msg),
-    reasoning: $(".reasoning", msg),
-    reasoningBody: $(".reasoning-body", msg),
-    reasoningLabel: $(".reasoning-label", msg),
-    reasoningPreview: $(".reasoning-preview", msg),
+    answer: $(".answer", msg), footer: $(".msg-footer", msg), reasoning: $(".reasoning", msg),
+    reasoningBody: $(".reasoning-body", msg), reasoningLabel: $(".reasoning-label", msg), reasoningPreview: $(".reasoning-preview", msg),
   };
 }
 
@@ -499,11 +777,9 @@ function renderReasoning(ui, entry, { live }) {
     const sentences = entry.thinking.replace(/[*_#`]/g, "").trim().split(/(?<=[.!?:])\s+/);
     ui.reasoningLabel.textContent = "Raciocinando…";
     ui.reasoningPreview.textContent = sentences.at(-1).length > 12 ? sentences.at(-1) : sentences.at(-2) || "";
-    ui.reasoningBody.scrollTop = ui.reasoningBody.scrollHeight;
   } else {
     ui.reasoningPreview.textContent = "";
-    ui.reasoningLabel.textContent = entry.thinkingSeconds
-      ? `Raciocinou por ${entry.thinkingSeconds}s` : "Raciocínio";
+    ui.reasoningLabel.textContent = entry.thinkingSeconds ? `Raciocinou por ${entry.thinkingSeconds}s` : "Raciocínio";
   }
 }
 
@@ -542,47 +818,44 @@ function setBusy(busy) {
   $("#send").setAttribute("aria-label", busy ? "Parar resposta" : "Enviar");
   updateSendState();
 }
-const updateSendState = () => { $("#send").disabled = !state.busy && !input.value.trim(); };
+function updateSendState() { $("#send").disabled = !state.busy && !input.value.trim(); }
+const persist = () => storage.set(STORE_KEY, { history: state.history });
+const MAX_HISTORY = 30; // igual ao limite da API
+
+// O servidor não guarda conversas: cada pergunta leva as últimas trocas completas
+function historyPayload() {
+  return state.history.slice(-MAX_HISTORY).map(({ role, text, disciplinas }) =>
+    role === "user" ? { role, text, disciplinas: disciplinas || [] } : { role, text: text.slice(0, 20000) });
+}
 
 function stopAnswer() {
   if (!state.busy) return;
   // Avisa o servidor explicitamente: abortar o fetch nem sempre derruba a conexão (proxies, keep-alive)
-  if (state.sessionId) fetch(`/chat/${state.sessionId}/cancel`, { method: "POST" }).catch(() => {});
+  if (state.requestId) fetch(`/chat/cancel/${state.requestId}`, { method: "POST" }).catch(() => {});
   state.controller?.abort();
 }
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-async function streamWithRetry(question, ui) {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await streamAnswer(question, ui);
-    } catch (error) {
-      // 409: a resposta interrompida ainda está encerrando no servidor; costuma levar 1-2 s
-      if (error.status !== 409 || attempt >= 10) throw error;
-      await sleep(600);
-    }
-  }
+function errorMessage(status, body) {
+  if (Array.isArray(body?.detail)) return "Pergunta inválida (texto ou histórico grande demais).";
+  if (body?.detail) return body.detail;
+  if (status >= 502) return "O servidor está iniciando. Tente de novo em alguns segundos.";
+  return `Erro ${status}`;
 }
 
-function persist() {
-  storage.set(STORE_KEY, { sessionId: state.sessionId, history: state.history });
-}
-
-async function streamAnswer(question, ui) {
+async function streamAnswer(question, disciplinas, ui) {
   state.controller = new AbortController();
-  const response = await fetch("/chat/stream", {
+  state.requestId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const response = await fetchWithWake("/chat/stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, session_id: state.sessionId }),
+    body: JSON.stringify({ question, disciplinas, history: historyPayload(), request_id: state.requestId }),
     signal: state.controller.signal,
   });
   if (!response.ok) {
-    const error = new Error((await response.json().catch(() => ({}))).detail || `Erro ${response.status}`);
+    const error = new Error(errorMessage(response.status, await response.json().catch(() => null)));
     error.status = response.status;
     throw error;
   }
-  state.sessionId = response.headers.get("X-Session-Id");
 
   const entry = { role: "assistant", text: "", thinking: "" };
   const reader = response.body.getReader();
@@ -595,7 +868,6 @@ async function streamAnswer(question, ui) {
     thinkingTimer = null;
     ui.answer.innerHTML = "";
   };
-
   const paint = () => {
     frame = 0;
     if (entry.text) renderMarkdown(ui.answer, entry.text, { streaming: true });
@@ -646,55 +918,49 @@ async function streamAnswer(question, ui) {
 async function ask(question) {
   question = question.trim();
   if (!question || state.busy) return;
-  if (isMobile()) setPane("chat");
+  const disciplinas = [...state.context];
+  state.context = [];
+  renderContext();
+  closePicker();
   input.value = "";
   autosize();
 
-  addUserMessage(question);
+  addUserMessage(question, disciplinas);
   const ui = addBotMessage();
   ui.thinkingTimer = startThinking(ui.answer);
   scrollToBottom(true);
   setBusy(true);
 
-  let entry;
   try {
-    try {
-      entry = await streamWithRetry(question, ui);
-    } catch (error) {
-      if (error.status !== 404) throw error;
-      // O servidor reiniciou e perdeu a sessão: continua numa nova
-      state.sessionId = null;
-      toast("A conversa anterior expirou no servidor. Continuei numa nova sessão.");
-      entry = await streamWithRetry(question, ui);
-    }
+    const entry = await streamAnswer(question, disciplinas, ui);
     renderMarkdown(ui.answer, entry.text || (entry.stopped ? "" : "_Sem resposta._"));
     renderReasoning(ui, entry, { live: false });
     renderFooter(ui.footer, entry);
-    if (!entry.stopped) {
-      state.history.push({ role: "user", text: question }, entry);
+    if (!entry.stopped && entry.text) { // a API rejeita mensagens vazias no histórico
+      state.history.push({ role: "user", text: question, disciplinas }, entry);
       persist();
     }
   } catch (error) {
     clearInterval(ui.thinkingTimer);
     const partial = error.partial?.text ? DOMPurify.sanitize(marked.parse(error.partial.text)) : "";
     ui.answer.innerHTML = `${partial}<div class="error-box">${
-      error.status === 409 ? "Ainda estou terminando a resposta anterior. Tente de novo em instantes."
-        : `Não consegui responder: ${escapeHtml(error.message)}`}</div>`;
+      error.status === 429 ? escapeHtml(error.message) : `Não consegui responder: ${escapeHtml(error.message)}`}</div>`;
   } finally {
     state.controller = null;
+    state.requestId = null;
     setBusy(false);
     scrollToBottom();
-    if (!isMobile()) input.focus();
+    if (matchMedia("(pointer: fine)").matches) input.focus();
   }
 }
 
 function restoreConversation() {
   const saved = storage.get(STORE_KEY);
-  if (!saved?.history?.length) return;
-  state.sessionId = saved.sessionId;
+  if (!saved?.history?.length) return false;
   state.history = saved.history;
+  messagesEl.innerHTML = "";
   for (const entry of state.history) {
-    if (entry.role === "user") addUserMessage(entry.text);
+    if (entry.role === "user") addUserMessage(entry.text, entry.disciplinas || []);
     else {
       const ui = addBotMessage();
       renderMarkdown(ui.answer, entry.text);
@@ -703,23 +969,16 @@ function restoreConversation() {
     }
   }
   scrollToBottom(true);
+  return true;
 }
 
 $("#new-chat").addEventListener("click", () => {
   stopAnswer();
-  state.sessionId = null;
   state.history = [];
+  state.context = [];
   storage.remove(STORE_KEY);
-  messagesEl.innerHTML = `
-    <div class="empty" id="empty">
-      <p class="eyebrow">Nova conversa</p>
-      <h1>Pergunte qualquer coisa<br><em>sobre o seu curso.</em></h1>
-      <p class="lede">Respostas baseadas no Projeto Pedagógico inteiro, com a página de cada informação
-        e o grafo de pré-requisitos já calculado.</p>
-      <div class="suggestions" id="suggestions"></div>
-    </div>`;
-  if (state.curriculum) renderSuggestions();
-  setPane("chat");
+  renderContext();
+  renderEmpty("Nova conversa");
   input.focus();
 });
 
@@ -730,8 +989,28 @@ function autosize() {
   input.style.overflowY = input.scrollHeight > 180 ? "auto" : "hidden";
   updateSendState();
 }
-input.addEventListener("input", autosize);
+input.addEventListener("input", () => { autosize(); syncPicker(); });
+input.addEventListener("click", syncPicker);
 input.addEventListener("keydown", (event) => {
+  if (picker.open && picker.items.length) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const delta = event.key === "ArrowDown" ? 1 : -1;
+      picker.active = (picker.active + delta + picker.items.length) % picker.items.length;
+      renderPicker();
+      return;
+    }
+    if (event.key === "Enter" || event.key === "Tab") {
+      event.preventDefault();
+      choosePicker(picker.items[picker.active]);
+      return;
+    }
+  }
+  if (picker.open && event.key === "Escape") { event.preventDefault(); closePicker(); return; }
+  if (event.key === "Backspace" && !input.value && state.context.length) {
+    toggleContext(state.context.at(-1), { force: false }); // apaga o último chip, como em campos de tags
+    return;
+  }
   if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
     event.preventDefault();
     if (!state.busy) ask(input.value);
@@ -747,9 +1026,5 @@ composer.addEventListener("submit", (event) => {
 marked.use({ gfm: true, breaks: false });
 updateSendState();
 loadCurriculum()
-  .then(() => {
-    restoreConversation();
-    document.fonts?.ready.then(() => drawEdges());
-  })
+  .then(() => { if (!restoreConversation()) renderEmpty(); })
   .catch((error) => toast(error.message));
-window.addEventListener("resize", () => drawEdges());

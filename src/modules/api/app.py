@@ -1,48 +1,62 @@
 import asyncio
 import json
-import uuid
 from contextlib import asynccontextmanager
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import AsyncIterator, Dict, Optional
+from typing import AsyncIterator, Dict, List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
+from src.modules.api.rate_limit import RateLimiter, client_ip
 from src.modules.knowledge.services.knowledge_base import get_knowledge_base
 from src.modules.response.services.chat_service import ChatSession
 from src.modules.shared.services.settings import get_settings
 
 STATIC_DIR = Path(__file__).parent / "static"
+MAX_HISTORY = 30  # mensagens anteriores reenviadas pelo navegador
+MAX_TEXT = 20_000  # caracteres por mensagem do histórico
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    get_knowledge_base()  # falha cedo se a ingestão não foi feita
+    get_knowledge_base()  # falha cedo se a base processada não existir
     yield
 
 
 app = FastAPI(title="PPChat API", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-
-@dataclass
-class SessionState:
-    chat: ChatSession
-    # Duas perguntas simultâneas na mesma sessão embaralhariam o histórico
-    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-    task: Optional[asyncio.Task] = None  # resposta em andamento, para o /cancel
+settings = get_settings()
+rate_limiter = RateLimiter(settings.rate_limit_per_hour, settings.global_rate_limit_per_hour)
+# Respostas em andamento, para o botão "parar"; só vivem durante a requisição
+running: Dict[str, asyncio.Task] = {}
 
 
-# Sessões em memória: suficiente para um processo único; troque por Redis/DB se escalar
-sessions: Dict[str, SessionState] = {}
+class HistoryTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    text: str = Field(max_length=MAX_TEXT)
+    disciplinas: List[str] = Field(default_factory=list, max_length=12)
 
 
 class ChatRequest(BaseModel):
-    question: str
-    session_id: Optional[str] = None
+    question: str = Field(min_length=1, max_length=4000)
+    # A API não guarda conversas: o navegador reenvia o histórico a cada pergunta
+    history: List[HistoryTurn] = Field(default_factory=list, max_length=MAX_HISTORY)
+    # Códigos das disciplinas selecionadas no chat; a ficha delas vai junto da pergunta
+    disciplinas: List[str] = Field(default_factory=list, max_length=12)
+    # Gerado pelo navegador para poder cancelar esta resposta em /chat/cancel/{request_id}
+    request_id: Optional[str] = Field(default=None, max_length=64)
+
+    @field_validator("history")
+    @classmethod
+    def alternating(cls, history: List[HistoryTurn]) -> List[HistoryTurn]:
+        roles = [turn.role for turn in history]
+        expected = ["user", "assistant"] * (len(roles) // 2)
+        if roles != expected:
+            raise ValueError("o histórico deve alternar user/assistant, começando por user")
+        return history
 
 
 class Usage(BaseModel):
@@ -54,23 +68,17 @@ class Usage(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    session_id: str
     answer: str
     usage: Optional[Usage] = None
 
 
-async def _acquire_session(session_id: Optional[str]) -> tuple[str, SessionState]:
-    if session_id is None:
-        session_id = str(uuid.uuid4())
-        sessions[session_id] = SessionState(chat=ChatSession())
-    elif session_id not in sessions:
-        raise HTTPException(status_code=404, detail="Sessão não encontrada")
+def _check_rate_limit(http_request: Request) -> None:
+    if error := rate_limiter.check(client_ip(http_request)):
+        raise HTTPException(status_code=429, detail=error)
 
-    state = sessions[session_id]
-    if state.lock.locked():
-        raise HTTPException(status_code=409, detail="Esta sessão ainda está respondendo")
-    await state.lock.acquire()  # livre: retorna na hora, sem ceder o loop
-    return session_id, state
+
+def _session(request: ChatRequest) -> ChatSession:
+    return ChatSession(history=[turn.model_dump() for turn in request.history])
 
 
 def _usage(session: ChatSession) -> Optional[Usage]:
@@ -86,31 +94,32 @@ def _usage(session: ChatSession) -> Optional[Usage]:
     )
 
 
-async def _stream_answer(state: SessionState, question: str, http_request: Request) -> AsyncIterator[str]:
+async def _stream_answer(request: ChatRequest, http_request: Request) -> AsyncIterator[str]:
     """Emite NDJSON: {"type": "thinking"} com o resumo do raciocínio, {"type": "text"} com a
     resposta, e por fim {"type": "done"} com o uso de tokens ou {"type": "error"}.
 
     A resposta roda numa task separada: cancelá-la (botão "parar" ou cliente desconectado)
     fecha a conexão com a API na hora, mesmo enquanto o modelo ainda está pensando.
     """
+    session = _session(request)
     events: asyncio.Queue = asyncio.Queue()
 
     async def produce():
         try:
-            async for kind, text in state.chat.stream_events(question):
+            async for kind, text in session.stream_events(request.question, request.disciplinas):
                 events.put_nowait({"type": kind, "text": text})
-            usage = _usage(state.chat)
+            usage = _usage(session)
             events.put_nowait({"type": "done", "usage": usage.model_dump() if usage else None})
         except asyncio.CancelledError:
-            pass  # a sessão já descartou a pergunta
+            pass
         except Exception as error:
             events.put_nowait({"type": "error", "message": str(error)})
         finally:
-            state.task = None
-            state.lock.release()
             events.put_nowait(None)
 
-    task = state.task = asyncio.create_task(produce())
+    task = asyncio.create_task(produce())
+    if request.request_id:
+        running[request.request_id] = task
     try:
         while True:
             try:
@@ -126,6 +135,8 @@ async def _stream_answer(state: SessionState, question: str, http_request: Reque
     finally:
         if not task.done():
             task.cancel()
+        if request.request_id:
+            running.pop(request.request_id, None)
 
 
 @app.get("/", include_in_schema=False)
@@ -142,7 +153,7 @@ def index() -> HTMLResponse:
 def pdf() -> FileResponse:
     # inline para o navegador abrir no visualizador e respeitar #page=N
     return FileResponse(
-        get_settings().pdf_path,
+        settings.pdf_path,
         media_type="application/pdf",
         headers={"Content-Disposition": "inline; filename=PPC.pdf"},
     )
@@ -156,7 +167,7 @@ def health() -> dict:
 
 @app.get("/curriculum")
 def curriculum() -> dict:
-    """Currículo estruturado + análise do grafo, para o mapa curricular do front."""
+    """Currículo estruturado + análise do grafo, para a árvore e a grade do front."""
     kb = get_knowledge_base()
     c, graph = kb.curriculo, kb.graph
     return {
@@ -176,30 +187,26 @@ def curriculum() -> dict:
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
-    session_id, state = await _acquire_session(request.session_id)
-    try:
-        answer = await state.chat.ask(request.question)
-    finally:
-        state.lock.release()
-    return ChatResponse(session_id=session_id, answer=answer, usage=_usage(state.chat))
+async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
+    _check_rate_limit(http_request)
+    session = _session(request)
+    answer = await session.ask(request.question, request.disciplinas)
+    return ChatResponse(answer=answer, usage=_usage(session))
 
 
 @app.post("/chat/stream")
 async def chat_stream(request: ChatRequest, http_request: Request) -> StreamingResponse:
-    session_id, state = await _acquire_session(request.session_id)
+    _check_rate_limit(http_request)
     return StreamingResponse(
-        _stream_answer(state, request.question, http_request),
+        _stream_answer(request, http_request),
         media_type="application/x-ndjson",
-        headers={"X-Session-Id": session_id},
+        # Desliga o buffer de proxies (nginx e afins) para o streaming chegar em tempo real
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
-@app.post("/chat/{session_id}/cancel", status_code=204)
-async def chat_cancel(session_id: str) -> None:
-    """Interrompe a resposta em andamento; a pergunta é descartada do histórico."""
-    if session_id not in sessions:
-        raise HTTPException(status_code=404, detail="Sessão não encontrada")
-    task = sessions[session_id].task
-    if task and not task.done():
+@app.post("/chat/cancel/{request_id}", status_code=204)
+async def chat_cancel(request_id: str) -> None:
+    """Interrompe a resposta em andamento (abortar o fetch nem sempre derruba a conexão)."""
+    if task := running.get(request_id):
         task.cancel()
