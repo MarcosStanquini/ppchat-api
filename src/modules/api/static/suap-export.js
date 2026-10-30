@@ -87,8 +87,10 @@
       .slice(0, 40)
       .map((t) => ({
         titulo: tableTitle(t).slice(0, 300),
+        // Células mescladas (colspan) são repetidas para o cabeçalho alinhar com as colunas dos dados:
+        // no Histórico, "Componentes" cobre Diário | Código | Descrição
         linhas: [...t.rows].slice(0, MAX_ROWS)
-          .map((tr) => [...tr.cells].map((cell) => clean(cell.textContent).slice(0, 500)))
+          .map((tr) => [...tr.cells].flatMap((cell) => Array(Math.min(cell.colSpan || 1, 6)).fill(clean(cell.textContent).slice(0, 500))))
           .filter((row) => row.some(Boolean)),
       }))
       .filter((t) => t.linhas.length);
@@ -121,7 +123,7 @@
         abas.push({ titulo: tab.label, tabelas: [], erro: error.message });
       }
     }
-    return { matricula, coletado_em: new Date().toISOString(), abas };
+    return { versao: 2, matricula, coletado_em: new Date().toISOString(), abas };
   }
 
   /* ── Envio ── */
