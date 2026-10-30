@@ -38,6 +38,7 @@ const state = {
   view: "tree",
   flowMode: "tree", // modo do Fluxograma: "tree" (Conexões) ou "grid" (Grade)
   trailSel: null, // parada selecionada na trilha do Meu percurso
+  meTab: "trail", // Meu percurso: "trail" (semestres) ou "acc" (atividades complementares)
 };
 
 /* ───────────── Utilidades ───────────── */
@@ -1587,6 +1588,7 @@ function renderMe() {
   const graded = done.map((d) => gradeValue(a.notas?.[d.codigo]?.nota)).filter((v) => !Number.isNaN(v));
   const acc = a.acc || {};
   trailStops = buildTrail(a);
+  const tab = acc.prevista ? state.meTab : "trail";
   const now = trailStops.find((s) => s.kind === "now");
   const end = trailStops.at(-1);
   const pct = done.length / all.length;
@@ -1609,16 +1611,22 @@ function renderMe() {
         <div class="pc-meter"><i style="--w:${pct * 100}%"></i></div>
       </div>
       <div class="pc-stats">
-        ${a.ira ? `<div><b>${escapeHtml(a.ira)}</b><span>I.R.A.</span></div>` : ""}
-        ${graded.length ? `<div><b>${fmtAvg(graded)}</b><span>média das notas</span></div>` : ""}
-        ${acc.prevista ? `<div class="is-acc"><b>${fmtH(acc.cumprida)}</b><span>de ${fmtH(acc.prevista)} complementares</span></div>` : ""}
+        ${a.ira ? `<div><b>${escapeHtml(a.ira)}</b><span>I.R.A.</span></div>`
+          : graded.length ? `<div><b>${fmtAvg(graded)}</b><span>média das notas</span></div>` : ""}
+        ${acc.prevista ? `<button class="is-acc" data-me-tab="acc"><b>${fmtH(acc.cumprida)}</b><span>de ${fmtH(acc.prevista)} complementares</span></button>` : ""}
         ${a.extensao ? `<div><b>${fmtH(a.extensao.cumprida)}</b><span>de ${fmtH(a.extensao.prevista)} de extensão curricular</span></div>` : ""}
       </div>
     </section>
 
     ${(a.versao || 1) < 2 ? `<div class="me-banner">Clique de novo no favorito <b>PPChat ← SUAP</b> com o SUAP aberto para trazer
-      as notas, os semestres e os requisitos de conclusão.</div>` : ""}
+      as notas, os semestres e as atividades complementares.</div>` : ""}
 
+    ${acc.prevista ? `<div class="segmented me-tabs" role="tablist">
+      <button role="tab" class="seg-mode${tab === "trail" ? " is-active" : ""}" data-me-tab="trail" aria-selected="${tab === "trail"}">Semestres</button>
+      <button role="tab" class="seg-mode${tab === "acc" ? " is-active" : ""}" data-me-tab="acc" aria-selected="${tab === "acc"}">Atividades complementares</button>
+    </div>` : ""}
+
+    ${tab === "acc" ? accHtml(a) : `
     <section class="trail-card">
       <div class="trail" id="trail">
         <svg class="trail-svg" id="trail-svg" aria-hidden="true"></svg>
@@ -1639,8 +1647,9 @@ function renderMe() {
       </div>
     </section>
 
-    <section class="stop-detail" id="stop-detail" aria-live="polite"></section>`;
+    <section class="stop-detail" id="stop-detail" aria-live="polite"></section>`}`;
 
+  if (tab !== "trail") return;
   layoutTrail();
   renderStop();
 }
@@ -1763,61 +1772,103 @@ function renderStop() {
     <div class="pc-courses">${stop.courses.map(course).join("")}</div>`;
 }
 
-// Última parada: o que falta além das disciplinas (requisitos do SUAP e atividades complementares)
+// Última parada: o que ainda falta além das disciplinas
 function graduationHtml(a, stop) {
   const all = state.curriculum.disciplinas.filter((d) => d.semestre);
   const left = all.filter((d) => a.status[d.codigo] !== "concluida").length;
   const acc = a.acc || {};
-  const reqs = (a.requisitos || []).filter((r) => !/^total/i.test(r.nome));
-  const isDenied = (l) => /n[aã]o/i.test(l.deferida);
-  const denied = (acc.lancamentos || []).filter(isDenied);
-  const shownLogs = (acc.lancamentos || []).filter((l) => state.settings.showDenied || !isDenied(l));
-  const tipos = (acc.tipos || []).filter((t) => t.max);
+  const accLeft = acc.prevista ? Math.max(0, acc.prevista - (acc.cumprida || 0)) : null;
+  const extLeft = a.extensao ? Math.max(0, a.extensao.prevista - a.extensao.cumprida) : null;
   return `
     <header class="sd-head">
       <span class="sd-num">${CAP_ICON}</span>
       <div class="sd-title"><p class="eyebrow">formatura</p><h4>Previsão: ${escapeHtml(stop.period)}</h4></div>
-      <div class="sd-facts">
-        <div><b>${left}</b><span>disciplina${left === 1 ? "" : "s"} a concluir</span></div>
-        ${acc.prevista ? `<div><b>${fmtH(Math.max(0, acc.prevista - (acc.cumprida || 0)))}</b><span>de complementares a fazer</span></div>` : ""}
-        ${a.extensao ? `<div><b>${fmtH(Math.max(0, a.extensao.prevista - a.extensao.cumprida))}</b><span>de extensão curricular a fazer</span></div>` : ""}
-      </div>
     </header>
-    <div class="grad-grid">
-      ${reqs.length ? `<article class="me-card">
-        <header><h4>Requisitos de conclusão</h4><span class="muted">do SUAP</span></header>
-        <ul class="req-list">${reqs.map((r) => {
-          const ok = /cumprid|conclu|ok\b/i.test(r.situacao) && !/n[aã]o|pendente/i.test(r.situacao);
-          return `<li class="${ok ? "is-ok" : ""}">
-            <div class="req-top"><span class="req-check">${ok ? ICON.check : ""}</span><b>${escapeHtml(r.nome)}</b>
-              <span class="req-sit">${escapeHtml(r.situacao || "")}</span></div>
-            ${r.prevista ? `${bar(r.cumprida || 0, r.prevista, ok ? "ok" : "")}
-              <div class="req-meta"><span>${fmtH(r.cumprida)} de ${fmtH(r.prevista)}</span>${r.pendente ? `<span>faltam ${fmtH(r.pendente)}</span>` : ""}</div>` : ""}
+    <p class="sd-note">O que ainda falta para se formar:</p>
+    <div class="grad-todo">
+      <div class="${left ? "" : "is-ok"}"><b>${left || ICON.check}</b><span>${left ? `disciplina${left === 1 ? "" : "s"} a concluir` : "disciplinas concluídas"}</span></div>
+      ${accLeft != null ? `<button class="${accLeft ? "is-acc" : "is-ok"}" data-me-tab="acc"><b>${accLeft ? fmtH(accLeft) : ICON.check}</b>
+        <span>${accLeft ? "de atividades complementares" : "atividades complementares"} →</span></button>` : ""}
+      ${extLeft != null ? `<div class="${extLeft ? "" : "is-ok"}"><b>${extLeft ? fmtH(extLeft) : ICON.check}</b><span>de extensão curricular (disciplinas Atividades de Extensão)</span></div>` : ""}
+    </div>`;
+}
+
+// Aba "Atividades complementares": total, limite por tipo e lançamentos por período
+function accHtml(a) {
+  const acc = a.acc || {};
+  const done = acc.cumprida || 0;
+  const left = Math.max(0, acc.prevista - done);
+  const pending = acc.cadastrada != null && acc.cadastrada > done ? acc.cadastrada - done : 0;
+  const isDenied = (l) => /n[aã]o/i.test(l.deferida);
+  const logs = acc.lancamentos || [];
+  const denied = logs.filter(isDenied);
+  const shown = logs.filter((l) => state.settings.showDenied || !isDenied(l));
+  const byPeriod = new Map();
+  for (const l of shown) {
+    const key = l.periodo || "Sem período";
+    byPeriod.has(key) ? byPeriod.get(key).push(l) : byPeriod.set(key, [l]);
+  }
+  const periods = [...byPeriod.keys()].sort().reverse();
+  const tipos = (acc.tipos || []).filter((t) => t.max).sort((x, y) => (y.contabilizada || 0) - (x.contabilizada || 0));
+  const pct = acc.prevista ? Math.min(1, done / acc.prevista) : 0;
+  const r = 70, c = 2 * Math.PI * r;
+  return `
+    <section class="acc-hero">
+      <svg class="acc-ring" viewBox="0 0 180 180" aria-hidden="true">
+        <circle cx="90" cy="90" r="${r}" class="acc-ring-bg"/>
+        <circle cx="90" cy="90" r="${r}" class="acc-ring-fg" style="--c:${c};--off:${c * (1 - pct)}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct)}"/>
+        <text x="90" y="88" class="acc-ring-val">${Math.round(done)} h</text>
+        <text x="90" y="110" class="acc-ring-sub">de ${Math.round(acc.prevista)} h</text>
+      </svg>
+      <div class="acc-hero-text">
+        <p class="eyebrow">Atividades complementares</p>
+        <h3>${left ? `Faltam <em>${fmtH(left)}</em>` : "Horas <em>completas</em>"}</h3>
+        <p class="muted">Contam atividades fora das disciplinas: iniciação científica, cursos, eventos, monitoria e ações de
+          extensão. As disciplinas Atividades de Extensão 1 a 4 não entram aqui.</p>
+        <div class="acc-chips">
+          <span class="st-badge st-concluida">${Math.round(pct * 100)}% cumprido</span>
+          ${pending ? `<span class="st-badge st-cursando">${fmtH(pending)} enviadas sem contar ainda</span>` : ""}
+          ${denied.length ? `<span class="st-badge st-reprovada">${denied.length} indeferida${denied.length === 1 ? "" : "s"}</span>` : ""}
+        </div>
+        <button class="btn btn-primary btn-sm" data-me="ask-acc">${ICON.ask}Como completar o que falta?</button>
+      </div>
+    </section>
+
+    <div class="acc-cols">
+      ${tipos.length ? `<article class="me-card">
+        <header><h4>Por tipo</h4><span class="muted">cada tipo tem um teto no curso</span></header>
+        <ul class="acc-tipos">${tipos.map((t) => {
+          const got = t.contabilizada || 0;
+          const room = Math.max(0, t.max - got);
+          return `<li>
+            <div class="acc-tipo-top"><span>${escapeHtml(t.tipo)}</span><b>${fmtH(got)}<small> / ${fmtH(t.max)}</small></b></div>
+            ${bar(got, t.max, room ? "acc" : "full")}
+            <small class="acc-room ${room ? "" : "is-full"}">${room ? `ainda cabem ${fmtH(room)}` : "teto atingido: novas horas desse tipo não contam"}</small>
           </li>`;
         }).join("")}</ul>
       </article>` : ""}
-      ${acc.prevista ? `<article class="me-card">
-        <header><h4>Atividades complementares</h4><span class="muted">${fmtH(acc.cumprida)} de ${fmtH(acc.prevista)}</span></header>
-        ${bar(acc.cumprida || 0, acc.prevista, "acc")}
-        ${tipos.length ? `<h5>Por tipo</h5><ul class="acc-types">${tipos.map((t) => `
-          <li><div class="acc-type-top"><span>${escapeHtml(t.tipo)}</span><span>${fmtH(t.contabilizada)} / ${fmtH(t.max)}</span></div>
-            ${bar(t.contabilizada || 0, t.max, (t.contabilizada || 0) >= t.max ? "full" : "acc")}</li>`).join("")}</ul>` : ""}
-        ${shownLogs.length || denied.length ? `<div class="acc-log-head"><h5>Lançamentos</h5>
-          ${denied.length && !state.settings.showDenied ? `<span class="muted small-note">${denied.length} indeferida(s) oculta(s) · ⚙ no topo</span>` : ""}</div>
-          <ul class="acc-log">${shownLogs.map((l) => `
-          <li class="${isDenied(l) ? "is-denied" : ""}">
-            <div><b>${escapeHtml(l.atividade)}</b><small>${escapeHtml(l.tipo)}${l.periodo ? ` · ${escapeHtml(l.periodo)}` : ""}</small>
-              ${l.razao ? `<p class="acc-reason">${escapeHtml(l.razao)}</p>` : ""}</div>
-            <span class="st-badge ${isDenied(l) ? "st-reprovada" : /sim/i.test(l.deferida) ? "st-concluida" : "st-cursando"}">
-              ${isDenied(l) ? "indeferida" : /sim/i.test(l.deferida) ? "deferida" : "em análise"}</span>
-          </li>`).join("")}</ul>` : ""}
+
+      ${logs.length ? `<article class="me-card">
+        <header><h4>Lançamentos</h4>
+          ${denied.length && !state.settings.showDenied ? `<span class="muted small-note">${denied.length} indeferida(s) oculta(s) · ⚙ no topo</span>` : `<span class="muted">${logs.length} no SUAP</span>`}</header>
+        ${periods.map((p) => `
+          <h5>${escapeHtml(p)}</h5>
+          <ul class="acc-log">${byPeriod.get(p).map((l) => `
+            <li class="${isDenied(l) ? "is-denied" : ""}">
+              <div><b>${escapeHtml(l.atividade)}</b><small>${escapeHtml(l.tipo)}</small>
+                ${l.razao ? `<p class="acc-reason">${escapeHtml(l.razao)}</p>` : ""}</div>
+              <span class="st-badge ${isDenied(l) ? "st-reprovada" : /sim/i.test(l.deferida) ? "st-concluida" : "st-cursando"}">
+                ${isDenied(l) ? "indeferida" : /sim/i.test(l.deferida) ? "deferida" : "em análise"}</span>
+            </li>`).join("")}</ul>`).join("") || '<p class="muted small-note">Nenhum lançamento para mostrar.</p>'}
       </article>` : ""}
     </div>`;
 }
 
-new ResizeObserver(() => { if (state.view === "me" && trailStops.length) layoutTrail({ animate: false }); }).observe($("#me"));
+new ResizeObserver(() => { if (state.view === "me" && $("#trail")) layoutTrail({ animate: false }); }).observe($("#me"));
 
 $("#me").addEventListener("click", (event) => {
+  const tab = event.target.closest("[data-me-tab]");
+  if (tab) { state.meTab = tab.dataset.meTab; return renderMe(); }
   const stop = event.target.closest("[data-stop]");
   if (stop) {
     state.trailSel = stop.dataset.stop;
@@ -1829,6 +1880,7 @@ $("#me").addEventListener("click", (event) => {
   if (goto) { setView("tree"); return focusTree(goto.dataset.goto, { push: true }); }
   const act = event.target.closest("[data-me]")?.dataset.me;
   if (act === "connect" || act === "update") { renderSuapModal(); suapModal.showModal(); }
+  else if (act === "ask-acc") { closeDrawer(); ask("Como posso completar as horas de atividades complementares que faltam, considerando o que já tenho e o limite de cada tipo?"); }
   else if (act === "ask") { closeDrawer(); ask("Faça um resumo do meu percurso no curso: o que já fiz, como estou indo e o que devo priorizar agora."); }
 });
 
