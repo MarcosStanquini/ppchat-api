@@ -73,12 +73,23 @@ function toast(message) {
 }
 
 /* ───────────── Tema ───────────── */
-$("#theme-toggle").addEventListener("click", () => {
+// Claro, escuro ou "sistema" (segue o sistema operacional; nada fica salvo)
+function syncThemeOptions() {
+  const current = document.documentElement.dataset.theme || "auto";
+  $$("[data-theme-opt]").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.themeOpt === current);
+    btn.setAttribute("aria-checked", btn.dataset.themeOpt === current);
+  });
+}
+$$("[data-theme-opt]").forEach((btn) => btn.addEventListener("click", () => {
   const root = document.documentElement;
-  const current = root.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  root.dataset.theme = current === "dark" ? "light" : "dark";
-  try { localStorage.setItem("ppchat-theme", root.dataset.theme); } catch {}
-});
+  const choice = btn.dataset.themeOpt;
+  if (choice === "auto") delete root.dataset.theme;
+  else root.dataset.theme = choice;
+  try { choice === "auto" ? localStorage.removeItem("ppchat-theme") : localStorage.setItem("ppchat-theme", choice); } catch {}
+  syncThemeOptions();
+}));
+syncThemeOptions();
 
 /* ───────────── Servidor acordando (plano grátis do Render) ───────────── */
 // O plano grátis dorme após 15 min sem uso; enquanto acorda, o proxy responde 502/503 ou derruba a conexão.
@@ -113,11 +124,6 @@ async function loadCurriculum() {
   data.disciplinas.forEach((d) => state.byCode.set(d.codigo, d));
 
   $("#course-name").textContent = "Engenharia de Software · IFSP São Carlos";
-  $("#stats").innerHTML = [
-    [data.disciplinas.length, "disciplinas"],
-    [data.duracao_semestres, "semestres"],
-    [hours(data.carga_horaria_total_curso), "no total"],
-  ].map(([value, label]) => `<span class="stat"><b>${value}</b>${label}</span>`).join("");
 
   renderGrid();
   renderRules();
@@ -148,6 +154,8 @@ function renderEmpty(eyebrow = "PPC · IFSP Câmpus São Carlos") {
       <h1>Pergunte qualquer coisa sobre <em>Engenharia de Software no IFSP.</em></h1>
       <p class="lede">Respostas baseadas no Projeto Pedagógico inteiro, com a página de cada informação.
         Digite <kbd>@</kbd> para colocar disciplinas no contexto da pergunta.</p>
+      <p class="course-facts"><span><b>${disciplinas.length}</b> disciplinas</span><span><b>${state.curriculum.duracao_semestres}</b> semestres</span>
+        <span><b>${hours(state.curriculum.carga_horaria_total_curso)}</b> de curso</span></p>
       <div class="suggestions">${items.map((item, i) => `
         <button class="suggestion" style="animation-delay:${80 + i * 60}ms" data-i="${i}">
           <span class="s-tag">${item.icon}${item.tag}</span>
@@ -330,8 +338,18 @@ function openDrawer(view = state.view, code) {
   // Com código, foca na disciplina; sem código, reabre no que estava (reaproveitando o desenho)
   if (view === "tree" && code && code !== state.focus) focusTree(code, { push: true });
 }
+// Marca no cabeçalho a seção aberta (Fluxograma ou Meu percurso)
+function syncNav() {
+  const open = drawer.classList.contains("is-open");
+  $$(".nav-btn[data-nav]").forEach((btn) => {
+    const active = open && btn.dataset.nav === (state.view === "me" ? "me" : "flow");
+    btn.classList.toggle("is-active", active);
+    active ? btn.setAttribute("aria-current", "page") : btn.removeAttribute("aria-current");
+  });
+}
 function closeDrawer() {
   drawer.classList.remove("is-open");
+  queueMicrotask(syncNav);
   drawer.setAttribute("aria-hidden", "true");
   $("#search-results").hidden = true;
 }
@@ -353,12 +371,13 @@ function setView(view) {
   $("#view-tree").classList.toggle("is-visible", view === "tree");
   $("#view-grid").classList.toggle("is-visible", view === "grid");
   $("#view-me").classList.toggle("is-visible", view === "me");
+  syncNav();
   $(".drawer-actions").hidden = view === "me"; // busca, modo e regras são do fluxograma
   if (view === "me") renderMe();
   if (view === "tree" && !$(".node", $("#tree-inner"))) showTree(state.focus); // primeiro desenho
 }
 
-$("#open-structure").addEventListener("click", () => openDrawer());
+$("#open-structure").addEventListener("click", () => openDrawer("flow"));
 $("#close-drawer").addEventListener("click", closeDrawer);
 $$(".seg").forEach((seg) => seg.addEventListener("click", () => setView(seg.dataset.view)));
 $$(".seg-mode").forEach((btn) => btn.addEventListener("click", () => setView(btn.dataset.mode)));
@@ -1414,9 +1433,8 @@ function setAluno(aluno) {
   state.aluno = aluno;
   if (aluno) aluno.contexto = alunoContext(aluno);
   aluno ? storage.set(ALUNO_KEY, aluno) : storage.remove(ALUNO_KEY);
-  const label = $("#suap-btn-label");
-  label.textContent = aluno ? "SUAP conectado" : "Conectar SUAP";
-  $("#suap-btn").classList.toggle("is-connected", !!aluno);
+  $("#suap-status").classList.toggle("is-on", !!aluno);
+  $("#suap-status").title = aluno ? "SUAP conectado" : "SUAP não conectado";
   if ($(".node", $("#tree-inner"))) { renderTree({ animate: false }); renderInfo(state.focus); }
   if ($("#empty")) renderEmpty();
   renderGrid();
@@ -1930,12 +1948,8 @@ function renderSuapModal() {
     <div class="info-actions"><button class="btn" data-act="remove-aluno">Remover meus dados deste navegador</button></div>`;
 }
 
-// Conectado: o botão leva ao "Meu percurso"; sem dados, abre as instruções do bookmarklet
-$("#suap-btn").addEventListener("click", () => {
-  if (state.aluno) return openDrawer("me");
-  renderSuapModal();
-  suapModal.showModal();
-});
+// Sem dados, o Meu percurso mostra como conectar o SUAP
+$("#suap-btn").addEventListener("click", () => openDrawer("me"));
 suapModal.addEventListener("click", async (event) => {
   if (event.target === suapModal || event.target.closest("[data-close]")) return suapModal.close();
   if (event.target.closest(".bookmarklet")) {
