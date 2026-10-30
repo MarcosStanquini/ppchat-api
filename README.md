@@ -87,7 +87,7 @@ Ao rodar `serve`, abra <http://localhost:8000>. Não há build nem login: é HTM
     disciplinas, notas e frequência; a formatura mostra os requisitos e as atividades complementares.
   - Busca e o modal "Regras do curso".
 - **Conversas:** lista lateral com as conversas salvas só no navegador (título automático pela primeira pergunta,
-  renomear e apagar); no celular abre pelo botão ao lado do logo. "Novo chat" começa outra sem perder as antigas.
+  renomear e apagar); com a marca e o "Novo chat" no topo, como a do ChatGPT. Fechada, o cabeçalho mostra o botão de abrir, a marca e o novo chat; no celular ela abre por cima.
 - **Detalhes:** botão para parar a resposta e menu Ajustes (tema claro/escuro/sistema, opções de exibição e o PDF do PPC).
 
 ### API
