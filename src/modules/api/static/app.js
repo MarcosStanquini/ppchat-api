@@ -1181,7 +1181,7 @@ const STATUS_TEXT = {
   liberada: "Pré-requisitos cumpridos: você já pode cursar.",
 };
 const SITUACOES = [
-  [/aprovad|dispensad|aproveitament|cumprid|conclu[ií]d/i, "concluida"],
+  [/aprovad|dispensad|aproveit|cumprid|conclu[ií]d/i, "concluida"], // SUAP: "Aproveit. Disciplina"
   [/cursando|matriculad|em curso/i, "cursando"],
   [/reprovad/i, "reprovada"],
 ];

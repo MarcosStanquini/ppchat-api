@@ -47,7 +47,8 @@
 
   /* ── Leitura ── */
   async function getDoc(url) {
-    const response = await fetch(url, { credentials: "same-origin" });
+    // HX-Request: as abas do SUAP são fragmentos htmx e o servidor espera esse cabeçalho
+    const response = await fetch(url, { credentials: "same-origin", headers: { "HX-Request": "true" } });
     if (/\/accounts\/login\//.test(response.url)) throw new Error("Você não está logado no SUAP. Entre e clique no favorito de novo.");
     if (!response.ok) throw new Error(`O SUAP respondeu ${response.status} em ${url}`);
     return new DOMParser().parseFromString(await response.text(), "text/html");
@@ -97,11 +98,16 @@
     const matricula = await findStudent();
     const base = `/edu/aluno/${encodeURIComponent(matricula)}/`;
     const page = await getDoc(base);
-    // Descobre as abas pelos próprios links da página (o SUAP pode mudar os nomes dos parâmetros)
+    // Descobre as abas pelos próprios elementos da página. No SUAP do IFSP cada aba é carregada por htmx
+    // (data-tab-name + hx-get="/edu/aluno/<matrícula>/historico/"); links "?tab=" ficam como alternativa
+    const candidates = [
+      ...[...page.querySelectorAll("[data-tab-name][hx-get]")].map((el) => [el, el.getAttribute("hx-get")]),
+      ...[...page.querySelectorAll('a[href*="tab="]')].map((el) => [el, el.getAttribute("href")]),
+    ];
     const tabs = [];
     for (const [pattern, label] of WANTED) {
-      const link = [...page.querySelectorAll('a[href*="tab="]')].find((a) => pattern.test(clean(a.textContent)));
-      if (link && !tabs.some((t) => t.label === label)) tabs.push({ label, url: new URL(link.getAttribute("href"), location.origin + base).href });
+      const hit = candidates.find(([el]) => pattern.test(clean(el.textContent)));
+      if (hit && !tabs.some((t) => t.label === label)) tabs.push({ label, url: new URL(hit[1], location.origin + base).href });
     }
     if (!tabs.length) tabs.push({ label: "Página do aluno", url: location.origin + base });
 
