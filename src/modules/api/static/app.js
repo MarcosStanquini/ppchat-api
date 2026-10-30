@@ -1551,6 +1551,9 @@ function renderMe() {
   const room = tipos.filter((t) => t.folga > 0).sort((x, y) => y.folga - x.folga);
   const roomTotal = room.reduce((s, t) => s + t.folga, 0);
   const denied = (acc.lancamentos || []).filter((l) => /n[aã]o/i.test(l.deferida));
+  // O SUAP traz uma linha "TOTAL:" na tabela de requisitos: vira o resumo do card
+  const reqs = (a.requisitos || []).filter((r) => !/^total/i.test(r.nome));
+  const reqTotal = (a.requisitos || []).find((r) => /^total/i.test(r.nome));
 
   box.innerHTML = `
     <section class="me-hero">
@@ -1580,10 +1583,11 @@ function renderMe() {
 
     <div class="me-grid">
       <div class="me-col">
-        ${a.requisitos?.length ? `
+        ${reqs.length ? `
         <article class="me-card">
-          <header><h4>Para se formar</h4><span class="muted">requisitos do SUAP</span></header>
-          <ul class="req-list">${a.requisitos.map((r) => {
+          <header><h4>Para se formar</h4><span class="muted">${reqTotal?.prevista ? `${fmtH(reqTotal.cumprida)} de ${fmtH(reqTotal.prevista)} no total` : "requisitos do SUAP"}</span></header>
+          ${reqTotal?.prevista ? bar(reqTotal.cumprida || 0, reqTotal.prevista, "ok") : ""}
+          <ul class="req-list">${reqs.map((r) => {
             const ok = /cumprid|conclu|ok\b/i.test(r.situacao) && !/n[aã]o|pendente/i.test(r.situacao);
             return `<li class="${ok ? "is-ok" : ""}">
               <div class="req-top"><span class="req-check">${ok ? ICON.check : ""}</span><b>${escapeHtml(r.nome)}</b>
