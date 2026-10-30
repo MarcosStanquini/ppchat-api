@@ -76,7 +76,7 @@ Ao rodar `serve`, abra <http://localhost:8000>. Não há build nem login: é HTM
   junto da pergunta.
 - **Citações clicáveis:** `[Página N]` vira um chip que abre o PDF naquela página; códigos como `SCLPROO`
   abrem a árvore da disciplina.
-- **Estrutura curricular** (botão no topo, em tela cheia):
+- **Estrutura curricular** (botões Fluxograma e Meu percurso no topo, em tela cheia):
   - **Fluxograma**, em dois modos:
     - **Conexões:** a disciplina em foco fica no centro, o que vem antes ramifica para a esquerda (azul, em camadas
       "logo antes", "2 etapas antes"…) e o que ela libera ramifica para a direita (laranja). Clicar num nó
@@ -86,7 +86,7 @@ Ao rodar `serve`, abra <http://localhost:8000>. Não há build nem login: é HTM
     até a formatura (pelos pré-requisitos e pelo semestre de oferta na matriz). Clicar num semestre mostra as
     disciplinas, notas e frequência; a formatura mostra os requisitos e as atividades complementares.
   - Busca e o modal "Regras do curso".
-- **Detalhes:** botão para parar a resposta, conversa salva no navegador e tema claro/escuro.
+- **Detalhes:** botão para parar a resposta, conversa salva no navegador e menu Ajustes (tema claro/escuro/sistema, opções de exibição e o PDF do PPC).
 
 ### API
 
