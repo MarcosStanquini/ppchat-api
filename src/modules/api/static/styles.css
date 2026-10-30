@@ -1048,3 +1048,11 @@ button.crumb svg { width: 14px; height: 14px; }
 @media (prefers-reduced-motion: reduce) { .donut-done { animation: none; } }
 
 .acc-hero { margin-top: 16px; padding: 22px 26px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow-sm); }
+
+/* Ajustes: apagar dados do SUAP (dois cliques) */
+button.menu-row { width: 100%; border: 0; background: none; text-align: left; font: inherit; color: inherit; }
+.menu-row.danger svg { color: var(--lvl-adv); }
+.menu-row .when-confirm { display: none; }
+.menu-row.is-confirming { background: color-mix(in oklab, var(--lvl-adv) 12%, transparent); }
+.menu-row.is-confirming .when-idle { display: none; }
+.menu-row.is-confirming .when-confirm { display: inline; color: var(--lvl-adv); }
