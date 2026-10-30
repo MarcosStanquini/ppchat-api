@@ -3,7 +3,7 @@
 const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 const SVG_NS = "http://www.w3.org/2000/svg";
-const STORE_KEY = "ppchat-conversation-v1";
+const STORE_KEY = "ppchat-conversation-v1"; // formato antigo, de uma conversa só (migrado para a lista)
 const MAX_CONTEXT = 12;
 const LOGO = '<svg viewBox="0 0 24 24"><path d="M6 8h12M6 12h7M6 16h9"/></svg>';
 const ICON = {
@@ -948,7 +948,6 @@ function setBusy(busy) {
   updateSendState();
 }
 function updateSendState() { $("#send").disabled = !state.busy && !input.value.trim(); }
-const persist = () => storage.set(STORE_KEY, { history: state.history });
 const MAX_HISTORY = 30; // igual ao limite da API
 
 // O servidor não guarda conversas: cada pergunta leva as últimas trocas completas
@@ -1086,10 +1085,60 @@ async function ask(question) {
   }
 }
 
-function restoreConversation() {
-  const saved = storage.get(STORE_KEY);
-  if (!saved?.history?.length) return false;
-  state.history = saved.history;
+/* ───────────── Conversas salvas (só no navegador) ───────────── */
+const CONVS_KEY = "ppchat-conversations-v1";
+const MAX_CONVS = 60;
+const conversations = { list: [] }; // {id, title, updated, history}, da mais recente para a mais antiga
+state.convId = null;
+
+const newConvId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+const titleFrom = (text) => {
+  const t = text.replace(/\s+/g, " ").trim();
+  return t.length > 60 ? `${t.slice(0, 57).trimEnd()}…` : t;
+};
+
+function loadConversations() {
+  const saved = storage.get(CONVS_KEY);
+  conversations.list = Array.isArray(saved?.list) ? saved.list : [];
+  state.convId = saved?.current && conversations.list.some((c) => c.id === saved.current) ? saved.current : null;
+  // A versão antiga guardava uma conversa só: vira a primeira da lista
+  const legacy = storage.get(STORE_KEY);
+  if (legacy?.history?.length) {
+    const conv = { id: newConvId(), title: titleFrom(legacy.history[0].text), updated: Date.now(), history: legacy.history };
+    conversations.list.unshift(conv);
+    state.convId = conv.id;
+    storage.remove(STORE_KEY);
+    saveConversations();
+  }
+}
+function saveConversations() {
+  // Sem espaço no navegador: descarta as conversas mais antigas até caber
+  for (;;) {
+    try {
+      localStorage.setItem(CONVS_KEY, JSON.stringify({ current: state.convId, list: conversations.list }));
+      return;
+    } catch {
+      if (conversations.list.length <= 1) return;
+      conversations.list.pop();
+    }
+  }
+}
+
+// Chamado depois de cada troca completa: cria a conversa na primeira pergunta e a leva para o topo
+function persist() {
+  let conv = conversations.list.find((c) => c.id === state.convId);
+  if (!conv) {
+    conv = { id: newConvId(), title: titleFrom(state.history[0].text), history: [] };
+    state.convId = conv.id;
+  }
+  conv.history = state.history;
+  conv.updated = Date.now();
+  conversations.list = [conv, ...conversations.list.filter((c) => c !== conv)].slice(0, MAX_CONVS);
+  saveConversations();
+  renderConversations();
+}
+
+function renderHistory() {
   messagesEl.innerHTML = "";
   for (const entry of state.history) {
     if (entry.role === "user") addUserMessage(entry.text, entry.disciplinas || []);
@@ -1101,19 +1150,144 @@ function restoreConversation() {
     }
   }
   scrollToBottom(true);
-  return true;
 }
 
-$("#new-chat").addEventListener("click", () => {
+function openConversation(id) {
+  const conv = conversations.list.find((c) => c.id === id);
+  if (!conv) return;
   stopAnswer();
+  state.convId = id;
+  state.history = conv.history;
+  state.context = [];
+  renderContext();
+  renderHistory();
+  saveConversations();
+  renderConversations();
+  closeDrawer();
+  closeSidebarOnMobile();
+}
+
+function startNewConversation() {
+  stopAnswer();
+  state.convId = null;
   state.history = [];
   state.context = [];
-  storage.remove(STORE_KEY);
+  saveConversations();
   renderContext();
   renderEmpty("Nova conversa");
+  renderConversations();
   closeDrawer();
+  closeSidebarOnMobile();
   input.focus();
+}
+
+function deleteConversation(id) {
+  conversations.list = conversations.list.filter((c) => c.id !== id);
+  if (id === state.convId) startNewConversation();
+  else { saveConversations(); renderConversations(); }
+}
+
+function renameConversation(id, title) {
+  const conv = conversations.list.find((c) => c.id === id);
+  if (conv && title.trim()) conv.title = titleFrom(title);
+  saveConversations();
+  renderConversations();
+}
+
+// Agrupa por data, como os apps de chat: hoje, ontem, últimos 7 dias, mais antigas
+function convGroup(ts) {
+  const day = 86_400_000;
+  const startToday = new Date().setHours(0, 0, 0, 0);
+  if (ts >= startToday) return "Hoje";
+  if (ts >= startToday - day) return "Ontem";
+  if (ts >= startToday - 7 * day) return "Últimos 7 dias";
+  return "Mais antigas";
+}
+
+function renderConversations() {
+  const list = $("#conv-list");
+  if (!conversations.list.length) {
+    list.innerHTML = '<p class="conv-empty">Suas conversas aparecem aqui para você voltar a elas depois.</p>';
+    return;
+  }
+  let html = "", last = "";
+  for (const c of conversations.list) {
+    const group = convGroup(c.updated);
+    if (group !== last) { html += `<p class="conv-group">${group}</p>`; last = group; }
+    const active = c.id === state.convId;
+    html += `
+      <div class="conv ${active ? "is-active" : ""}" data-conv="${c.id}">
+        <button class="conv-open" data-act="open" title="${escapeHtml(c.title)}"${active ? ' aria-current="true"' : ""}>${escapeHtml(c.title)}</button>
+        <span class="conv-actions">
+          <button class="conv-btn" data-act="rename" title="Renomear" aria-label="Renomear conversa">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+          <button class="conv-btn conv-del" data-act="delete" title="Apagar" aria-label="Apagar conversa">
+            <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Apagar?</span></button>
+        </span>
+      </div>`;
+  }
+  list.innerHTML = html;
+}
+
+$("#conv-list").addEventListener("click", (event) => {
+  const row = event.target.closest("[data-conv]");
+  const btn = event.target.closest("[data-act]");
+  if (!row || !btn) return;
+  const id = row.dataset.conv;
+  const act = btn.dataset.act;
+  if (act === "open") return openConversation(id);
+  if (act === "delete") {
+    // Dois cliques para apagar, sem caixa de diálogo
+    if (!row.classList.contains("is-confirming")) {
+      $$(".conv.is-confirming").forEach((r) => r.classList.remove("is-confirming"));
+      row.classList.add("is-confirming");
+      btn.setAttribute("aria-label", "Clique de novo para apagar");
+      return;
+    }
+    return deleteConversation(id);
+  }
+  if (act === "rename") {
+    const conv = conversations.list.find((c) => c.id === id);
+    const field = document.createElement("input");
+    field.className = "conv-rename";
+    field.value = conv.title;
+    field.setAttribute("aria-label", "Novo nome da conversa");
+    row.replaceChildren(field);
+    field.focus();
+    field.select();
+    let done = false;
+    const finish = (save) => {
+      if (done) return;
+      done = true;
+      save ? renameConversation(id, field.value) : renderConversations();
+    };
+    field.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") finish(true);
+      if (e.key === "Escape") { e.stopPropagation(); finish(false); }
+    });
+    field.addEventListener("blur", () => finish(true));
+  }
 });
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".conv.is-confirming")) $$(".conv.is-confirming").forEach((r) => r.classList.remove("is-confirming"));
+});
+
+/* Lista lateral: coluna no computador (pode esconder), gaveta por cima no celular */
+const SIDEBAR_KEY = "ppchat-sidebar";
+const isMobile = () => matchMedia("(max-width: 900px)").matches;
+function setSidebar(open) {
+  document.body.classList.toggle("sidebar-open", open);
+  $("#sidebar-toggle").setAttribute("aria-expanded", open);
+  $("#sidebar-scrim").hidden = !(open && isMobile());
+  if (!isMobile()) storage.set(SIDEBAR_KEY, open);
+}
+function closeSidebarOnMobile() { if (isMobile()) setSidebar(false); }
+$("#sidebar-toggle").addEventListener("click", () => setSidebar(!document.body.classList.contains("sidebar-open")));
+$("#sidebar-close").addEventListener("click", () => setSidebar(false));
+$("#sidebar-scrim").addEventListener("click", () => setSidebar(false));
+setSidebar(!isMobile() && storage.get(SIDEBAR_KEY) !== false);
+
+$("#new-chat").addEventListener("click", startNewConversation);
 
 /* Composer */
 function autosize() {
@@ -1956,7 +2130,10 @@ loadCurriculum()
   .then(() => {
     const saved = storage.get(ALUNO_KEY);
     if (saved?.status) setAluno(saved);
-    if (!restoreConversation()) renderEmpty();
+    loadConversations();
+    const current = conversations.list.find((c) => c.id === state.convId);
+    if (current) { state.history = current.history; renderHistory(); } else renderEmpty();
+    renderConversations();
     importFromHash();
   })
   .catch((error) => toast(error.message));

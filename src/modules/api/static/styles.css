@@ -1012,7 +1012,7 @@ button.crumb svg { width: 14px; height: 14px; }
   #new-chat { margin-left: 0; padding: 0 10px; }
   .nav-btn { padding: 0 10px; }
   .nav-status { position: absolute; top: 6px; right: 6px; }
-  .brand-text span { display: none; }
+  .brand-text { display: none; }
   .settings-pop { position: fixed; left: 12px; right: 12px; top: calc(var(--topbar-h, 61px) + 6px); width: auto; max-height: calc(100vh - var(--topbar-h, 61px) - 20px); overflow-y: auto; }
 }
 
@@ -1049,6 +1049,52 @@ button.crumb svg { width: 14px; height: 14px; }
 
 .acc-hero { margin-top: 16px; padding: 22px 26px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow-sm); }
 
+/* ───────────── Conversas (lista lateral) ───────────── */
+.workspace { flex: 1; min-height: 0; display: flex; position: relative; }
+.workspace .chat { min-width: 0; }
+.sidebar {
+  width: 0; flex: none; display: flex; flex-direction: column; overflow: hidden;
+  border-right: 1px solid transparent; background: color-mix(in oklab, var(--surface) 55%, transparent);
+  transition: width .2s ease, border-color .2s;
+}
+body.sidebar-open .sidebar { width: 268px; border-right-color: var(--line); }
+.sidebar > * { min-width: 268px; }
+.sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 12px 6px 18px; }
+.sidebar-head b { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.sidebar-close { display: none; }
+.conv-list { flex: 1; overflow-y: auto; padding: 4px 10px 12px; }
+.conv-group { margin: 14px 8px 4px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.conv-group:first-child { margin-top: 4px; }
+.conv-empty { margin: 8px; font-size: 13px; color: var(--muted); }
+.conv { position: relative; display: flex; align-items: center; border-radius: 10px; transition: background .12s; }
+.conv:hover, .conv:focus-within { background: var(--surface); }
+.conv.is-active { background: var(--surface); box-shadow: var(--shadow-sm); }
+.conv.is-active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--accent); }
+.conv-open {
+  flex: 1; min-width: 0; padding: 9px 10px 9px 12px; border: 0; background: none; text-align: left;
+  font-size: 13.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.conv.is-active .conv-open { color: var(--ink); font-weight: 600; }
+.conv-actions { display: none; gap: 2px; padding-right: 4px; }
+.conv:hover .conv-actions, .conv:focus-within .conv-actions, .conv.is-confirming .conv-actions { display: flex; }
+.conv-btn {
+  display: inline-flex; align-items: center; gap: 4px; height: 28px; min-width: 28px; justify-content: center; padding: 0 6px;
+  border: 0; border-radius: 7px; background: transparent; color: var(--muted);
+}
+.conv-btn svg { width: 15px; height: 15px; }
+.conv-btn:hover { background: var(--surface-2); color: var(--ink); }
+.conv-del span { display: none; font-size: 12px; font-weight: 600; }
+.conv.is-confirming .conv-del { background: color-mix(in oklab, var(--lvl-adv) 16%, transparent); color: var(--lvl-adv); }
+.conv.is-confirming .conv-del span { display: inline; }
+.conv.is-confirming .conv-btn[data-act="rename"] { display: none; }
+.conv-rename {
+  flex: 1; margin: 3px; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--accent);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 13.5px; outline: none;
+}
+.sidebar-note { margin: 0; padding: 10px 18px 14px; font-size: 11.5px; color: var(--muted); border-top: 1px solid var(--line); }
+.sidebar-scrim { display: none; }
+.sidebar-toggle { margin-right: -8px; }
+
 /* Ajustes: apagar dados do SUAP (dois cliques) */
 button.menu-row { width: 100%; border: 0; background: none; text-align: left; font: inherit; color: inherit; }
 .menu-row.danger svg { color: var(--lvl-adv); }
@@ -1056,3 +1102,16 @@ button.menu-row { width: 100%; border: 0; background: none; text-align: left; fo
 .menu-row.is-confirming { background: color-mix(in oklab, var(--lvl-adv) 12%, transparent); }
 .menu-row.is-confirming .when-idle { display: none; }
 .menu-row.is-confirming .when-confirm { display: inline; color: var(--lvl-adv); }
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed; z-index: 45; top: 0; bottom: 0; left: 0; width: min(300px, 86vw) !important;
+    background: var(--surface); border-right: 1px solid var(--line); box-shadow: var(--shadow-lg);
+    transform: translateX(-102%); transition: transform .22s ease;
+  }
+  body.sidebar-open .sidebar { transform: none; }
+  .sidebar > * { min-width: 0; }
+  .sidebar-close { display: inline-grid; }
+  .sidebar-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / .35); }
+  .conv-actions { display: flex; }
+}

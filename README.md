@@ -86,6 +86,8 @@ Ao rodar `serve`, abra <http://localhost:8000>. Não há build nem login: é HTM
     até a formatura (pelos pré-requisitos e pelo semestre de oferta na matriz). Clicar num semestre mostra as
     disciplinas, notas e frequência; a formatura mostra os requisitos e as atividades complementares.
   - Busca e o modal "Regras do curso".
+- **Conversas:** lista lateral com as conversas salvas só no navegador (título automático pela primeira pergunta,
+  renomear e apagar); no celular abre pelo botão ao lado do logo. "Novo chat" começa outra sem perder as antigas.
 - **Detalhes:** botão para parar a resposta, conversa salva no navegador e menu Ajustes (tema claro/escuro/sistema, opções de exibição e o PDF do PPC).
 
 ### API
