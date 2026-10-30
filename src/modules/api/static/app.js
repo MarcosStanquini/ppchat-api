@@ -1424,6 +1424,8 @@ const SETTING_INPUTS = { grades: "#opt-grades", progress: "#opt-progress", showD
 
 function renderSettings() {
   const connected = !!state.aluno;
+  $("#clear-suap").hidden = !connected;
+  $("#clear-suap").classList.remove("is-confirming");
   for (const [key, sel] of Object.entries(SETTING_INPUTS)) {
     $(sel).checked = !!state.settings[key];
     $(sel).disabled = !connected;
@@ -1450,6 +1452,14 @@ document.addEventListener("click", (event) => {
 for (const [key, sel] of Object.entries(SETTING_INPUTS)) {
   $(sel).addEventListener("change", (event) => setSetting(key, event.target.checked));
 }
+// Apagar os dados do SUAP deste navegador: dois cliques, sem caixa de diálogo
+$("#clear-suap").addEventListener("click", (event) => {
+  const btn = event.currentTarget;
+  if (!btn.classList.contains("is-confirming")) { btn.classList.add("is-confirming"); return; }
+  setAluno(null);
+  $("#tree-settings").hidden = true;
+  toast("Dados do SUAP apagados deste navegador.");
+});
 
 const gradeValue = (nota) => Number(String(nota).replace(",", "."));
 const gradeClass = (nota) => {
@@ -1763,9 +1773,11 @@ function accHtml(a) {
   const acc = a.acc || {};
   const done = acc.cumprida || 0;
   const left = Math.max(0, acc.prevista - done);
-  const pending = acc.cadastrada != null && acc.cadastrada > done ? acc.cadastrada - done : 0;
   const isDenied = (l) => /n[aã]o/i.test(l.deferida);
   const logs = acc.lancamentos || [];
+  // Em análise = lançamentos ainda sem decisão (nem deferidos nem indeferidos); as horas vêm no fim do tipo ("…/24,00")
+  const pending = logs.filter((l) => !isDenied(l) && !/sim/i.test(l.deferida))
+    .reduce((sum, l) => sum + (parseHours(l.tipo.split("/").pop()) || 0), 0);
   const denied = logs.filter(isDenied);
   const shown = logs.filter((l) => state.settings.showDenied || !isDenied(l));
   const byPeriod = new Map();
