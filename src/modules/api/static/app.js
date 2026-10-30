@@ -1194,26 +1194,14 @@ function renameConversation(id, title) {
   renderConversations();
 }
 
-// Agrupa por data, como os apps de chat: hoje, ontem, últimos 7 dias, mais antigas
-function convGroup(ts) {
-  const day = 86_400_000;
-  const startToday = new Date().setHours(0, 0, 0, 0);
-  if (ts >= startToday) return "Hoje";
-  if (ts >= startToday - day) return "Ontem";
-  if (ts >= startToday - 7 * day) return "Últimos 7 dias";
-  return "Mais antigas";
-}
-
 function renderConversations() {
   const list = $("#conv-list");
   if (!conversations.list.length) {
     list.innerHTML = '<p class="conv-empty">Suas conversas aparecem aqui para você voltar a elas depois.</p>';
     return;
   }
-  let html = "", last = "";
+  let html = "";
   for (const c of conversations.list) {
-    const group = convGroup(c.updated);
-    if (group !== last) { html += `<p class="conv-group">${group}</p>`; last = group; }
     const active = c.id === state.convId;
     html += `
       <div class="conv ${active ? "is-active" : ""}" data-conv="${c.id}">
@@ -1272,7 +1260,7 @@ document.addEventListener("click", (event) => {
   if (!event.target.closest(".conv.is-confirming")) $$(".conv.is-confirming").forEach((r) => r.classList.remove("is-confirming"));
 });
 
-/* Lista lateral: coluna no computador (pode esconder), gaveta por cima no celular */
+/* Barra lateral: coluna no computador (pode fechar), gaveta por cima no celular */
 const SIDEBAR_KEY = "ppchat-sidebar";
 const isMobile = () => matchMedia("(max-width: 900px)").matches;
 function setSidebar(open) {
@@ -1288,6 +1276,7 @@ $("#sidebar-scrim").addEventListener("click", () => setSidebar(false));
 setSidebar(!isMobile() && storage.get(SIDEBAR_KEY) !== false);
 
 $("#new-chat").addEventListener("click", startNewConversation);
+$("#new-chat-mini").addEventListener("click", startNewConversation);
 
 /* Composer */
 function autosize() {
