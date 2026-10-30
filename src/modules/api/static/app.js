@@ -28,7 +28,7 @@ const state = {
   byCode: new Map(),
   requestId: null, // resposta em andamento, para o botão "parar"
   aluno: null, // dados importados do SUAP: {matricula, coletado_em, status: {codigo: situação}, contexto}
-  settings: { grades: false, progress: true }, // engrenagem da árvore (salvo no navegador)
+  settings: { grades: false, progress: true, showDenied: false }, // preferências de exibição (salvas no navegador)
   history: [], // {role: "user", text, disciplinas} | {role: "assistant", text, thinking?, usage?, stopped?}
   context: [], // disciplinas selecionadas para a próxima pergunta
   busy: false,
@@ -121,7 +121,7 @@ async function loadCurriculum() {
 }
 
 /* ───────────── Estado vazio ───────────── */
-function renderEmpty(eyebrow = "Seu PPC, em conversa") {
+function renderEmpty(eyebrow = "PPC · IFSP Câmpus São Carlos") {
   const { disciplinas, gargalos } = state.curriculum;
   const deepest = [...disciplinas].sort((a, b) => b.profundidade - a.profundidade || b.indice_complexidade - a.indice_complexidade)
     .find((d) => d.tipo === "obrigatoria" && !/extens/i.test(d.nome)) || disciplinas[0];
@@ -142,7 +142,7 @@ function renderEmpty(eyebrow = "Seu PPC, em conversa") {
   $("#messages").innerHTML = `
     <div class="empty" id="empty">
       <p class="eyebrow">${eyebrow}</p>
-      <h1>Pergunte qualquer coisa <em>sobre o seu curso.</em></h1>
+      <h1>Pergunte qualquer coisa sobre <em>Engenharia de Software no IFSP.</em></h1>
       <p class="lede">Respostas baseadas no Projeto Pedagógico inteiro, com a página de cada informação.
         Digite <kbd>@</kbd> para colocar disciplinas no contexto da pergunta.</p>
       <div class="suggestions">${items.map((item, i) => `
@@ -1390,7 +1390,7 @@ function alunoContext(aluno) {
     aluno.ira ? `I.R.A. (índice de rendimento acadêmico): ${aluno.ira}` : "",
     aluno.acc.prevista ? `Atividades complementares: ${aluno.acc.cumprida ?? "?"} h cumpridas de ${aluno.acc.prevista} h exigidas.` : "",
     aluno.acc.tipos?.length ? `Horas por tipo de atividade complementar (contabilizada/máximo no curso): ${aluno.acc.tipos.map((t) => `${t.tipo}: ${t.contabilizada}/${t.max ?? "?"} h`).join("; ")}` : "",
-    aluno.extensao ? `Atividades curriculares de extensão: ${aluno.extensao.cumprida} h de ${aluno.extensao.prevista} h.` : "",
+    aluno.extensao ? `Carga horária de extensão curricular (disciplinas Atividades de Extensão 1 a 4; não são atividades complementares): ${aluno.extensao.cumprida} h de ${aluno.extensao.prevista} h.` : "",
     "",
     "Tabelas copiadas do SUAP:",
     aluno.tabelas,
@@ -1438,11 +1438,15 @@ function progressHtml() {
 const SETTINGS_KEY = "ppchat-tree-settings";
 Object.assign(state.settings, storage.get(SETTINGS_KEY) || {});
 
+// Engrenagem do cabeçalho: cada opção é um interruptor ligado a uma chave de state.settings
+const SETTING_INPUTS = { grades: "#opt-grades", progress: "#opt-progress", showDenied: "#opt-denied" };
+
 function renderSettings() {
   const connected = !!state.aluno;
-  $("#opt-grades").checked = state.settings.grades;
-  $("#opt-progress").checked = state.settings.progress;
-  $("#opt-grades").disabled = $("#opt-progress").disabled = !connected;
+  for (const [key, sel] of Object.entries(SETTING_INPUTS)) {
+    $(sel).checked = !!state.settings[key];
+    $(sel).disabled = !connected;
+  }
   $("#settings-note").hidden = connected;
 }
 function setSetting(key, value) {
@@ -1450,6 +1454,7 @@ function setSetting(key, value) {
   storage.set(SETTINGS_KEY, state.settings);
   if ($(".node", $("#tree-inner"))) renderTree({ animate: false });
   renderGrid();
+  if (state.view === "me") renderMe();
 }
 $("#tree-settings-btn").addEventListener("click", (event) => {
   event.stopPropagation();
@@ -1461,8 +1466,9 @@ $("#tree-settings-btn").addEventListener("click", (event) => {
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".settings")) $("#tree-settings").hidden = true;
 });
-$("#opt-grades").addEventListener("change", (event) => setSetting("grades", event.target.checked));
-$("#opt-progress").addEventListener("change", (event) => setSetting("progress", event.target.checked));
+for (const [key, sel] of Object.entries(SETTING_INPUTS)) {
+  $(sel).addEventListener("change", (event) => setSetting(key, event.target.checked));
+}
 
 const gradeValue = (nota) => Number(String(nota).replace(",", "."));
 const gradeClass = (nota) => {
@@ -1478,19 +1484,6 @@ function gradeTag(code) {
 }
 
 /* ───────────── Aba "Meu percurso" ───────────── */
-// Ideias por tipo de atividade complementar; são sugestões, o regulamento do curso decide o que vale
-const ACC_IDEAS = [
-  [/curso|forma[cç][aã]o|treinamento/i, "Cursos online com certificado na área (Alura, Coursera, Fundação Bradesco, cursos de extensão do IFSP)."],
-  [/organiza/i, "Ajude a organizar semanas acadêmicas, o InterIF, hackathons ou eventos do câmpus."],
-  [/artigo|apresenta/i, "Apresente trabalhos em jornadas científicas e congressos (jornadas de IC, CONNEPI)."],
-  [/competi/i, "Maratona de programação, OBI, hackathons e olimpíadas representando o IFSP."],
-  [/certifica/i, "Certificações de mercado em computação (nuvem, Scrum, linguagens). Confira o tipo certo antes de enviar."],
-  [/inicia[cç][aã]o|pesquisa/i, "Projetos de iniciação científica com professores do câmpus."],
-  [/monitor/i, "Seja monitor de uma disciplina que você já concluiu."],
-  [/evento|palestra|semin/i, "Assista a palestras, seminários e semanas acadêmicas com certificado."],
-];
-const accIdea = (tipo) => ACC_IDEAS.find(([re]) => re.test(tipo))?.[1] || "Veja no regulamento de atividades complementares o que conta neste tipo.";
-
 function ring(pct) {
   const r = 52, c = 2 * Math.PI * r;
   return `<svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
@@ -1548,9 +1541,10 @@ function renderMe() {
   };
 
   const tipos = (acc.tipos || []).filter((t) => t.max).map((t) => ({ ...t, folga: Math.max(0, t.max - (t.contabilizada || 0)) }));
-  const room = tipos.filter((t) => t.folga > 0).sort((x, y) => y.folga - x.folga);
-  const roomTotal = room.reduce((s, t) => s + t.folga, 0);
-  const denied = (acc.lancamentos || []).filter((l) => /n[aã]o/i.test(l.deferida));
+  // Indeferidas ficam ocultas por padrão (opção "Mostrar indeferidas")
+  const isDenied = (l) => /n[aã]o/i.test(l.deferida);
+  const denied = (acc.lancamentos || []).filter(isDenied);
+  const shownLogs = (acc.lancamentos || []).filter((l) => state.settings.showDenied || !isDenied(l));
   // O SUAP traz uma linha "TOTAL:" na tabela de requisitos: vira o resumo do card
   const reqs = (a.requisitos || []).filter((r) => !/^total/i.test(r.nome));
   const reqTotal = (a.requisitos || []).find((r) => /^total/i.test(r.nome));
@@ -1574,7 +1568,7 @@ function renderMe() {
         <div class="kpi kpi-anc"><b>${doing.length}</b><span>cursando agora</span></div>
         <div class="kpi kpi-accent"><b>${free.length}</b><span>já liberadas</span></div>
         ${acc.prevista ? `<div class="kpi kpi-desc"><b>${fmtH(acc.cumprida)}</b><span>de ${fmtH(acc.prevista)} complementares</span></div>` : ""}
-        ${a.extensao ? `<div class="kpi"><b>${fmtH(a.extensao.cumprida)}</b><span>de ${fmtH(a.extensao.prevista)} de extensão</span></div>` : ""}
+        ${a.extensao ? `<div class="kpi"><b>${fmtH(a.extensao.cumprida)}</b><span>de ${fmtH(a.extensao.prevista)} de extensão curricular</span></div>` : ""}
       </div>
     </section>
 
@@ -1632,26 +1626,15 @@ function renderMe() {
           ${tipos.length ? `<h5>Por tipo</h5><ul class="acc-types">${tipos.map((t) => `
             <li><div class="acc-type-top"><span>${escapeHtml(t.tipo)}</span><span>${fmtH(t.contabilizada)} / ${fmtH(t.max)}</span></div>
               ${bar(t.contabilizada || 0, t.max, t.folga === 0 ? "full" : "acc")}</li>`).join("")}</ul>` : ""}
-          ${acc.lancamentos?.length ? `<h5>Lançamentos</h5><ul class="acc-log">${acc.lancamentos.map((l) => `
+          ${shownLogs.length || denied.length ? `<div class="acc-log-head"><h5>Lançamentos</h5>
+            ${denied.length && !state.settings.showDenied ? `<span class="muted small-note">${denied.length} indeferida(s) oculta(s) · ⚙ no topo</span>` : ""}</div>
+            <ul class="acc-log">${shownLogs.map((l) => `
             <li class="${/n[aã]o/i.test(l.deferida) ? "is-denied" : ""}">
               <div><b>${escapeHtml(l.atividade)}</b><small>${escapeHtml(l.tipo)}${l.periodo ? ` · ${escapeHtml(l.periodo)}` : ""}</small>
                 ${l.razao ? `<p class="acc-reason">${escapeHtml(l.razao)}</p>` : ""}</div>
               <span class="st-badge ${/n[aã]o/i.test(l.deferida) ? "st-reprovada" : /sim/i.test(l.deferida) ? "st-concluida" : "st-cursando"}">
                 ${/n[aã]o/i.test(l.deferida) ? "indeferida" : /sim/i.test(l.deferida) ? "deferida" : "em análise"}</span>
             </li>`).join("")}</ul>` : ""}
-        </article>
-
-        <article class="me-card me-tips">
-          <header><h4>Como completar as horas</h4>${accLeft ? `<span class="muted">faltam ${fmtH(accLeft)}</span>` : ""}</header>
-          ${accLeft === 0 ? `<p class="tip-done">${ICON.check} Você já cumpriu todas as horas de atividades complementares.</p>` : `
-          ${denied.map((l) => `<div class="tip tip-fix"><b>Corrija e reenvie: ${escapeHtml(l.atividade)}</b>
-            <p>${escapeHtml(l.razao || "Foi indeferida; confira o motivo no SUAP.")}</p></div>`).join("")}
-          ${room.map((t) => `<div class="tip"><span class="tip-hours">até +${fmtH(t.folga)}</span>
-            <div><b>${escapeHtml(t.tipo)}</b><p>${accIdea(t.tipo)}</p></div></div>`).join("")}
-          ${accLeft > roomTotal ? `<p class="small-note">Mesmo usando todo o limite dos tipos acima, faltariam ${fmtH(accLeft - roomTotal)}.
-            O regulamento tem outros tipos de atividade: pergunte ao PPChat quais combinam com você.</p>` : ""}
-          <button class="btn btn-primary btn-sm" data-me="plan">${ICON.ask}Montar um plano com o PPChat</button>
-          <p class="small-note">Sugestões gerais; o regulamento de atividades complementares do curso decide o que é aceito.</p>`}
         </article>` : ""}
       </div>
     </div>`;
@@ -1663,7 +1646,6 @@ $("#me").addEventListener("click", (event) => {
   const act = event.target.closest("[data-me]")?.dataset.me;
   if (act === "connect" || act === "update") { renderSuapModal(); suapModal.showModal(); }
   else if (act === "ask") { closeDrawer(); ask("Faça um resumo do meu percurso no curso: o que já fiz, como estou indo e o que devo priorizar agora."); }
-  else if (act === "plan") { closeDrawer(); ask("Monte um plano para eu completar as horas de atividades complementares que faltam, respeitando os limites de cada tipo e considerando o que já tenho."); }
 });
 
 /* Modal */
@@ -1692,7 +1674,7 @@ function renderSuapModal() {
       <p>Importe seu histórico do SUAP para o PPChat responder sobre <b>o seu</b> percurso e marcar na árvore o que você já fez.</p>
       ${suapStepsHtml()}
       <p class="small-note">Lemos só as abas acadêmicas: dados acadêmicos, histórico, boletins, requisitos de conclusão e atividades
-        complementares. Os dados ficam guardados <b>só neste navegador</b>; o servidor apenas repassa e apaga em até 10 minutos.
+        complementares. Os dados ficam guardados <b>só neste navegador</b>; o servidor só repassa e apaga assim que o PPChat abre.
         Projeto independente, sem vínculo oficial com o IFSP.</p>`;
     return;
   }
@@ -1768,3 +1750,8 @@ loadCurriculum()
     importFromHash();
   })
   .catch((error) => toast(error.message));
+
+// O painel da estrutura abre logo abaixo do cabeçalho (que guarda a engrenagem e o botão do SUAP)
+new ResizeObserver(([entry]) => {
+  document.documentElement.style.setProperty("--topbar-h", `${entry.target.offsetHeight}px`);
+}).observe($(".topbar"));
