@@ -44,7 +44,7 @@
       <a class="icon-btn" href="/pdf" target="_blank" rel="noopener" title="Abrir o PPC em PDF">
         <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
       </a>
-      <!-- Configurações de exibição (valem para árvore, grade e Meu percurso) -->
+      <!-- Configurações de exibição (valem para o fluxograma e o Meu percurso) -->
       <div class="settings">
         <button class="icon-btn settings-btn" id="tree-settings-btn" aria-haspopup="true" aria-expanded="false"
             title="Configurações de exibição" aria-label="Configurações de exibição">
@@ -116,12 +116,16 @@
         </button>
         <h2>Estrutura curricular</h2>
         <div class="segmented" role="tablist">
-          <button role="tab" class="seg is-active" data-view="tree" aria-selected="true">Árvore</button>
-          <button role="tab" class="seg" data-view="grid" aria-selected="false">Grade</button>
+          <button role="tab" class="seg is-active" data-view="flow" aria-selected="true">Fluxograma</button>
           <button role="tab" class="seg seg-me" data-view="me" aria-selected="false">Meu percurso</button>
         </div>
       </div>
       <div class="drawer-actions">
+        <!-- Dois jeitos de ver o fluxograma: ligações de pré-requisito ou a grade por semestre -->
+        <div class="segmented mini" role="group" aria-label="Modo do fluxograma">
+          <button class="seg-mode is-active" data-mode="tree" aria-pressed="true">Conexões</button>
+          <button class="seg-mode" data-mode="grid" aria-pressed="false">Grade</button>
+        </div>
         <label class="search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input id="search" type="search" placeholder="Buscar disciplina" aria-label="Buscar disciplina" autocomplete="off">
@@ -134,7 +138,7 @@
     <section class="view view-tree is-visible" id="view-tree">
       <div class="tree-wrap">
         <div class="tree-bar">
-          <nav class="tree-crumbs" id="tree-crumbs" aria-label="Navegação da árvore"></nav>
+          <nav class="tree-crumbs" id="tree-crumbs" aria-label="Navegação do fluxograma"></nav>
           <div class="tree-bar-actions">
             <button class="chip-btn panel-toggle" id="toggle-info" aria-pressed="true"></button>
           </div>
@@ -161,7 +165,7 @@
     </section>
 
     <section class="view view-grid" id="view-grid">
-      <p class="muted grid-hint">Toque numa disciplina para ver a árvore de dependências dela.</p>
+      <p class="muted grid-hint">Toque numa disciplina para ver as conexões dela.</p>
       <div class="board" id="board"><div class="board-inner" id="board-inner"></div></div>
     </section>
 

@@ -36,6 +36,8 @@ const state = {
   focus: null, // disciplina em foco na árvore
   focusHistory: [],
   view: "tree",
+  flowMode: "tree", // modo do Fluxograma: "tree" (Conexões) ou "grid" (Grade)
+  trailSel: null, // parada selecionada na trilha do Meu percurso
 };
 
 /* ───────────── Utilidades ───────────── */
@@ -332,17 +334,25 @@ function closeDrawer() {
   drawer.setAttribute("aria-hidden", "true");
   $("#search-results").hidden = true;
 }
+// "flow" é a aba Fluxograma: abre no último modo usado (Conexões = árvore, ou Grade)
 function setView(view) {
+  if (view === "flow") view = state.flowMode;
   state.view = view;
+  if (view !== "me") state.flowMode = view;
   $$(".seg").forEach((seg) => {
-    const active = seg.dataset.view === view;
+    const active = seg.dataset.view === (view === "me" ? "me" : "flow");
     seg.classList.toggle("is-active", active);
     seg.setAttribute("aria-selected", active);
+  });
+  $$(".seg-mode").forEach((btn) => {
+    const active = btn.dataset.mode === state.flowMode;
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-pressed", active);
   });
   $("#view-tree").classList.toggle("is-visible", view === "tree");
   $("#view-grid").classList.toggle("is-visible", view === "grid");
   $("#view-me").classList.toggle("is-visible", view === "me");
-  $(".drawer-actions").hidden = view === "me"; // busca e regras são da árvore e da grade
+  $(".drawer-actions").hidden = view === "me"; // busca, modo e regras são do fluxograma
   if (view === "me") renderMe();
   if (view === "tree" && !$(".node", $("#tree-inner"))) showTree(state.focus); // primeiro desenho
 }
@@ -350,6 +360,7 @@ function setView(view) {
 $("#open-structure").addEventListener("click", () => openDrawer());
 $("#close-drawer").addEventListener("click", closeDrawer);
 $$(".seg").forEach((seg) => seg.addEventListener("click", () => setView(seg.dataset.view)));
+$$(".seg-mode").forEach((btn) => btn.addEventListener("click", () => setView(btn.dataset.mode)));
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape" || rulesModal.open) return;
   if (picker.open) return closePicker();
@@ -1483,18 +1494,80 @@ function gradeTag(code) {
   return `<span class="grade ${gradeClass(n.nota)}" title="Nota final">${escapeHtml(n.nota)}</span>`;
 }
 
-/* ───────────── Aba "Meu percurso" ───────────── */
-function ring(pct) {
-  const r = 52, c = 2 * Math.PI * r;
-  return `<svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
-    <circle cx="60" cy="60" r="${r}" class="ring-bg"/>
-    <circle cx="60" cy="60" r="${r}" class="ring-fg" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct)}"/>
-    <text x="60" y="58" class="ring-pct">${Math.round(pct * 100)}%</text><text x="60" y="78" class="ring-sub">do curso</text></svg>`;
-}
-
+/* ───────────── Aba "Meu percurso": trilha dos semestres ───────────── */
 const bar = (value, max, cls = "") =>
   `<div class="me-bar ${cls}"><i style="width:${max ? Math.min(100, (value / max) * 100) : 0}%"></i></div>`;
 const fmtH = (h) => (h == null ? "?" : `${Number(h).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} h`);
+const fmtAvg = (nums) => (nums.length ? (nums.reduce((s, v) => s + v, 0) / nums.length).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : null);
+
+// "2025/1", "2025.1", "2025 - 1" → {y: 2025, p: 1}
+const parsePeriod = (s) => {
+  const m = String(s || "").match(/(\d{4})\D{0,3}([12])\b/);
+  return m ? { y: +m[1], p: +m[2] } : null;
+};
+const periodKey = (o) => `${o.y}/${o.p}`;
+const nextPeriod = (o) => (o.p === 1 ? { y: o.y, p: 2 } : { y: o.y + 1, p: 1 });
+const PROJ_CAP = 7; // disciplinas por semestre na previsão (a matriz tem até 6)
+const CAP_ICON = '<svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/></svg>';
+
+let trailStops = [];
+
+// Paradas da trilha: semestres letivos já cursados, o atual e uma previsão até a formatura.
+// A previsão respeita os pré-requisitos e o semestre de oferta da matriz (ímpar/par conforme o ingresso)
+function buildTrail(a) {
+  const all = state.curriculum.disciplinas.filter((d) => d.semestre);
+  const inMatrix = new Set(all.map((d) => d.codigo));
+  const done = all.filter((d) => a.status[d.codigo] === "concluida");
+  const doing = all.filter((d) => a.status[d.codigo] === "cursando");
+
+  const byPeriod = new Map();
+  const loose = []; // concluídas sem período (ex.: aproveitamentos)
+  for (const d of done) {
+    const p = parsePeriod(a.notas?.[d.codigo]?.periodo);
+    if (!p) { loose.push(d); continue; }
+    const key = periodKey(p);
+    byPeriod.has(key) ? byPeriod.get(key).push(d) : byPeriod.set(key, [d]);
+  }
+  const keys = [...byPeriod.keys()].sort();
+  const today = new Date();
+  const cur = doing.map((d) => parsePeriod(a.notas?.[d.codigo]?.periodo)).find(Boolean)
+    || (keys.length ? nextPeriod(parsePeriod(keys.at(-1))) : { y: today.getFullYear(), p: today.getMonth() < 6 ? 1 : 2 });
+  const curKey = periodKey(cur);
+
+  const stops = keys.filter((k) => k !== curKey).map((k) => ({ kind: "done", period: k, courses: byPeriod.get(k) }));
+  if (loose.length) stops.length ? stops[0].courses.push(...loose) : stops.push({ kind: "done", period: "Concluídas", courses: loose });
+  const nowCourses = [...doing, ...(byPeriod.get(curKey) || [])];
+  if (nowCourses.length) stops.push({ kind: "now", period: curKey, courses: nowCourses });
+
+  const entry = parsePeriod(keys[0]) || cur;
+  const offered = (d, per) => (d.semestre % 2 === 1) === (per.p === entry.p);
+  const passed = new Set([...done, ...doing].map((d) => d.codigo));
+  let pending = all.filter((d) => !passed.has(d.codigo)).sort((x, y) => x.semestre - y.semestre || y.total_aulas - x.total_aulas);
+  let per = nowCourses.length ? nextPeriod(cur) : cur;
+  for (let guard = 0; pending.length && guard < 16; guard++, per = nextPeriod(per)) {
+    const ready = pending.filter((d) => d.pre_requisitos.every((p) => passed.has(p) || !inMatrix.has(p)));
+    const pick = ready.filter((d) => offered(d, per)).slice(0, PROJ_CAP);
+    if (!pick.length) continue;
+    stops.push({ kind: "future", period: periodKey(per), courses: pick });
+    pick.forEach((d) => passed.add(d.codigo));
+    pending = pending.filter((d) => !pick.includes(d));
+  }
+  stops.forEach((s, i) => { s.n = i + 1; s.key = `${s.kind}-${s.period}`; });
+  stops.push({ kind: "end", key: "end", period: stops.at(-1)?.period || curKey, courses: [] });
+  return stops;
+}
+
+const KIND_TEXT = { done: "concluído", now: "agora", future: "previsão", end: "formatura" };
+
+function stopStats(a, stop) {
+  const grades = stop.courses.map((d) => gradeValue(a.notas?.[d.codigo]?.nota)).filter((v) => !Number.isNaN(v));
+  const freqs = stop.courses.map((d) => parseFloat(String(a.notas?.[d.codigo]?.freq || "").replace(",", "."))).filter((v) => !Number.isNaN(v));
+  return {
+    avg: stop.kind === "done" ? fmtAvg(grades) : null,
+    freq: freqs.length ? Math.round(freqs.reduce((s, v) => s + v, 0) / freqs.length) : null,
+    ch: stop.courses.reduce((s, d) => s + (d.carga_horaria_total || 0), 0),
+  };
+}
 
 function renderMe() {
   const box = $("#me");
@@ -1504,143 +1577,254 @@ function renderMe() {
       <div class="me-empty">
         <p class="eyebrow">Meu percurso</p>
         <h3>Veja seu curso do seu jeito</h3>
-        <p class="muted">Conecte o SUAP para ver suas notas, o que falta para se formar e sugestões para completar as atividades complementares.</p>
+        <p class="muted">Conecte o SUAP para ver seus semestres numa trilha, com suas notas, o que está cursando e uma previsão até a formatura.</p>
         <button class="btn btn-primary" data-me="connect">Conectar SUAP</button>
       </div>`;
     return;
   }
   const all = state.curriculum.disciplinas.filter((d) => d.semestre);
-  const statusOf = (c) => studentStatus(c);
-  const done = all.filter((d) => statusOf(d.codigo) === "concluida");
-  const doing = all.filter((d) => statusOf(d.codigo) === "cursando");
-  const free = all.filter((d) => statusOf(d.codigo) === "liberada");
-  const blocked = all.filter((d) => !statusOf(d.codigo) || statusOf(d.codigo) === "reprovada");
+  const done = all.filter((d) => a.status[d.codigo] === "concluida");
   const graded = done.map((d) => gradeValue(a.notas?.[d.codigo]?.nota)).filter((v) => !Number.isNaN(v));
-  const media = graded.length ? (graded.reduce((s, v) => s + v, 0) / graded.length).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : null;
   const acc = a.acc || {};
-  const accLeft = acc.prevista != null ? Math.max(0, acc.prevista - (acc.cumprida || 0)) : null;
-
-  // Linha do tempo: disciplinas agrupadas pelo semestre letivo em que foram cursadas
-  const periods = new Map();
-  for (const d of [...done, ...doing]) {
-    const n = a.notas?.[d.codigo] || {};
-    const key = statusOf(d.codigo) === "cursando" ? "Agora" : n.periodo || "Sem período";
-    if (!periods.has(key)) periods.set(key, []);
-    periods.get(key).push(d);
-  }
-  const order = [...periods.keys()].sort((x, y) => (x === "Agora") - (y === "Agora") || x.localeCompare(y));
-  const course = (d) => {
-    const n = a.notas?.[d.codigo] || {};
-    const st = statusOf(d.codigo);
-    return `<button class="me-course st-${st}" data-goto="${d.codigo}" title="Ver na árvore">
-      <span class="me-course-main"><b>${escapeHtml(titleCase(d.nome))}</b><small>${d.codigo}${n.freq ? ` · ${escapeHtml(n.freq)} freq.` : ""}</small></span>
-      ${st === "cursando" ? '<span class="st-badge st-cursando">cursando</span>'
-        : n.nota ? `<span class="grade big ${gradeClass(n.nota)}">${escapeHtml(n.nota)}</span>`
-        : `<span class="st-badge st-concluida">${/aproveit/i.test(n.situacao || "") ? "aproveitada" : "✓ feita"}</span>`}
-    </button>`;
-  };
-
-  const tipos = (acc.tipos || []).filter((t) => t.max).map((t) => ({ ...t, folga: Math.max(0, t.max - (t.contabilizada || 0)) }));
-  // Indeferidas ficam ocultas por padrão (opção "Mostrar indeferidas")
-  const isDenied = (l) => /n[aã]o/i.test(l.deferida);
-  const denied = (acc.lancamentos || []).filter(isDenied);
-  const shownLogs = (acc.lancamentos || []).filter((l) => state.settings.showDenied || !isDenied(l));
-  // O SUAP traz uma linha "TOTAL:" na tabela de requisitos: vira o resumo do card
-  const reqs = (a.requisitos || []).filter((r) => !/^total/i.test(r.nome));
-  const reqTotal = (a.requisitos || []).find((r) => /^total/i.test(r.nome));
+  trailStops = buildTrail(a);
+  const now = trailStops.find((s) => s.kind === "now");
+  const end = trailStops.at(-1);
+  const pct = done.length / all.length;
+  if (!trailStops.some((s) => s.key === state.trailSel)) state.trailSel = (now || trailStops.findLast((s) => s.kind === "done") || trailStops[0]).key;
 
   box.innerHTML = `
-    <section class="me-hero">
-      ${ring(done.length / all.length)}
-      <div class="me-hero-text">
+    <section class="pc-hero">
+      <div class="pc-hero-text">
         <p class="eyebrow">Meu percurso · Engenharia de Software · IFSP São Carlos</p>
-        <h3>${done.length} de ${all.length} disciplinas concluídas</h3>
+        <h3>${now ? `Você está no <em>${now.n}º semestre</em>` : `<em>${done.length}</em> de ${all.length} disciplinas`}${end.period && done.length < all.length ? `<span>formatura prevista em <b>${escapeHtml(end.period)}</b></span>` : ""}</h3>
         <p class="muted">Matrícula ${escapeHtml(a.matricula)} · dados do SUAP de
           ${new Date(a.coletado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
-        <div class="me-actions">
-          <button class="btn btn-primary btn-sm" data-me="ask">${ICON.ask}Perguntar sobre meu percurso</button>
-          <button class="btn btn-sm" data-me="update">Atualizar do SUAP</button>
-        </div>
       </div>
-      <div class="me-kpis">
-        ${a.ira ? `<div class="kpi"><b>${escapeHtml(a.ira)}</b><span>I.R.A.</span></div>` : ""}
-        ${media ? `<div class="kpi"><b>${media}</b><span>média das notas</span></div>` : ""}
-        <div class="kpi kpi-anc"><b>${doing.length}</b><span>cursando agora</span></div>
-        <div class="kpi kpi-accent"><b>${free.length}</b><span>já liberadas</span></div>
-        ${acc.prevista ? `<div class="kpi kpi-desc"><b>${fmtH(acc.cumprida)}</b><span>de ${fmtH(acc.prevista)} complementares</span></div>` : ""}
-        ${a.extensao ? `<div class="kpi"><b>${fmtH(a.extensao.cumprida)}</b><span>de ${fmtH(a.extensao.prevista)} de extensão curricular</span></div>` : ""}
+      <div class="pc-actions">
+        <button class="btn btn-primary btn-sm" data-me="ask">${ICON.ask}Perguntar sobre meu percurso</button>
+        <button class="btn btn-sm" data-me="update">Atualizar do SUAP</button>
+      </div>
+      <div class="pc-progress">
+        <div class="pc-progress-top"><span><b>${done.length}</b> de ${all.length} disciplinas concluídas</span><b>${Math.round(pct * 100)}%</b></div>
+        <div class="pc-meter"><i style="--w:${pct * 100}%"></i></div>
+      </div>
+      <div class="pc-stats">
+        ${a.ira ? `<div><b>${escapeHtml(a.ira)}</b><span>I.R.A.</span></div>` : ""}
+        ${graded.length ? `<div><b>${fmtAvg(graded)}</b><span>média das notas</span></div>` : ""}
+        ${acc.prevista ? `<div class="is-acc"><b>${fmtH(acc.cumprida)}</b><span>de ${fmtH(acc.prevista)} complementares</span></div>` : ""}
+        ${a.extensao ? `<div><b>${fmtH(a.extensao.cumprida)}</b><span>de ${fmtH(a.extensao.prevista)} de extensão curricular</span></div>` : ""}
       </div>
     </section>
 
     ${(a.versao || 1) < 2 ? `<div class="me-banner">Clique de novo no favorito <b>PPChat ← SUAP</b> com o SUAP aberto para trazer
-      as notas, os requisitos de conclusão e o detalhe das atividades complementares.</div>` : ""}
+      as notas, os semestres e os requisitos de conclusão.</div>` : ""}
 
-    <div class="me-grid">
-      <div class="me-col">
-        ${reqs.length ? `
-        <article class="me-card">
-          <header><h4>Para se formar</h4><span class="muted">${reqTotal?.prevista ? `${fmtH(reqTotal.cumprida)} de ${fmtH(reqTotal.prevista)} no total` : "requisitos do SUAP"}</span></header>
-          ${reqTotal?.prevista ? bar(reqTotal.cumprida || 0, reqTotal.prevista, "ok") : ""}
-          <ul class="req-list">${reqs.map((r) => {
-            const ok = /cumprid|conclu|ok\b/i.test(r.situacao) && !/n[aã]o|pendente/i.test(r.situacao);
-            return `<li class="${ok ? "is-ok" : ""}">
-              <div class="req-top"><span class="req-check">${ok ? ICON.check : ""}</span><b>${escapeHtml(r.nome)}</b>
-                <span class="req-sit">${escapeHtml(r.situacao || "")}</span></div>
-              ${r.prevista ? `${bar(r.cumprida || 0, r.prevista, ok ? "ok" : "")}
-                <div class="req-meta"><span>${fmtH(r.cumprida)} de ${fmtH(r.prevista)}</span>${r.pendente ? `<span>faltam ${fmtH(r.pendente)}</span>` : ""}</div>` : ""}
-            </li>`;
-          }).join("")}</ul>
-        </article>` : ""}
-
-        <article class="me-card">
-          <header><h4>Minhas disciplinas</h4><span class="muted">${done.length} feitas · ${doing.length} cursando</span></header>
-          <div class="timeline">${order.map((key) => {
-            const list = periods.get(key);
-            const nums = list.map((d) => gradeValue(a.notas?.[d.codigo]?.nota)).filter((v) => !Number.isNaN(v));
-            const avg = nums.length ? (nums.reduce((s, v) => s + v, 0) / nums.length).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : null;
-            return `<section class="tl-period ${key === "Agora" ? "is-now" : ""}">
-              <div class="tl-head"><span class="tl-dot"></span><b>${key === "Agora" ? "Cursando agora" : escapeHtml(key)}</b>
-                ${avg ? `<span class="muted">média ${avg}</span>` : ""}</div>
-              <div class="tl-courses">${list.map(course).join("")}</div>
-            </section>`;
-          }).join("")}</div>
-          <div class="me-pending">
-            <h5>Já pode cursar (${free.length})</h5>
-            ${free.length ? goChips(free.map((d) => d.codigo)) : '<p class="muted small-note">Nada liberado no momento.</p>'}
-            <h5>Ainda bloqueadas (${blocked.length})</h5>
-            ${blocked.length ? goChips(blocked.map((d) => d.codigo)) : '<p class="muted small-note">Nenhuma.</p>'}
-          </div>
-        </article>
+    <section class="trail-card">
+      <div class="trail" id="trail">
+        <svg class="trail-svg" id="trail-svg" aria-hidden="true"></svg>
+        ${trailStops.map((s) => {
+          const st = stopStats(a, s);
+          const sub = s.kind === "end" ? "formatura" : s.kind === "done" && st.avg ? `média ${st.avg}`
+            : `${s.courses.length} disciplina${s.courses.length === 1 ? "" : "s"}`;
+          return `<button class="stop k-${s.kind}" data-stop="${s.key}" aria-label="${s.kind === "end" ? "Formatura" : `${s.n}º semestre`}, ${escapeHtml(s.period)}, ${KIND_TEXT[s.kind]}">
+            <span class="stop-num">${s.kind === "end" ? CAP_ICON : s.n}</span>
+            <span class="stop-node"></span>
+            <span class="stop-label"><b>${escapeHtml(s.kind === "end" ? "Formatura" : s.period)}</b><small>${escapeHtml(s.kind === "end" ? s.period : sub)}</small></span>
+          </button>`;
+        }).join("")}
       </div>
-
-      <div class="me-col">
-        ${acc.prevista ? `
-        <article class="me-card">
-          <header><h4>Atividades complementares</h4><span class="muted">${fmtH(acc.cumprida)} de ${fmtH(acc.prevista)}</span></header>
-          <div class="acc-total">
-            <div><b>${fmtH(acc.cumprida)}</b><span>contabilizadas</span></div>
-            <div><b>${fmtH(accLeft)}</b><span>faltam</span></div>
-            ${acc.cadastrada && acc.cumprida != null && acc.cadastrada > acc.cumprida ? `<div><b>${fmtH(acc.cadastrada - acc.cumprida)}</b><span>enviadas sem contar</span></div>` : ""}
-          </div>
-          ${bar(acc.cumprida || 0, acc.prevista, "acc")}
-          ${tipos.length ? `<h5>Por tipo</h5><ul class="acc-types">${tipos.map((t) => `
-            <li><div class="acc-type-top"><span>${escapeHtml(t.tipo)}</span><span>${fmtH(t.contabilizada)} / ${fmtH(t.max)}</span></div>
-              ${bar(t.contabilizada || 0, t.max, t.folga === 0 ? "full" : "acc")}</li>`).join("")}</ul>` : ""}
-          ${shownLogs.length || denied.length ? `<div class="acc-log-head"><h5>Lançamentos</h5>
-            ${denied.length && !state.settings.showDenied ? `<span class="muted small-note">${denied.length} indeferida(s) oculta(s) · ⚙ no topo</span>` : ""}</div>
-            <ul class="acc-log">${shownLogs.map((l) => `
-            <li class="${/n[aã]o/i.test(l.deferida) ? "is-denied" : ""}">
-              <div><b>${escapeHtml(l.atividade)}</b><small>${escapeHtml(l.tipo)}${l.periodo ? ` · ${escapeHtml(l.periodo)}` : ""}</small>
-                ${l.razao ? `<p class="acc-reason">${escapeHtml(l.razao)}</p>` : ""}</div>
-              <span class="st-badge ${/n[aã]o/i.test(l.deferida) ? "st-reprovada" : /sim/i.test(l.deferida) ? "st-concluida" : "st-cursando"}">
-                ${/n[aã]o/i.test(l.deferida) ? "indeferida" : /sim/i.test(l.deferida) ? "deferida" : "em análise"}</span>
-            </li>`).join("")}</ul>` : ""}
-        </article>` : ""}
+      <div class="trail-legend">
+        <span><i class="lg-done"></i>Concluído</span><span><i class="lg-now"></i>Agora</span>
+        <span><i class="lg-future"></i>Previsão pelos pré-requisitos</span>
       </div>
+    </section>
+
+    <section class="stop-detail" id="stop-detail" aria-live="polite"></section>`;
+
+  layoutTrail();
+  renderStop();
+}
+
+// Desenha a serpente: linhas alternando de direção, ligadas por meias-voltas. Em telas estreitas, vira uma coluna
+function layoutTrail({ animate = true } = {}) {
+  const trail = $("#trail");
+  if (!trail || !trail.clientWidth) return;
+  const W = trail.clientWidth;
+  const n = trailStops.length;
+  const vertical = W < 620;
+  trail.classList.toggle("is-vertical", vertical);
+  const pts = [];
+  const segs = []; // comprimento acumulado até cada parada, para colorir o caminho até "agora"
+  let d, total = 0, H;
+  if (vertical) {
+    const x = 34, gap = 84, top = 40;
+    for (let i = 0; i < n; i++) pts.push({ x, y: top + i * gap });
+    d = `M${x} ${top - 26} V${pts.at(-1).y}`;
+    pts.forEach((p) => segs.push(p.y - (top - 26)));
+    total = pts.at(-1).y - (top - 26);
+    H = pts.at(-1).y + 40;
+  } else {
+    const r = 74, rowH = 2 * r;
+    const cols = Math.max(3, Math.min(6, Math.floor((W - 2 * r) / 150) + 1, n));
+    const left = r + 24, right = W - r - 24, step = (right - left) / (cols - 1), top = 86;
+    for (let i = 0; i < n; i++) {
+      const row = Math.floor(i / cols), j = i % cols;
+      pts.push({ x: row % 2 ? right - j * step : left + j * step, y: top + row * rowH, row });
+    }
+    const start = left - 40;
+    d = `M${start} ${top}`;
+    let cx = start, len = 0;
+    pts.forEach((p, i) => {
+      if (i > 0 && p.row !== pts[i - 1].row) {
+        // Meia-volta: termina a linha na borda, desce e volta
+        const edge = pts[i - 1].row % 2 ? left : right;
+        len += Math.abs(edge - cx);
+        d += ` H${edge} A${r} ${r} 0 0 ${pts[i - 1].row % 2 ? 0 : 1} ${edge} ${p.y}`;
+        len += Math.PI * r;
+        cx = edge;
+      }
+      len += Math.abs(p.x - cx);
+      d += ` H${p.x}`;
+      cx = p.x;
+      segs.push(len);
+    });
+    total = len;
+    H = pts.at(-1).y + 96;
+  }
+  trail.style.height = `${H}px`;
+  const nowIdx = trailStops.findIndex((s) => s.kind === "now");
+  const lastDone = trailStops.findLastIndex((s) => s.kind === "done");
+  const doneLen = lastDone >= 0 ? segs[lastDone] : 0;
+  const nowLen = nowIdx >= 0 ? segs[nowIdx] : doneLen;
+  const svg = $("#trail-svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = `
+    <defs><linearGradient id="trail-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="${H}"><stop offset="0" class="tg-a"/><stop offset="1" class="tg-b"/></linearGradient></defs>
+    <path class="trail-base" d="${d}"/>
+    <path class="trail-now" d="${d}" style="stroke-dasharray:0 ${doneLen} ${nowLen - doneLen} ${total + 10}"/>
+    <path class="trail-done${animate ? " is-drawing" : ""}" d="${d}" style="--len:${doneLen};stroke-dasharray:${doneLen} ${total + 10}"/>
+    <circle class="trail-start" cx="${vertical ? 34 : pts[0].x - 40}" cy="${vertical ? 14 : pts[0].y}" r="5"/>`;
+  $$(".stop", trail).forEach((el, i) => {
+    el.style.left = `${pts[i].x}px`;
+    el.style.top = `${pts[i].y}px`;
+    el.style.setProperty("--i", i);
+  });
+}
+
+function renderStop() {
+  const a = state.aluno;
+  const stop = trailStops.find((s) => s.key === state.trailSel);
+  if (!a || !stop) return;
+  $$(".stop").forEach((el) => el.classList.toggle("is-selected", el.dataset.stop === stop.key));
+  const box = $("#stop-detail");
+  box.className = `stop-detail k-${stop.kind}`;
+  if (stop.kind === "end") { box.innerHTML = graduationHtml(a, stop); return; }
+
+  const inMatrix = new Set(state.curriculum.disciplinas.filter((d) => d.semestre).map((d) => d.codigo));
+  const st = stopStats(a, stop);
+  const course = (d) => {
+    const n = a.notas?.[d.codigo] || {};
+    const status = a.status[d.codigo];
+    let meta, side;
+    if (stop.kind === "future") {
+      const missing = d.pre_requisitos.filter((p) => inMatrix.has(p) && a.status[p] !== "concluida");
+      meta = missing.length ? `depois de ${missing.slice(0, 2).map(nameOf).join(" e ")}${missing.length > 2 ? "…" : ""}` : "pré-requisitos cumpridos";
+      side = status === "reprovada" ? '<span class="st-badge st-reprovada">refazer</span>'
+        : missing.length ? "" : '<span class="st-badge st-liberada">liberada</span>';
+    } else if (status === "cursando") {
+      meta = [n.freq && `${n.freq} de frequência`, n.nota && `nota parcial ${n.nota}`].filter(Boolean).join(" · ") || "em andamento";
+      side = '<span class="st-badge st-cursando">cursando</span>';
+    } else {
+      meta = [/aproveit/i.test(n.situacao || "") ? "aproveitada" : "", n.freq ? `${n.freq} de frequência` : ""].filter(Boolean).join(" · ") || "concluída";
+      side = n.nota ? `<span class="grade big ${gradeClass(n.nota)}">${escapeHtml(n.nota)}</span>` : `<span class="pc-check">${ICON.check}</span>`;
+    }
+    return `<button class="pc-course" data-goto="${d.codigo}" title="Ver no fluxograma">
+      <span class="pc-course-sem" title="Semestre na matriz">${d.semestre}º</span>
+      <span class="pc-course-main"><b>${escapeHtml(titleCase(d.nome))}</b><small>${d.codigo} · ${fmtH(d.carga_horaria_total)} · ${escapeHtml(meta)}</small></span>
+      ${side}
+    </button>`;
+  };
+  const facts = [
+    `<div><b>${stop.courses.length}</b><span>disciplina${stop.courses.length === 1 ? "" : "s"}</span></div>`,
+    st.avg ? `<div><b>${st.avg}</b><span>média</span></div>` : "",
+    st.freq != null && stop.kind !== "future" ? `<div><b>${st.freq}%</b><span>frequência média</span></div>` : "",
+    `<div><b>${fmtH(st.ch)}</b><span>carga horária</span></div>`,
+  ].join("");
+  const note = stop.kind === "future"
+    ? "Previsão: considera os pré-requisitos e o semestre em que cada disciplina é oferecida na matriz. Não é a oferta oficial."
+    : stop.kind === "now" ? "Notas e frequência parciais, como estão no SUAP agora." : "";
+  box.innerHTML = `
+    <header class="sd-head">
+      <span class="sd-num">${stop.n}</span>
+      <div class="sd-title"><p class="eyebrow">${KIND_TEXT[stop.kind]}</p><h4>${stop.n}º semestre · ${escapeHtml(stop.period)}</h4></div>
+      <div class="sd-facts">${facts}</div>
+    </header>
+    ${note ? `<p class="sd-note">${note}</p>` : ""}
+    <div class="pc-courses">${stop.courses.map(course).join("")}</div>`;
+}
+
+// Última parada: o que falta além das disciplinas (requisitos do SUAP e atividades complementares)
+function graduationHtml(a, stop) {
+  const all = state.curriculum.disciplinas.filter((d) => d.semestre);
+  const left = all.filter((d) => a.status[d.codigo] !== "concluida").length;
+  const acc = a.acc || {};
+  const reqs = (a.requisitos || []).filter((r) => !/^total/i.test(r.nome));
+  const isDenied = (l) => /n[aã]o/i.test(l.deferida);
+  const denied = (acc.lancamentos || []).filter(isDenied);
+  const shownLogs = (acc.lancamentos || []).filter((l) => state.settings.showDenied || !isDenied(l));
+  const tipos = (acc.tipos || []).filter((t) => t.max);
+  return `
+    <header class="sd-head">
+      <span class="sd-num">${CAP_ICON}</span>
+      <div class="sd-title"><p class="eyebrow">formatura</p><h4>Previsão: ${escapeHtml(stop.period)}</h4></div>
+      <div class="sd-facts">
+        <div><b>${left}</b><span>disciplina${left === 1 ? "" : "s"} a concluir</span></div>
+        ${acc.prevista ? `<div><b>${fmtH(Math.max(0, acc.prevista - (acc.cumprida || 0)))}</b><span>de complementares a fazer</span></div>` : ""}
+        ${a.extensao ? `<div><b>${fmtH(Math.max(0, a.extensao.prevista - a.extensao.cumprida))}</b><span>de extensão curricular a fazer</span></div>` : ""}
+      </div>
+    </header>
+    <div class="grad-grid">
+      ${reqs.length ? `<article class="me-card">
+        <header><h4>Requisitos de conclusão</h4><span class="muted">do SUAP</span></header>
+        <ul class="req-list">${reqs.map((r) => {
+          const ok = /cumprid|conclu|ok\b/i.test(r.situacao) && !/n[aã]o|pendente/i.test(r.situacao);
+          return `<li class="${ok ? "is-ok" : ""}">
+            <div class="req-top"><span class="req-check">${ok ? ICON.check : ""}</span><b>${escapeHtml(r.nome)}</b>
+              <span class="req-sit">${escapeHtml(r.situacao || "")}</span></div>
+            ${r.prevista ? `${bar(r.cumprida || 0, r.prevista, ok ? "ok" : "")}
+              <div class="req-meta"><span>${fmtH(r.cumprida)} de ${fmtH(r.prevista)}</span>${r.pendente ? `<span>faltam ${fmtH(r.pendente)}</span>` : ""}</div>` : ""}
+          </li>`;
+        }).join("")}</ul>
+      </article>` : ""}
+      ${acc.prevista ? `<article class="me-card">
+        <header><h4>Atividades complementares</h4><span class="muted">${fmtH(acc.cumprida)} de ${fmtH(acc.prevista)}</span></header>
+        ${bar(acc.cumprida || 0, acc.prevista, "acc")}
+        ${tipos.length ? `<h5>Por tipo</h5><ul class="acc-types">${tipos.map((t) => `
+          <li><div class="acc-type-top"><span>${escapeHtml(t.tipo)}</span><span>${fmtH(t.contabilizada)} / ${fmtH(t.max)}</span></div>
+            ${bar(t.contabilizada || 0, t.max, (t.contabilizada || 0) >= t.max ? "full" : "acc")}</li>`).join("")}</ul>` : ""}
+        ${shownLogs.length || denied.length ? `<div class="acc-log-head"><h5>Lançamentos</h5>
+          ${denied.length && !state.settings.showDenied ? `<span class="muted small-note">${denied.length} indeferida(s) oculta(s) · ⚙ no topo</span>` : ""}</div>
+          <ul class="acc-log">${shownLogs.map((l) => `
+          <li class="${isDenied(l) ? "is-denied" : ""}">
+            <div><b>${escapeHtml(l.atividade)}</b><small>${escapeHtml(l.tipo)}${l.periodo ? ` · ${escapeHtml(l.periodo)}` : ""}</small>
+              ${l.razao ? `<p class="acc-reason">${escapeHtml(l.razao)}</p>` : ""}</div>
+            <span class="st-badge ${isDenied(l) ? "st-reprovada" : /sim/i.test(l.deferida) ? "st-concluida" : "st-cursando"}">
+              ${isDenied(l) ? "indeferida" : /sim/i.test(l.deferida) ? "deferida" : "em análise"}</span>
+          </li>`).join("")}</ul>` : ""}
+      </article>` : ""}
     </div>`;
 }
 
+new ResizeObserver(() => { if (state.view === "me" && trailStops.length) layoutTrail({ animate: false }); }).observe($("#me"));
+
 $("#me").addEventListener("click", (event) => {
+  const stop = event.target.closest("[data-stop]");
+  if (stop) {
+    state.trailSel = stop.dataset.stop;
+    renderStop();
+    if (window.innerWidth < 900) $("#stop-detail").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
   const goto = event.target.closest("[data-goto]");
   if (goto) { setView("tree"); return focusTree(goto.dataset.goto, { push: true }); }
   const act = event.target.closest("[data-me]")?.dataset.me;
