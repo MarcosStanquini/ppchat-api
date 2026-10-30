@@ -4,7 +4,7 @@ O SUAP usa Cross-Origin-Opener-Policy: same-origin, então a aba do SUAP não co
 passar dados para uma janela do PPChat via postMessage. Em vez disso o bookmarklet envia
 os dados para cá, recebe um código de uso único e abre o PPChat com `#suap=<código>`;
 o front troca o código pelos dados uma única vez. Nada vai para disco: os dados ficam
-na memória por no máximo 10 minutos.
+na memória por no máximo 1 hora.
 """
 
 import secrets
@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 
-TTL_SECONDS = 600
+TTL_SECONDS = 3600  # o plano grátis do Render dorme após 15 min sem uso e perde a memória de qualquer forma
 MAX_PENDING = 500
 
 

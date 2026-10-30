@@ -153,7 +153,7 @@
       $("[data-list]").innerHTML = payload.abas.map((aba) =>
         `<li><span>${esc(aba.titulo)}</span><span${aba.erro ? ' class="err"' : ""}>${aba.erro ? "erro" : `${aba.tabelas.length} tabelas · ${rows(aba)} linhas`}</span></li>`).join("");
       status(`Matrícula <b>${esc(payload.matricula)}</b>. Isto é o que será enviado ao PPChat:
-        <div class="muted">Fica guardado só no seu navegador; o servidor apaga em até 10 min.</div>`);
+        <div class="muted">Fica guardado só no seu navegador; o servidor apaga assim que o PPChat abrir (ou em até 1 h).</div>`);
       $("[data-actions]").innerHTML = `<button class="btn" data-send>Enviar e abrir o PPChat</button>`;
       $("[data-send]").addEventListener("click", async (event) => {
         event.target.disabled = true;

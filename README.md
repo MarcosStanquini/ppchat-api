@@ -110,7 +110,7 @@ clica com o SUAP já aberto.
    (dados acadêmicos, requisitos de conclusão, histórico, boletins e atividades complementares e de extensão).
    Dados pessoais e bancários ficam de fora. Antes de enviar, mostra o que leu.
 2. Envia as tabelas para `POST /aluno/importar` (CORS liberado só para `SUAP_ORIGINS`) e recebe um código de uso
-   único que expira em 10 minutos. O servidor guarda os dados só em memória.
+   único que expira em 1 hora. O servidor guarda os dados só em memória.
 3. Abre o PPChat com `#suap=<código>`. O front troca o código pelos dados (`GET /aluno/importar/{código}`), apaga o
    código da URL e guarda tudo **só no navegador**. Dá para remover a qualquer momento no mesmo botão.
 4. A situação de cada disciplina (feita, cursando, reprovada) vem do código `SCL…` ou do nome na tabela. As

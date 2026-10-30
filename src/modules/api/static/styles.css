@@ -96,7 +96,7 @@ kbd {
   display: flex; align-items: center; gap: 20px; padding: 12px 20px;
   border-bottom: 1px solid var(--line);
   background: color-mix(in oklab, var(--surface) 75%, transparent);
-  backdrop-filter: blur(10px); z-index: 5;
+  backdrop-filter: blur(10px); position: relative; z-index: 40; /* acima do painel, para a engrenagem abrir por cima */
 }
 .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .brand-mark svg { width: 34px; height: 34px; stroke: none; }
@@ -346,7 +346,7 @@ kbd {
 
 /* ───────────── Estrutura curricular (tela cheia) ───────────── */
 .drawer {
-  position: fixed; inset: 0; z-index: 31; display: flex; flex-direction: column; background: var(--bg);
+  position: fixed; inset: var(--topbar-h, 61px) 0 0 0; z-index: 31; /* abaixo do cabeçalho, que fica sempre visível */ display: flex; flex-direction: column; background: var(--bg);
   /* Só opacidade e um deslocamento curto: animação barata, roda na GPU */
   opacity: 0; transform: translateY(10px); visibility: hidden; pointer-events: none;
   transition: opacity .16s ease, transform .2s ease, visibility 0s .2s;
@@ -844,6 +844,8 @@ button.crumb svg { width: 14px; height: 14px; }
 .acc-type-top { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; margin-bottom: 5px; }
 .acc-type-top span:last-child { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .acc-types .me-bar { height: 6px; }
+.acc-log-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.acc-log-head .link { font-size: 12px; }
 .acc-log { list-style: none; margin: 0; padding: 0; }
 .acc-log li { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .acc-log li:last-child { border-bottom: 0; }
@@ -851,14 +853,6 @@ button.crumb svg { width: 14px; height: 14px; }
 .acc-log small { font-size: 12px; color: var(--muted); }
 .acc-reason { margin: 6px 0 0; font-size: 12px; color: var(--lvl-adv); }
 
-.me-tips { background: linear-gradient(160deg, color-mix(in oklab, var(--desc-soft) 70%, var(--surface)), var(--surface) 60%); }
-.tip { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); margin-bottom: 8px; }
-.tip b { display: block; font-size: 13.5px; }
-.tip p { margin: 3px 0 0; font-size: 12.5px; color: var(--ink-2); }
-.tip-hours { flex: none; padding: 4px 8px; border-radius: 9px; font: 700 12px var(--font); background: var(--desc-soft); color: var(--desc); white-space: nowrap; }
-.tip-fix { display: block; border-color: color-mix(in oklab, var(--lvl-adv) 40%, var(--line)); background: color-mix(in oklab, var(--lvl-adv) 7%, var(--surface)); }
-.tip-done { display: flex; align-items: center; gap: 8px; color: var(--lvl-intro); font-weight: 600; }
-.me-tips .btn { margin: 6px 0 4px; }
 
 @media (max-width: 1000px) {
   .me-grid { grid-template-columns: 1fr; }

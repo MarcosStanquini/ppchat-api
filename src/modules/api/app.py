@@ -235,7 +235,7 @@ async def aluno_importar(data: SuapImport, http_request: Request) -> dict:
 
 @app.get("/aluno/importar/{code}")
 async def aluno_resgatar(code: str) -> SuapImport:
-    """O PPChat troca o código pelos dados uma única vez (expira em 10 minutos)."""
+    """O PPChat troca o código pelos dados uma única vez (expira em 1 hora)."""
     data = suap_imports.take(code)
     if data is None:
         raise HTTPException(status_code=404, detail="Código expirado ou já usado. Rode o bookmarklet de novo no SUAP.")
