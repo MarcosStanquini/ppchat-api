@@ -76,11 +76,15 @@ Ao rodar `serve`, abra <http://localhost:8000>. Não há build nem login: é HTM
   junto da pergunta.
 - **Citações clicáveis:** `[Página N]` vira um chip que abre o PDF naquela página; códigos como `SCLPROO`
   abrem a árvore da disciplina.
-- **Estrutura curricular** (botão no topo, em painel lateral):
-  - **Árvore:** a disciplina em foco fica no centro, o que vem antes ramifica para a esquerda (azul, em camadas
-    "logo antes", "2 etapas antes"…) e o que ela libera ramifica para a direita (laranja). Clicar num nó
-    centraliza a árvore nele; o painel ao lado traz detalhes, "Adicionar ao chat" e atalhos de pergunta.
-  - **Grade:** todas as disciplinas por semestre; clicar abre a árvore.
+- **Estrutura curricular** (botão no topo, em tela cheia):
+  - **Fluxograma**, em dois modos:
+    - **Conexões:** a disciplina em foco fica no centro, o que vem antes ramifica para a esquerda (azul, em camadas
+      "logo antes", "2 etapas antes"…) e o que ela libera ramifica para a direita (laranja). Clicar num nó
+      centraliza nele; o painel ao lado traz detalhes, "Adicionar ao chat" e atalhos de pergunta.
+    - **Grade:** todas as disciplinas por semestre; clicar abre as conexões.
+  - **Meu percurso** (com o SUAP conectado): trilha em serpente com os semestres já cursados, o atual e uma previsão
+    até a formatura (pelos pré-requisitos e pelo semestre de oferta na matriz). Clicar num semestre mostra as
+    disciplinas, notas e frequência; a formatura mostra os requisitos e as atividades complementares.
   - Busca e o modal "Regras do curso".
 - **Detalhes:** botão para parar a resposta, conversa salva no navegador e tema claro/escuro.
 
