@@ -670,3 +670,46 @@ button.crumb svg { width: 14px; height: 14px; }
   .grid-hint { padding: 10px 14px 0; }
   .board { padding: 8px 14px 14px; }
 }
+
+/* ───────────── Dados do SUAP ───────────── */
+.suap-btn.is-connected { border-color: color-mix(in oklab, var(--accent) 50%, transparent); color: var(--accent); background: var(--accent-soft); }
+.st-badge {
+  display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 99px;
+  white-space: nowrap; letter-spacing: .01em;
+}
+.st-badge.st-concluida { background: color-mix(in oklab, var(--lvl-intro) 18%, transparent); color: var(--lvl-intro); }
+.st-badge.st-cursando { background: var(--anc-soft); color: var(--anc); }
+.st-badge.st-liberada { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 60%, transparent); }
+.st-badge.st-reprovada { background: color-mix(in oklab, var(--lvl-adv) 16%, transparent); color: var(--lvl-adv); }
+/* Na árvore: feitas ficam "apagadas" em verde, cursando com contorno azul, liberadas destacadas */
+.node.st-concluida:not(.is-focus) { background: color-mix(in oklab, var(--lvl-intro) 9%, var(--surface)); }
+.node.st-concluida:not(.is-focus)::before { background: var(--lvl-intro); }
+.node.st-concluida:not(.is-focus) .node-name { color: var(--ink-2); }
+.node.st-cursando:not(.is-focus) { box-shadow: 0 0 0 1.5px var(--anc), var(--shadow-sm); }
+.node.st-liberada:not(.is-focus) { box-shadow: 0 0 0 1.5px color-mix(in oklab, var(--accent) 70%, transparent), var(--shadow-sm); }
+.node.st-reprovada:not(.is-focus)::before { background: var(--lvl-adv); }
+.node.is-focus .st-badge { background: color-mix(in oklab, var(--accent-ink) 22%, transparent); color: var(--accent-ink); box-shadow: none; }
+.st-line { margin: -4px 0 10px; font-size: 13px; font-weight: 600; }
+.st-line.st-concluida { color: var(--lvl-intro); } .st-line.st-cursando { color: var(--anc); }
+.st-line.st-liberada { color: var(--accent); } .st-line.st-reprovada { color: var(--lvl-adv); }
+.progress { padding: 14px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); }
+.progress-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+.progress-row b { font: 700 18px var(--display); color: var(--ink); }
+.meter.big { height: 8px; }
+.progress-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.progress-pills .st-badge { font-size: 11.5px; padding: 3px 9px; }
+.suap-modal .modal-body > p { margin: 0 0 12px; color: var(--ink-2); }
+.steps { margin: 6px 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+.steps li::marker { font-weight: 700; color: var(--accent); }
+.steps .small-note { display: block; }
+.bookmarklet {
+  display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 2px; padding: 7px 14px; border-radius: 10px;
+  background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 13.5px; text-decoration: none;
+  cursor: grab; box-shadow: var(--shadow-md);
+}
+.bookmarklet::before { content: "⠿"; opacity: .7; }
+.diag { margin-top: 12px; font-size: 13px; }
+.diag summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+.diag ul { margin: 8px 0 0; padding: 0; list-style: none; }
+.diag li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.diag li span:last-child { color: var(--muted); }

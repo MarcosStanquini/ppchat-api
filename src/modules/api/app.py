@@ -5,11 +5,13 @@ from pathlib import Path
 from typing import AsyncIterator, Dict, List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
 from src.modules.api.rate_limit import RateLimiter, client_ip
+from src.modules.api.suap_import import ImportStore, SuapImport
 from src.modules.knowledge.services.knowledge_base import get_knowledge_base
 from src.modules.response.services.chat_service import ChatSession
 from src.modules.shared.services.settings import get_settings
@@ -29,7 +31,16 @@ app = FastAPI(title="PPChat API", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 settings = get_settings()
+# O bookmarklet roda dentro do SUAP e envia os dados do aluno para cá: só essa origem é liberada
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.suap_origins,
+    allow_methods=["POST"],
+    allow_headers=["Content-Type"],
+)
 rate_limiter = RateLimiter(settings.rate_limit_per_hour, settings.global_rate_limit_per_hour)
+import_limiter = RateLimiter(per_ip=20, global_limit=300)
+suap_imports = ImportStore()
 # Respostas em andamento, para o botão "parar"; só vivem durante a requisição
 running: Dict[str, asyncio.Task] = {}
 
@@ -48,6 +59,8 @@ class ChatRequest(BaseModel):
     disciplinas: List[str] = Field(default_factory=list, max_length=12)
     # Gerado pelo navegador para poder cancelar esta resposta em /chat/cancel/{request_id}
     request_id: Optional[str] = Field(default=None, max_length=64)
+    # Resumo acadêmico do aluno (importado do SUAP e guardado só no navegador dele)
+    perfil: Optional[str] = Field(default=None, max_length=30_000)
 
     @field_validator("history")
     @classmethod
@@ -106,7 +119,7 @@ async def _stream_answer(request: ChatRequest, http_request: Request) -> AsyncIt
 
     async def produce():
         try:
-            async for kind, text in session.stream_events(request.question, request.disciplinas):
+            async for kind, text in session.stream_events(request.question, request.disciplinas, request.perfil):
                 events.put_nowait({"type": kind, "text": text})
             usage = _usage(session)
             events.put_nowait({"type": "done", "usage": usage.model_dump() if usage else None})
@@ -190,7 +203,7 @@ def curriculum() -> dict:
 async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
     _check_rate_limit(http_request)
     session = _session(request)
-    answer = await session.ask(request.question, request.disciplinas)
+    answer = await session.ask(request.question, request.disciplinas, request.perfil)
     return ChatResponse(answer=answer, usage=_usage(session))
 
 
@@ -210,3 +223,20 @@ async def chat_cancel(request_id: str) -> None:
     """Interrompe a resposta em andamento (abortar o fetch nem sempre derruba a conexão)."""
     if task := running.get(request_id):
         task.cancel()
+
+
+@app.post("/aluno/importar")
+async def aluno_importar(data: SuapImport, http_request: Request) -> dict:
+    """Recebe os dados lidos pelo bookmarklet no SUAP e devolve um código de uso único."""
+    if error := import_limiter.check(client_ip(http_request)):
+        raise HTTPException(status_code=429, detail=error)
+    return {"code": suap_imports.put(data)}
+
+
+@app.get("/aluno/importar/{code}")
+async def aluno_resgatar(code: str) -> SuapImport:
+    """O PPChat troca o código pelos dados uma única vez (expira em 10 minutos)."""
+    data = suap_imports.take(code)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Código expirado ou já usado. Rode o bookmarklet de novo no SUAP.")
+    return data

@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     # Proteção dos créditos da API quando o site é público (0 desliga)
     rate_limit_per_hour: int = 30  # perguntas por IP
     global_rate_limit_per_hour: int = 400  # teto para o site inteiro, vale mesmo se alguém forjar o IP
+
+    # Origens do SUAP de onde o bookmarklet pode enviar os dados do aluno (CORS)
+    suap_origins: List[str] = ["https://suap.ifsp.edu.br"]
 
     # Arquivos
     pdf_path: Path = ROOT_DIR / "src" / "data" / "documents" / "PPCENGSOFTWARE.pdf"
