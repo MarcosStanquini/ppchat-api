@@ -342,7 +342,7 @@ function openDrawer(view = state.view, code) {
 function syncNav() {
   const open = drawer.classList.contains("is-open");
   $$(".nav-btn[data-nav]").forEach((btn) => {
-    const active = open && btn.dataset.nav === (state.view === "me" ? "me" : "flow");
+    const active = btn.dataset.nav === (!open ? "chat" : state.view === "me" ? "me" : "flow");
     btn.classList.toggle("is-active", active);
     active ? btn.setAttribute("aria-current", "page") : btn.removeAttribute("aria-current");
   });
@@ -358,11 +358,6 @@ function setView(view) {
   if (view === "flow") view = state.flowMode;
   state.view = view;
   if (view !== "me") state.flowMode = view;
-  $$(".seg").forEach((seg) => {
-    const active = seg.dataset.view === (view === "me" ? "me" : "flow");
-    seg.classList.toggle("is-active", active);
-    seg.setAttribute("aria-selected", active);
-  });
   $$(".seg-mode").forEach((btn) => {
     const active = btn.dataset.mode === state.flowMode;
     btn.classList.toggle("is-active", active);
@@ -372,14 +367,13 @@ function setView(view) {
   $("#view-grid").classList.toggle("is-visible", view === "grid");
   $("#view-me").classList.toggle("is-visible", view === "me");
   syncNav();
-  $(".drawer-actions").hidden = view === "me"; // busca, modo e regras são do fluxograma
+  $("#drawer-head").hidden = view === "me"; // modo, busca e regras são do fluxograma
   if (view === "me") renderMe();
   if (view === "tree" && !$(".node", $("#tree-inner"))) showTree(state.focus); // primeiro desenho
 }
 
 $("#open-structure").addEventListener("click", () => openDrawer("flow"));
 $("#close-drawer").addEventListener("click", closeDrawer);
-$$(".seg").forEach((seg) => seg.addEventListener("click", () => setView(seg.dataset.view)));
 $$(".seg-mode").forEach((btn) => btn.addEventListener("click", () => setView(btn.dataset.mode)));
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape" || rulesModal.open) return;
@@ -497,24 +491,18 @@ function buildFocusGraph(code) {
   };
 }
 
-// compact: no curso inteiro a coluna já diz o semestre, então o card mostra só a carga horária
-function nodeHtml(code, { side = "", focus = false, direct = false, compact = false }) {
+// O card mostra só o nome e, se houver, a situação do aluno; os detalhes ficam no painel ao clicar
+function nodeHtml(code, { side = "", focus = false, direct = false }) {
   const d = disc(code);
-  const blocks = d.libera_transitivamente.length;
   const inCtx = state.context.includes(code);
   const solo = !isConnected(d); // sem pré-requisitos nem dependentes: borda tracejada
   const st = state.settings.progress ? studentStatus(code) : null; // com o SUAP importado: feita, cursando, liberada...
-  const badge = inCtx ? '<span class="ctx-badge">no chat</span>'
-    : st ? `<span class="st-badge st-${st}">${STATUS_LABEL[st]}</span>`
-    : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`;
+  const badge = (inCtx ? '<span class="ctx-badge">no chat</span>' : st ? `<span class="st-badge st-${st}">${STATUS_LABEL[st]}</span>` : "") + gradeTag(code);
   return `
     <button class="node ${side} ${focus ? "is-focus" : ""} ${direct ? "direct" : ""} ${inCtx ? "in-context" : ""} ${solo ? "is-solo" : ""} ${st ? `st-${st}` : ""}"
         data-code="${code}" title="${focus ? "" : "Centralizar a árvore nesta disciplina"}">
-      <span class="node-top"><span class="node-code">${code}</span>${badge}</span>
       <span class="node-name">${escapeHtml(titleCase(d.nome))}</span>
-      <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
-      <span class="node-meta"><span>${compact ? "" : `${semesterLabel(d)} · `}${hours(d.carga_horaria_total)}</span>
-        ${gradeTag(code) || (blocks >= 3 && side !== "anc" ? `<span>trava ${blocks}</span>` : "")}</span>
+      ${badge ? `<span class="node-meta">${badge}</span>` : ""}
     </button>`;
 }
 
@@ -542,7 +530,7 @@ function renderCrumbs() {
     ? `<button class="crumb" data-crumb="course">${ICON.back}Curso inteiro</button>
        <span class="crumb-sep">›</span><span class="crumb is-current">${escapeHtml(nameOf(state.focus))}</span>`
     : `<span class="crumb is-current">Curso inteiro</span>
-       <span class="crumb-hint">Passe o mouse para ver a cadeia de uma disciplina · clique para focar nela</span>`;
+       <span class="crumb-hint">Clique numa disciplina para ver as conexões dela</span>`;
 }
 $("#tree-crumbs").addEventListener("click", (event) => {
   if (event.target.closest("[data-crumb=course]")) showCourse();
@@ -588,7 +576,7 @@ function renderTree({ animate = true } = {}) {
   inner.innerHTML = `<svg class="tree-edges" id="tree-edges"></svg>` + levels.map((l) => {
     const [label, cls] = graph.label(l);
     return `<span class="col-label ${cls}" data-level="${l}">${label}</span>` +
-      columns.get(l).map((c) => nodeHtml(c, { side: graph.side(l), focus: c === graph.focus, direct: graph.directs?.has(c), compact: !graph.focus })).join("");
+      columns.get(l).map((c) => nodeHtml(c, { side: graph.side(l), focus: c === graph.focus, direct: graph.directs?.has(c) })).join("");
   }).join("") +
     (graph.focus && levels.length === 1 ? `<p class="tree-empty">Esta disciplina não exige nem libera nenhuma outra: dá para cursá-la a qualquer momento do seu semestre.</p>` : "");
 
@@ -825,17 +813,13 @@ function renderGrid() {
 
   $("#board-inner").innerHTML = columns.map((col) => `
     <div class="column">
-      <div class="col-head"><b>${col.title}</b><span>${hours(col.items.reduce((sum, d) => sum + d.carga_horaria_total, 0))}</span></div>
+      <div class="col-head"><b>${col.title}</b></div>
       ${col.items.map((d) => {
-        const blocks = d.libera_transitivamente.length;
         const st = state.settings.progress ? studentStatus(d.codigo) : null;
+        const badge = (st ? `<span class="st-badge st-${st}">${STATUS_LABEL[st]}</span>` : "") + gradeTag(d.codigo);
         return `<button class="card ${st ? `st-${st}` : ""}" data-code="${d.codigo}">
-          <span class="card-top"><span class="card-code">${d.codigo}</span>
-            ${st ? `<span class="st-badge st-${st}">${STATUS_LABEL[st]}</span>` : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`}</span>
           <span class="card-name">${escapeHtml(titleCase(d.nome))}</span>
-          <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
-          <span class="card-meta"><span>${hours(d.carga_horaria_total)}</span>
-            ${gradeTag(d.codigo) || (blocks >= 4 ? `<span class="badge-gate">trava ${blocks}</span>` : "")}</span>
+          ${badge ? `<span class="card-meta">${badge}</span>` : ""}
         </button>`;
       }).join("")}
     </div>`).join("");
@@ -1161,6 +1145,7 @@ $("#new-chat").addEventListener("click", () => {
   storage.remove(STORE_KEY);
   renderContext();
   renderEmpty("Nova conversa");
+  closeDrawer();
   input.focus();
 });
 
@@ -1614,26 +1599,19 @@ function renderMe() {
 
   box.innerHTML = `
     <section class="pc-hero">
-      <div class="pc-hero-text">
-        <p class="eyebrow">Meu percurso · Engenharia de Software · IFSP São Carlos</p>
-        <h3>${now ? `Você está no <em>${now.n}º semestre</em>` : `<em>${done.length}</em> de ${all.length} disciplinas`}${end.period && done.length < all.length ? `<span>formatura prevista em <b>${escapeHtml(end.period)}</b></span>` : ""}</h3>
-        <p class="muted">Matrícula ${escapeHtml(a.matricula)} · dados do SUAP de
-          ${new Date(a.coletado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
+      <div class="pc-head">
+        <h3>${now ? `Você está no <em>${now.n}º semestre</em>` : `<em>${done.length}</em> de ${all.length} disciplinas`}</h3>
+        <div class="pc-actions">
+          <button class="btn btn-ghost btn-sm" data-me="ask">${ICON.ask}Perguntar</button>
+          <button class="btn btn-ghost btn-sm" data-me="update" title="Dados do SUAP de ${new Date(a.coletado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}">Atualizar</button>
+        </div>
       </div>
-      <div class="pc-actions">
-        <button class="btn btn-primary btn-sm" data-me="ask">${ICON.ask}Perguntar sobre meu percurso</button>
-        <button class="btn btn-sm" data-me="update">Atualizar do SUAP</button>
-      </div>
-      <div class="pc-progress">
-        <div class="pc-progress-top"><span><b>${done.length}</b> de ${all.length} disciplinas concluídas</span><b>${Math.round(pct * 100)}%</b></div>
-        <div class="pc-meter"><i style="--w:${pct * 100}%"></i></div>
-      </div>
-      <div class="pc-stats">
-        ${a.ira ? `<div><b>${escapeHtml(a.ira)}</b><span>I.R.A.</span></div>`
-          : graded.length ? `<div><b>${fmtAvg(graded)}</b><span>média das notas</span></div>` : ""}
-        ${acc.prevista ? `<button class="is-acc" data-me-tab="acc"><b>${fmtH(acc.cumprida)}</b><span>de ${fmtH(acc.prevista)} complementares</span></button>` : ""}
-        ${a.extensao ? `<div><b>${fmtH(a.extensao.cumprida)}</b><span>de ${fmtH(a.extensao.prevista)} de extensão curricular</span></div>` : ""}
-      </div>
+      <div class="pc-meter"><i style="--w:${pct * 100}%"></i></div>
+      <p class="pc-line">
+        <span><b>${done.length}</b> de ${all.length} disciplinas</span>
+        ${a.ira ? `<span>I.R.A. <b>${escapeHtml(a.ira)}</b></span>` : graded.length ? `<span>média <b>${fmtAvg(graded)}</b></span>` : ""}
+        ${end.period && done.length < all.length ? `<span>formatura prevista em <b class="is-end">${escapeHtml(end.period)}</b></span>` : ""}
+      </p>
     </section>
 
     ${(a.versao || 1) < 2 ? `<div class="me-banner">Clique de novo no favorito <b>PPChat ← SUAP</b> com o SUAP aberto para trazer
@@ -1759,27 +1737,23 @@ function renderStop() {
       side = status === "reprovada" ? '<span class="st-badge st-reprovada">refazer</span>'
         : missing.length ? "" : '<span class="st-badge st-liberada">liberada</span>';
     } else if (status === "cursando") {
-      meta = [n.freq && `${n.freq} de frequência`, n.nota && `nota parcial ${n.nota}`].filter(Boolean).join(" · ") || "em andamento";
+      meta = n.freq ? `${n.freq} de frequência` : "em andamento";
       side = '<span class="st-badge st-cursando">cursando</span>';
     } else {
-      meta = [/aproveit/i.test(n.situacao || "") ? "aproveitada" : "", n.freq ? `${n.freq} de frequência` : ""].filter(Boolean).join(" · ") || "concluída";
+      meta = /aproveit/i.test(n.situacao || "") ? "aproveitada" : "concluída";
       side = n.nota ? `<span class="grade big ${gradeClass(n.nota)}">${escapeHtml(n.nota)}</span>` : `<span class="pc-check">${ICON.check}</span>`;
     }
     return `<button class="pc-course" data-goto="${d.codigo}" title="Ver no fluxograma">
-      <span class="pc-course-sem" title="Semestre na matriz">${d.semestre}º</span>
-      <span class="pc-course-main"><b>${escapeHtml(titleCase(d.nome))}</b><small>${d.codigo} · ${fmtH(d.carga_horaria_total)} · ${escapeHtml(meta)}</small></span>
+      <span class="pc-course-main"><b>${escapeHtml(titleCase(d.nome))}</b><small>${escapeHtml(meta)}</small></span>
       ${side}
     </button>`;
   };
   const facts = [
-    `<div><b>${stop.courses.length}</b><span>disciplina${stop.courses.length === 1 ? "" : "s"}</span></div>`,
     st.avg ? `<div><b>${st.avg}</b><span>média</span></div>` : "",
-    st.freq != null && stop.kind !== "future" ? `<div><b>${st.freq}%</b><span>frequência média</span></div>` : "",
-    `<div><b>${fmtH(st.ch)}</b><span>carga horária</span></div>`,
+
   ].join("");
   const note = stop.kind === "future"
-    ? "Previsão: considera os pré-requisitos e o semestre em que cada disciplina é oferecida na matriz. Não é a oferta oficial."
-    : stop.kind === "now" ? "Notas e frequência parciais, como estão no SUAP agora." : "";
+    ? "Previsão pelos pré-requisitos e pela oferta da matriz, não é a oferta oficial." : "";
   box.innerHTML = `
     <header class="sd-head">
       <span class="sd-num">${stop.n}</span>
@@ -1828,28 +1802,22 @@ function accHtml(a) {
   }
   const periods = [...byPeriod.keys()].sort().reverse();
   const tipos = (acc.tipos || []).filter((t) => t.max).sort((x, y) => (y.contabilizada || 0) - (x.contabilizada || 0));
-  const pct = acc.prevista ? Math.min(1, done / acc.prevista) : 0;
-  const r = 70, c = 2 * Math.PI * r;
+  const pct = (h) => (acc.prevista ? Math.min(100, (h / acc.prevista) * 100) : 0);
   return `
     <section class="acc-hero">
-      <svg class="acc-ring" viewBox="0 0 180 180" aria-hidden="true">
-        <circle cx="90" cy="90" r="${r}" class="acc-ring-bg"/>
-        <circle cx="90" cy="90" r="${r}" class="acc-ring-fg" style="--c:${c};--off:${c * (1 - pct)}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct)}"/>
-        <text x="90" y="88" class="acc-ring-val">${Math.round(done)} h</text>
-        <text x="90" y="110" class="acc-ring-sub">de ${Math.round(acc.prevista)} h</text>
-      </svg>
-      <div class="acc-hero-text">
-        <p class="eyebrow">Atividades complementares</p>
+      <div class="pc-head">
         <h3>${left ? `Faltam <em>${fmtH(left)}</em>` : "Horas <em>completas</em>"}</h3>
-        <p class="muted">Contam atividades fora das disciplinas: iniciação científica, cursos, eventos, monitoria e ações de
-          extensão. As disciplinas Atividades de Extensão 1 a 4 não entram aqui.</p>
-        <div class="acc-chips">
-          <span class="st-badge st-concluida">${Math.round(pct * 100)}% cumprido</span>
-          ${pending ? `<span class="st-badge st-cursando">${fmtH(pending)} enviadas sem contar ainda</span>` : ""}
-          ${denied.length ? `<span class="st-badge st-reprovada">${denied.length} indeferida${denied.length === 1 ? "" : "s"}</span>` : ""}
-        </div>
-        <button class="btn btn-primary btn-sm" data-me="ask-acc">${ICON.ask}Como completar o que falta?</button>
+        <button class="btn btn-ghost btn-sm" data-me="ask-acc">${ICON.ask}Como completar?</button>
       </div>
+      <div class="acc-meter" role="img" aria-label="${fmtH(done)} de ${fmtH(acc.prevista)}">
+        <i class="is-done" style="--w:${pct(done)}%"></i>
+        ${pending ? `<i class="is-pending" style="--w:${pct(pending)}%" title="${fmtH(pending)} enviadas, ainda sem contar"></i>` : ""}
+      </div>
+      <p class="pc-line">
+        <span><b>${fmtH(done)}</b> de ${fmtH(acc.prevista)}</span>
+        ${pending ? `<span class="is-pending">${fmtH(pending)} em análise</span>` : ""}
+        ${denied.length ? `<span class="is-denied">${denied.length} indeferida${denied.length === 1 ? "" : "s"}</span>` : ""}
+      </p>
     </section>
 
     <div class="acc-cols">
