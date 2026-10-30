@@ -100,6 +100,26 @@ A API **não guarda conversas**: para continuar uma, mande em `history` as troca
 O front faz isso sozinho com a conversa salva no navegador. Perguntas acima do limite por IP ou do teto global
 recebem 429.
 
+## Dados do aluno via SUAP (bookmarklet)
+
+O SUAP do IFSP não oferece, na API, as notas e o histórico do aluno, e o login da página web tem reCAPTCHA. Por
+isso o PPChat **não pede senha**: o aluno arrasta o favorito "PPChat ← SUAP" (botão **Conectar SUAP** no topo) e o
+clica com o SUAP já aberto.
+
+1. O script (`static/suap-export.js`) roda dentro do SUAP com a sessão do próprio aluno e lê só as abas acadêmicas
+   (dados acadêmicos, requisitos de conclusão, histórico, boletins e atividades complementares e de extensão).
+   Dados pessoais e bancários ficam de fora. Antes de enviar, mostra o que leu.
+2. Envia as tabelas para `POST /aluno/importar` (CORS liberado só para `SUAP_ORIGINS`) e recebe um código de uso
+   único que expira em 10 minutos. O servidor guarda os dados só em memória.
+3. Abre o PPChat com `#suap=<código>`. O front troca o código pelos dados (`GET /aluno/importar/{código}`), apaga o
+   código da URL e guarda tudo **só no navegador**. Dá para remover a qualquer momento no mesmo botão.
+4. A situação de cada disciplina (feita, cursando, reprovada) vem do código `SCL…` ou do nome na tabela. As
+   "liberadas" são calculadas pelo grafo de pré-requisitos. Um resumo vai junto de cada pergunta (`perfil`), e a
+   árvore vira um mapa de progresso.
+
+O leitor é genérico (descobre as abas pelos links e extrai todas as tabelas), mas se o SUAP mudar muito, ajuste os
+padrões em `suap-export.js` (abas) e em `buildAluno` no `app.js` (situações).
+
 ## Deploy no Render (plano gratuito)
 
 O `render.yaml` já descreve o serviço. A base processada (`src/data/processed/`) está no repositório, então o

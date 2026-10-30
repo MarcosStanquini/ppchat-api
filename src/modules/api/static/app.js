@@ -27,6 +27,7 @@ const state = {
   curriculum: null,
   byCode: new Map(),
   requestId: null, // resposta em andamento, para o botão "parar"
+  aluno: null, // dados importados do SUAP: {matricula, coletado_em, status: {codigo: situação}, contexto}
   history: [], // {role: "user", text, disciplinas} | {role: "assistant", text, thinking?, usage?, stopped?}
   context: [], // disciplinas selecionadas para a próxima pergunta
   busy: false,
@@ -125,7 +126,13 @@ function renderEmpty(eyebrow = "Seu PPC, em conversa") {
     .find((d) => d.tipo === "obrigatoria" && !/extens/i.test(d.nome)) || disciplinas[0];
   const gate = disc(gargalos[1] || gargalos[0]);
   const pair = [gargalos[2], "SCLBDD1"].filter((c) => disc(c));
-  const items = [
+  const items = state.aluno ? [
+    // Com o SUAP importado, as sugestões falam do percurso do próprio aluno
+    { icon: ICON.route, tag: "Meu percurso", text: "Quais disciplinas eu já posso cursar no próximo semestre?" },
+    { icon: ICON.rules, tag: "Meu percurso", text: "Quanto falta para eu me formar, incluindo as atividades complementares?" },
+    { icon: ICON.gauge, tag: "Dificuldade", text: "Das disciplinas que ainda faltam, quais devem ser as mais difíceis para mim?" },
+    { icon: ICON.chain, tag: "Planejamento", text: "Monte um plano semestre a semestre para eu me formar no menor tempo." },
+  ] : [
     { icon: ICON.chain, tag: "Dependências", text: `Quais são todos os pré-requisitos de ${titleCase(deepest.nome)}?` },
     { icon: ICON.route, tag: "Com disciplinas no contexto", text: "Em que ordem devo cursar estas disciplinas e por quê?", context: pair },
     { icon: ICON.gauge, tag: "Dificuldade", text: "Quais são as disciplinas mais difíceis do curso e por quê?" },
@@ -461,11 +468,14 @@ function nodeHtml(code, { side = "", focus = false, direct = false, compact = fa
   const blocks = d.libera_transitivamente.length;
   const inCtx = state.context.includes(code);
   const solo = !isConnected(d); // sem pré-requisitos nem dependentes: borda tracejada
+  const st = studentStatus(code); // com o SUAP importado: feita, cursando, liberada...
+  const badge = inCtx ? '<span class="ctx-badge">no chat</span>'
+    : st ? `<span class="st-badge st-${st}">${STATUS_LABEL[st]}</span>`
+    : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`;
   return `
-    <button class="node ${side} ${focus ? "is-focus" : ""} ${direct ? "direct" : ""} ${inCtx ? "in-context" : ""} ${solo ? "is-solo" : ""}"
+    <button class="node ${side} ${focus ? "is-focus" : ""} ${direct ? "direct" : ""} ${inCtx ? "in-context" : ""} ${solo ? "is-solo" : ""} ${st ? `st-${st}` : ""}"
         data-code="${code}" title="${focus ? "" : "Centralizar a árvore nesta disciplina"}">
-      <span class="node-top"><span class="node-code">${code}</span>
-        ${inCtx ? '<span class="ctx-badge">no chat</span>' : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`}</span>
+      <span class="node-top"><span class="node-code">${code}</span>${badge}</span>
       <span class="node-name">${escapeHtml(titleCase(d.nome))}</span>
       <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
       <span class="node-meta"><span>${compact ? "" : `${semesterLabel(d)} · `}${hours(d.carga_horaria_total)}</span>
@@ -687,6 +697,7 @@ function renderCourseInfo() {
       <span class="pill">${disciplinas.length} disciplinas</span>
       <span class="pill">${hours(state.curriculum.carga_horaria_total_curso)}</span>
     </div>
+    ${state.aluno ? progressHtml() : ""}
     <div class="info-section">
       <div class="stat-grid">
         <div class="stat-card anc"><b>${connected.length}</b><span>com pré-requisitos ou dependentes</span></div>
@@ -718,6 +729,7 @@ function renderInfo(code) {
     ${state.focusHistory.length ? `<button class="btn btn-sm back-btn" data-act="back">${ICON.back}<span>Voltar para ${back ? escapeHtml(nameOf(back)) : "o curso inteiro"}</span></button>` : ""}
     <span class="info-code">${d.codigo}</span>
     <h3>${escapeHtml(name)}</h3>
+    ${studentStatus(code) ? `<p class="st-line st-${studentStatus(code)}">${STATUS_TEXT[studentStatus(code)]}</p>` : ""}
     <div class="pills">
       <span class="pill">${d.semestre ? `${d.semestre}º semestre` : "Optativa"}</span>
       <span class="pill">${hours(d.carga_horaria_total)}</span>
@@ -978,7 +990,10 @@ async function streamAnswer(question, disciplinas, ui) {
   const response = await fetchWithWake("/chat/stream", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question, disciplinas, history: historyPayload(), request_id: state.requestId }),
+    body: JSON.stringify({
+      question, disciplinas, history: historyPayload(), request_id: state.requestId,
+      perfil: state.aluno?.contexto || null, // dados do SUAP, guardados só neste navegador
+    }),
     signal: state.controller.signal,
   });
   if (!response.ok) {
@@ -1152,9 +1167,242 @@ composer.addEventListener("submit", (event) => {
   else ask(input.value);
 });
 
+/* ───────────── Dados do SUAP (bookmarklet) ───────────── */
+// O bookmarklet roda dentro do SUAP com a sessão do próprio aluno, envia as tabelas acadêmicas ao
+// servidor e abre o PPChat com #suap=<código de uso único>. Aqui o código vira dados, que ficam só
+// neste navegador (localStorage) e seguem, resumidos, junto de cada pergunta.
+const ALUNO_KEY = "ppchat-aluno-v1";
+const PERFIL_MAX = 28_000; // a API aceita até 30 mil caracteres
+const STATUS_LABEL = { concluida: "✓ feita", cursando: "cursando", reprovada: "reprovou", liberada: "liberada" };
+const STATUS_TEXT = {
+  concluida: "Você já concluiu esta disciplina.",
+  cursando: "Você está cursando esta disciplina agora.",
+  reprovada: "Você reprovou e ainda não concluiu esta disciplina.",
+  liberada: "Pré-requisitos cumpridos: você já pode cursar.",
+};
+const SITUACOES = [
+  [/aprovad|dispensad|aproveitament|cumprid|conclu[ií]d/i, "concluida"],
+  [/cursando|matriculad|em curso/i, "cursando"],
+  [/reprovad/i, "reprovada"],
+];
+const RANK = { concluida: 3, cursando: 2, reprovada: 1 };
+const CONTEXT_TABS = /dados acad|requisitos|complementares|extens|boletins?/i;
+
+// Situação de uma disciplina para o aluno; "liberada" = todos os pré-requisitos já concluídos
+function studentStatus(code) {
+  if (!state.aluno) return null;
+  const st = state.aluno.status[code];
+  if (st) return st;
+  const d = disc(code);
+  return d && d.pre_requisitos.every((p) => state.aluno.status[p] === "concluida") ? "liberada" : null;
+}
+
+// Nomes do currículo do mais longo ao mais curto, para "Banco de Dados 1" não casar dentro de outro nome
+let namesByLength = null;
+function codesInRow(text) {
+  const codes = [...new Set(text.match(/\bSCL[A-Z0-9]{4,5}\b/g) || [])].filter(disc);
+  if (codes.length) return codes;
+  namesByLength ||= state.curriculum.disciplinas.map((d) => [normalize(d.nome), d.codigo]).sort((a, b) => b[0].length - a[0].length);
+  const norm = normalize(text);
+  const hit = namesByLength.find(([name]) => norm.includes(name));
+  return hit ? [hit[1]] : [];
+}
+
+const parseHours = (s) => {
+  const m = (s || "").replace(/\./g, "").replace(",", ".").match(/\d+(?:\.\d+)?/);
+  return m ? Number(m[0]) : null;
+};
+
+// "C.H. Prevista:" | "640,00 hora(s)" → 640 (rótulo e valor na mesma célula ou na seguinte)
+function findHours(tables, label) {
+  for (const t of tables) for (const row of t.linhas) {
+    for (let i = 0; i < row.length; i++) {
+      if (!label.test(row[i])) continue;
+      const inline = parseHours(row[i].replace(label, ""));
+      return inline ?? parseHours(row[i + 1]);
+    }
+  }
+  return null;
+}
+
+const mdTable = (t, maxRows = 40) =>
+  (t.titulo ? `**${t.titulo}**\n` : "") + t.linhas.slice(0, maxRows).map((r) => `| ${r.join(" | ")} |`).join("\n");
+
+function buildAluno(data) {
+  const status = {};
+  for (const aba of data.abas) for (const t of aba.tabelas) for (const row of t.linhas) {
+    const text = row.join(" | ");
+    const situacao = SITUACOES.find(([re]) => re.test(text))?.[1];
+    if (!situacao) continue;
+    for (const code of codesInRow(text)) {
+      if (!status[code] || RANK[situacao] > RANK[status[code]]) status[code] = situacao;
+    }
+  }
+  const accTables = data.abas.filter((a) => /complementares/i.test(a.titulo)).flatMap((a) => a.tabelas);
+  const acc = { prevista: findHours(accTables, /C\.?\s*H\.?\s*Prevista:?/i), cumprida: findHours(accTables, /C\.?\s*H\.?\s*Cumprida:?/i) };
+  const aluno = {
+    matricula: data.matricula,
+    coletado_em: data.coletado_em,
+    status,
+    acc,
+    diag: data.abas.map((a) => ({ titulo: a.titulo, tabelas: a.tabelas.length, linhas: a.tabelas.reduce((n, t) => n + t.linhas.length, 0) })),
+  };
+  // Tabelas que ajudam a responder (requisitos, horas, boletim atual), como markdown
+  aluno.tabelas = data.abas.filter((a) => CONTEXT_TABS.test(a.titulo))
+    .map((a) => `### ${a.titulo}\n` + a.tabelas.map((t) => mdTable(t)).join("\n\n")).join("\n\n");
+  return aluno;
+}
+
+// Resumo que vai junto das perguntas (o modelo recebe as listas já calculadas com o grafo)
+function alunoContext(aluno) {
+  const all = state.curriculum.disciplinas.filter((d) => d.semestre);
+  const by = (st) => all.filter((d) => aluno.status[d.codigo] === st);
+  const names = (list) => list.map((d) => `${titleCase(d.nome)} (${d.codigo})`).join("; ") || "nenhuma";
+  const done = (c) => aluno.status[c] === "concluida";
+  const pending = all.filter((d) => !["concluida", "cursando"].includes(aluno.status[d.codigo]));
+  const free = pending.filter((d) => d.pre_requisitos.every(done));
+  const afterNow = pending.filter((d) => !d.pre_requisitos.every(done) &&
+    d.pre_requisitos.every((p) => done(p) || aluno.status[p] === "cursando"));
+  const lines = [
+    `Matrícula ${aluno.matricula} · dados do SUAP de ${new Date(aluno.coletado_em).toLocaleDateString("pt-BR")}`,
+    `Concluídas (${by("concluida").length} de ${all.length}): ${names(by("concluida"))}`,
+    `Cursando agora: ${names(by("cursando"))}`,
+    `Reprovadas e ainda não concluídas: ${names(by("reprovada"))}`,
+    `Liberadas para cursar já (todos os pré-requisitos concluídos): ${names(free)}`,
+    `Liberadas se for aprovado no semestre atual: ${names(afterNow)}`,
+    `Ainda não liberadas: ${names(pending.filter((d) => !free.includes(d) && !afterNow.includes(d)))}`,
+    aluno.acc.prevista ? `Atividades complementares: ${aluno.acc.cumprida ?? "?"} h cumpridas de ${aluno.acc.prevista} h exigidas.` : "",
+    "",
+    "Tabelas copiadas do SUAP:",
+    aluno.tabelas,
+  ];
+  return lines.filter((l) => l !== "").join("\n").slice(0, PERFIL_MAX);
+}
+
+function setAluno(aluno) {
+  state.aluno = aluno;
+  if (aluno) aluno.contexto = alunoContext(aluno);
+  aluno ? storage.set(ALUNO_KEY, aluno) : storage.remove(ALUNO_KEY);
+  const label = $("#suap-btn-label");
+  label.textContent = aluno ? "SUAP conectado" : "Conectar SUAP";
+  $("#suap-btn").classList.toggle("is-connected", !!aluno);
+  if ($(".node", $("#tree-inner"))) { renderTree({ animate: false }); renderInfo(state.focus); }
+  if ($("#empty")) renderEmpty();
+  renderGrid();
+}
+
+function progressHtml() {
+  const all = state.curriculum.disciplinas.filter((d) => d.semestre);
+  const count = (st) => all.filter((d) => studentStatus(d.codigo) === st).length;
+  const done = count("concluida");
+  const { prevista, cumprida } = state.aluno.acc;
+  const free = all.filter((d) => studentStatus(d.codigo) === "liberada").map((d) => d.codigo);
+  return `
+    <div class="info-section progress">
+      <h4>Seu progresso · SUAP</h4>
+      <div class="progress-row"><span><b>${done}</b> de ${all.length} disciplinas</span><span>${Math.round((done / all.length) * 100)}%</span></div>
+      <div class="meter big"><i class="lvl-introdutoria" style="width:${(done / all.length) * 100}%"></i></div>
+      <div class="progress-pills">
+        <span class="st-badge st-cursando">${count("cursando")} cursando</span>
+        <span class="st-badge st-liberada">${free.length} liberadas</span>
+        ${count("reprovada") ? `<span class="st-badge st-reprovada">${count("reprovada")} a refazer</span>` : ""}
+      </div>
+      ${prevista ? `<div class="progress-row" style="margin-top:12px"><span>Atividades complementares</span><span>${cumprida ?? "?"} / ${prevista} h</span></div>
+        <div class="meter big"><i class="lvl-intermediaria" style="width:${Math.min(100, ((cumprida || 0) / prevista) * 100)}%"></i></div>` : ""}
+      ${free.length ? `<h4 style="margin-top:14px">Já pode cursar</h4>${goChips(free)}` : ""}
+    </div>`;
+}
+
+/* Modal */
+const suapModal = $("#suap-modal");
+const bookmarkletHref = () =>
+  `javascript:(()=>{var s=document.createElement('script');s.src='${location.origin}/static/suap-export.js?v='+Date.now();` +
+  `s.dataset.ppchat='${location.origin}';document.body.appendChild(s);})();`;
+
+function suapStepsHtml() {
+  return `
+    <ol class="steps">
+      <li><b>Arraste este botão para a barra de favoritos</b> do navegador
+        <a class="bookmarklet" href="${bookmarkletHref()}" title="Arraste para a barra de favoritos">PPChat ← SUAP</a>
+        <span class="small-note">Barra escondida? <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>. Ou
+        <button class="link" data-act="copy-bookmarklet">copie o código</button> e crie um favorito com ele.</span></li>
+      <li>Entre no <a href="https://suap.ifsp.edu.br" target="_blank" rel="noopener">SUAP</a> como sempre. <b>O PPChat nunca vê sua senha.</b></li>
+      <li>Com o SUAP aberto, clique no favorito <b>PPChat ← SUAP</b>, confira o que será enviado e clique em <b>Enviar</b>.</li>
+    </ol>`;
+}
+
+function renderSuapModal() {
+  const a = state.aluno;
+  $("#suap-title").textContent = a ? "Seus dados do SUAP" : "Conectar ao SUAP";
+  if (!a) {
+    $("#suap-body").innerHTML = `
+      <p>Importe seu histórico do SUAP para o PPChat responder sobre <b>o seu</b> percurso e marcar na árvore o que você já fez.</p>
+      ${suapStepsHtml()}
+      <p class="small-note">Lemos só as abas acadêmicas: dados acadêmicos, histórico, boletins, requisitos de conclusão e atividades
+        complementares. Os dados ficam guardados <b>só neste navegador</b>; o servidor apenas repassa e apaga em até 10 minutos.
+        Projeto independente, sem vínculo oficial com o IFSP.</p>`;
+    return;
+  }
+  const recognized = Object.keys(a.status).length;
+  $("#suap-body").innerHTML = `
+    <p class="small-note" style="margin-top:0">Matrícula <b>${escapeHtml(a.matricula)}</b> · importado em
+      ${new Date(a.coletado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
+    ${recognized ? progressHtml() : `<div class="error-box">Li ${a.diag.reduce((n, d) => n + d.linhas, 0)} linhas, mas não reconheci
+      nenhuma disciplina. O formato do SUAP pode ser diferente do esperado; mande um print da aba Histórico para ajustarmos.</div>`}
+    <details class="diag"><summary>O que foi lido do SUAP</summary>
+      <ul>${a.diag.map((d) => `<li><span>${escapeHtml(d.titulo)}</span><span>${d.tabelas} tabelas · ${d.linhas} linhas</span></li>`).join("")}</ul>
+    </details>
+    <details class="diag"><summary>Atualizar os dados</summary>${suapStepsHtml()}</details>
+    <div class="info-actions"><button class="btn" data-act="remove-aluno">Remover meus dados deste navegador</button></div>`;
+}
+
+$("#suap-btn").addEventListener("click", () => { renderSuapModal(); suapModal.showModal(); });
+suapModal.addEventListener("click", async (event) => {
+  if (event.target === suapModal || event.target.closest("[data-close]")) return suapModal.close();
+  if (event.target.closest(".bookmarklet")) {
+    event.preventDefault(); // aqui no PPChat ele não faz nada: só funciona dentro do SUAP
+    return toast("Arraste o botão para a barra de favoritos e clique nele com o SUAP aberto.");
+  }
+  if (event.target.closest("[data-goto]")) {
+    suapModal.close();
+    return openDrawer("tree", event.target.closest("[data-goto]").dataset.goto);
+  }
+  const act = event.target.closest("[data-act]")?.dataset.act;
+  if (act === "copy-bookmarklet") {
+    try { await navigator.clipboard.writeText(bookmarkletHref()); toast("Código copiado. Cole como endereço de um novo favorito."); }
+    catch { toast("Não foi possível copiar."); }
+  } else if (act === "remove-aluno") {
+    setAluno(null);
+    renderSuapModal();
+    toast("Seus dados do SUAP foram apagados deste navegador.");
+  }
+});
+
+// Chegada do bookmarklet: #suap=<código>. O código some da URL na hora e só vale uma vez.
+async function importFromHash() {
+  const match = location.hash.match(/^#suap=([\w-]{16,64})$/);
+  if (!match) return;
+  history.replaceState(null, "", location.pathname + location.search);
+  try {
+    const response = await fetchWithWake(`/aluno/importar/${match[1]}`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || `Erro ${response.status}`);
+    setAluno(buildAluno(data));
+    renderSuapModal();
+    suapModal.showModal();
+  } catch (error) {
+    toast(`Não consegui importar do SUAP: ${error.message}`);
+  }
+}
+
 /* ───────────── Início ───────────── */
 marked.use({ gfm: true, breaks: false });
 updateSendState();
 loadCurriculum()
-  .then(() => { if (!restoreConversation()) renderEmpty(); })
+  .then(() => {
+    const saved = storage.get(ALUNO_KEY);
+    if (saved?.status) setAluno(saved);
+    if (!restoreConversation()) renderEmpty();
+    importFromHash();
+  })
   .catch((error) => toast(error.message));
