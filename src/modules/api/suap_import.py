@@ -28,6 +28,7 @@ class Aba(BaseModel):
 
 
 class SuapImport(BaseModel):
+    versao: int = 1  # 2: colunas mescladas expandidas (permite ler notas pelo cabeçalho)
     matricula: str = Field(max_length=30)
     coletado_em: str = Field(max_length=40)
     abas: List[Aba] = Field(default_factory=list, max_length=12)

@@ -87,10 +87,15 @@
   <aside class="drawer" id="drawer" aria-label="Estrutura curricular" aria-hidden="true">
     <div class="drawer-head">
       <div class="drawer-title">
+        <!-- Volta ao chat: botão com texto, à esquerda, em vez de um X escondido no canto -->
+        <button class="btn back-chat" id="close-drawer">
+          <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg><span>Voltar ao chat</span>
+        </button>
         <h2>Estrutura curricular</h2>
         <div class="segmented" role="tablist">
           <button role="tab" class="seg is-active" data-view="tree" aria-selected="true">Árvore</button>
           <button role="tab" class="seg" data-view="grid" aria-selected="false">Grade</button>
+          <button role="tab" class="seg seg-me" data-view="me" aria-selected="false">Meu percurso</button>
         </div>
       </div>
       <div class="drawer-actions">
@@ -100,9 +105,6 @@
           <div class="search-results" id="search-results" hidden></div>
         </label>
         <button class="chip-btn" id="open-rules">Regras do curso</button>
-        <button class="icon-btn" id="close-drawer" aria-label="Fechar">
-          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
-        </button>
       </div>
     </div>
 
@@ -110,7 +112,28 @@
       <div class="tree-wrap">
         <div class="tree-bar">
           <nav class="tree-crumbs" id="tree-crumbs" aria-label="Navegação da árvore"></nav>
-          <button class="chip-btn panel-toggle" id="toggle-info" aria-pressed="true"></button>
+          <div class="tree-bar-actions">
+            <!-- Configurações de exibição da árvore -->
+            <div class="settings">
+              <button class="icon-btn settings-btn" id="tree-settings-btn" aria-haspopup="true" aria-expanded="false"
+                  title="Configurações de exibição" aria-label="Configurações de exibição">
+                <svg viewBox="0 0 24 24"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <div class="settings-pop" id="tree-settings" role="menu" hidden>
+                <p class="settings-title">Exibição</p>
+                <label class="switch-row">
+                  <span><b>Notas finais</b><small>Mostra a nota de cada disciplina já feita</small></span>
+                  <input type="checkbox" id="opt-grades"><i class="switch" aria-hidden="true"></i>
+                </label>
+                <label class="switch-row">
+                  <span><b>Meu progresso</b><small>Marca feita, cursando e liberada</small></span>
+                  <input type="checkbox" id="opt-progress"><i class="switch" aria-hidden="true"></i>
+                </label>
+                <p class="settings-note" id="settings-note">Conecte o SUAP para usar estas opções.</p>
+              </div>
+            </div>
+            <button class="chip-btn panel-toggle" id="toggle-info" aria-pressed="true"></button>
+          </div>
         </div>
         <div class="tree-canvas" id="tree-canvas">
           <div class="tree-inner" id="tree-inner"></div>
@@ -136,6 +159,10 @@
     <section class="view view-grid" id="view-grid">
       <p class="muted grid-hint">Toque numa disciplina para ver a árvore de dependências dela.</p>
       <div class="board" id="board"><div class="board-inner" id="board-inner"></div></div>
+    </section>
+
+    <section class="view view-me" id="view-me">
+      <div class="me" id="me"></div>
     </section>
   </aside>
 

@@ -28,6 +28,7 @@ const state = {
   byCode: new Map(),
   requestId: null, // resposta em andamento, para o botão "parar"
   aluno: null, // dados importados do SUAP: {matricula, coletado_em, status: {codigo: situação}, contexto}
+  settings: { grades: false, progress: true }, // engrenagem da árvore (salvo no navegador)
   history: [], // {role: "user", text, disciplinas} | {role: "assistant", text, thinking?, usage?, stopped?}
   context: [], // disciplinas selecionadas para a próxima pergunta
   busy: false,
@@ -108,7 +109,7 @@ async function loadCurriculum() {
   state.curriculum = data;
   data.disciplinas.forEach((d) => state.byCode.set(d.codigo, d));
 
-  $("#course-name").textContent = `${data.curso} · ${data.campus} · ${data.vigencia}`;
+  $("#course-name").textContent = "Engenharia de Software · IFSP São Carlos";
   $("#stats").innerHTML = [
     [data.disciplinas.length, "disciplinas"],
     [data.duracao_semestres, "semestres"],
@@ -340,6 +341,9 @@ function setView(view) {
   });
   $("#view-tree").classList.toggle("is-visible", view === "tree");
   $("#view-grid").classList.toggle("is-visible", view === "grid");
+  $("#view-me").classList.toggle("is-visible", view === "me");
+  $(".drawer-actions").hidden = view === "me"; // busca e regras são da árvore e da grade
+  if (view === "me") renderMe();
   if (view === "tree" && !$(".node", $("#tree-inner"))) showTree(state.focus); // primeiro desenho
 }
 
@@ -468,7 +472,7 @@ function nodeHtml(code, { side = "", focus = false, direct = false, compact = fa
   const blocks = d.libera_transitivamente.length;
   const inCtx = state.context.includes(code);
   const solo = !isConnected(d); // sem pré-requisitos nem dependentes: borda tracejada
-  const st = studentStatus(code); // com o SUAP importado: feita, cursando, liberada...
+  const st = state.settings.progress ? studentStatus(code) : null; // com o SUAP importado: feita, cursando, liberada...
   const badge = inCtx ? '<span class="ctx-badge">no chat</span>'
     : st ? `<span class="st-badge st-${st}">${STATUS_LABEL[st]}</span>`
     : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`;
@@ -479,7 +483,7 @@ function nodeHtml(code, { side = "", focus = false, direct = false, compact = fa
       <span class="node-name">${escapeHtml(titleCase(d.nome))}</span>
       <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
       <span class="node-meta"><span>${compact ? "" : `${semesterLabel(d)} · `}${hours(d.carga_horaria_total)}</span>
-        ${blocks >= 3 && side !== "anc" ? `<span>trava ${blocks}</span>` : ""}</span>
+        ${gradeTag(code) || (blocks >= 3 && side !== "anc" ? `<span>trava ${blocks}</span>` : "")}</span>
     </button>`;
 }
 
@@ -793,12 +797,14 @@ function renderGrid() {
       <div class="col-head"><b>${col.title}</b><span>${hours(col.items.reduce((sum, d) => sum + d.carga_horaria_total, 0))}</span></div>
       ${col.items.map((d) => {
         const blocks = d.libera_transitivamente.length;
-        return `<button class="card" data-code="${d.codigo}">
-          <span class="card-top"><span class="card-code">${d.codigo}</span><i class="dot ${levelClass(d.nivel_estimado)}"></i></span>
+        const st = state.settings.progress ? studentStatus(d.codigo) : null;
+        return `<button class="card ${st ? `st-${st}` : ""}" data-code="${d.codigo}">
+          <span class="card-top"><span class="card-code">${d.codigo}</span>
+            ${st ? `<span class="st-badge st-${st}">${STATUS_LABEL[st]}</span>` : `<i class="dot ${levelClass(d.nivel_estimado)}"></i>`}</span>
           <span class="card-name">${escapeHtml(titleCase(d.nome))}</span>
           <span class="meter"><i class="${levelClass(d.nivel_estimado)}" style="width:${d.indice_complexidade * 10}%"></i></span>
           <span class="card-meta"><span>${hours(d.carga_horaria_total)}</span>
-            ${blocks >= 4 ? `<span class="badge-gate">trava ${blocks}</span>` : ""}</span>
+            ${gradeTag(d.codigo) || (blocks >= 4 ? `<span class="badge-gate">trava ${blocks}</span>` : "")}</span>
         </button>`;
       }).join("")}
     </div>`).join("");
@@ -1228,6 +1234,109 @@ function findHours(tables, label) {
 const mdTable = (t, maxRows = 40) =>
   (t.titulo ? `**${t.titulo}**\n` : "") + t.linhas.slice(0, maxRows).map((r) => `| ${r.join(" | ")} |`).join("\n");
 
+// Lê uma tabela pelo cabeçalho (1ª linha). Desde a versão 2 do bookmarklet as colunas mescladas vêm
+// repetidas, então o índice do cabeçalho bate com o das células
+function records(t) {
+  const [head = [], ...rows] = t.linhas;
+  const keys = head.map(normalize);
+  return { rows, col: (re) => keys.findIndex((k) => re.test(k)) };
+}
+const tablesOf = (data, re) => data.abas.filter((a) => re.test(a.titulo)).flatMap((a) => a.tabelas);
+const hasDigit = (s) => /\d/.test(s || "");
+
+// "I.R.A." | "8,20" → "8,20" (rótulo numa célula, valor na seguinte)
+function findValue(tables, label) {
+  for (const t of tables) for (const row of t.linhas) {
+    const i = row.findIndex((cell) => label.test(cell));
+    if (i >= 0 && row[i + 1]) return row[i + 1];
+  }
+  return null;
+}
+
+// Nota final, frequência e período de cada disciplina (Histórico + Boletim do período atual)
+function readGrades(data) {
+  const notas = {};
+  for (const t of tablesOf(data, /hist[oó]rico|boletins?/i)) {
+    const r = records(t);
+    const iSit = r.col(/situa/);
+    if (iSit < 0) continue;
+    const iNota = [/^mfd/, /^nota/, /^media$/].map((re) => r.col(re)).find((i) => i >= 0) ?? -1;
+    const iFreq = r.col(/freq/);
+    const iPer = r.col(/^ano letivo|^ano\/periodo/);
+    for (const row of r.rows) {
+      const codes = codesInRow(row.join(" | "));
+      if (!codes.length) continue;
+      const status = SITUACOES.find(([re]) => re.test(row[iSit]))?.[1] || null;
+      const entry = {
+        situacao: row[iSit] || null,
+        status,
+        nota: iNota >= 0 && hasDigit(row[iNota]) ? row[iNota] : null,
+        freq: iFreq >= 0 && hasDigit(row[iFreq]) ? row[iFreq] : null,
+        periodo: iPer >= 0 && hasDigit(row[iPer]) ? row[iPer] : null,
+      };
+      for (const code of codes) {
+        const prev = notas[code];
+        // Fica a linha de situação mais avançada (ex.: aprovado depois de uma reprovação), sem perder dados
+        if (prev && (RANK[status] || 0) < (RANK[prev.status] || 0)) continue;
+        notas[code] = { ...prev, ...Object.fromEntries(Object.entries(entry).filter(([, v]) => v != null)) };
+      }
+    }
+  }
+  return notas;
+}
+
+function readComplementares(data) {
+  const tables = tablesOf(data, /complementares/i);
+  const acc = {
+    prevista: findHours(tables, /C\.?\s*H\.?\s*Prevista:?/i),
+    cumprida: findHours(tables, /C\.?\s*H\.?\s*Cumprida:?/i),
+    cadastrada: findHours(tables, /C\.?\s*H\.?\s*Cadastrada:?/i),
+    tipos: [],
+    lancamentos: [],
+  };
+  for (const t of tables) {
+    const r = records(t);
+    const iTipo = r.col(/^tipo$/), iMax = r.col(/max\.? curso/), iCad = r.col(/cadastrada/), iCont = r.col(/contabilizada/);
+    if (iTipo >= 0 && iCont >= 0) {
+      acc.tipos = r.rows.filter((row) => row[iTipo]).map((row) => ({
+        tipo: row[iTipo], max: parseHours(row[iMax]), cadastrada: parseHours(row[iCad]), contabilizada: parseHours(row[iCont]) ?? 0,
+      }));
+    }
+    const iAtv = r.col(/atividade/), iDef = r.col(/deferida/);
+    if (iAtv >= 0 && iDef >= 0) {
+      const iPer = r.col(/ano\/periodo/), iTipoCh = r.col(/tipo\/carga/), iRaz = r.col(/razao/);
+      acc.lancamentos = r.rows.filter((row) => row[iAtv]).map((row) => ({
+        periodo: row[iPer] || "", tipo: row[iTipoCh] || "", atividade: row[iAtv], deferida: row[iDef] || "", razao: row[iRaz] && row[iRaz] !== "-" ? row[iRaz] : "",
+      }));
+    }
+  }
+  return acc;
+}
+
+function readRequisitos(data) {
+  for (const t of tablesOf(data, /requisitos/i)) {
+    const r = records(t);
+    const iNome = r.col(/requisito/), iSit = r.col(/situa/), iPrev = r.col(/prevista/), iCump = r.col(/cumprid/), iPend = r.col(/pendente/);
+    if (iNome < 0 || iPrev < 0) continue;
+    return r.rows.filter((row) => row[iNome]).map((row) => ({
+      nome: row[iNome], situacao: row[iSit] || "", prevista: parseHours(row[iPrev]), cumprida: parseHours(row[iCump]), pendente: parseHours(row[iPend]),
+    }));
+  }
+  return [];
+}
+
+function readExtensao(data) {
+  for (const t of tablesOf(data, /extens/i)) {
+    const r = records(t);
+    const iPrev = r.col(/prevista/), iCump = r.col(/cumprida/);
+    if (iPrev < 0) continue;
+    return r.rows.map((row) => ({ prevista: parseHours(row[iPrev]), cumprida: parseHours(row[iCump]) }))
+      .filter((x) => x.prevista != null)
+      .reduce((sum, x) => ({ prevista: sum.prevista + x.prevista, cumprida: sum.cumprida + (x.cumprida || 0) }), { prevista: 0, cumprida: 0 });
+  }
+  return null;
+}
+
 function buildAluno(data) {
   const status = {};
   for (const aba of data.abas) for (const t of aba.tabelas) for (const row of t.linhas) {
@@ -1238,13 +1347,17 @@ function buildAluno(data) {
       if (!status[code] || RANK[situacao] > RANK[status[code]]) status[code] = situacao;
     }
   }
-  const accTables = data.abas.filter((a) => /complementares/i.test(a.titulo)).flatMap((a) => a.tabelas);
-  const acc = { prevista: findHours(accTables, /C\.?\s*H\.?\s*Prevista:?/i), cumprida: findHours(accTables, /C\.?\s*H\.?\s*Cumprida:?/i) };
   const aluno = {
+    versao: data.versao || 1,
     matricula: data.matricula,
     coletado_em: data.coletado_em,
     status,
-    acc,
+    // Notas e tabelas lidas pelo cabeçalho só são confiáveis com as colunas mescladas expandidas (versão 2)
+    notas: data.versao >= 2 ? readGrades(data) : {},
+    acc: readComplementares(data),
+    requisitos: data.versao >= 2 ? readRequisitos(data) : [],
+    extensao: data.versao >= 2 ? readExtensao(data) : null,
+    ira: findValue(tablesOf(data, /dados acad/i), /^I\.?\s?R\.?\s?A\.?$/i),
     diag: data.abas.map((a) => ({ titulo: a.titulo, tabelas: a.tabelas.length, linhas: a.tabelas.reduce((n, t) => n + t.linhas.length, 0) })),
   };
   // Tabelas que ajudam a responder (requisitos, horas, boletim atual), como markdown
@@ -1257,7 +1370,10 @@ function buildAluno(data) {
 function alunoContext(aluno) {
   const all = state.curriculum.disciplinas.filter((d) => d.semestre);
   const by = (st) => all.filter((d) => aluno.status[d.codigo] === st);
-  const names = (list) => list.map((d) => `${titleCase(d.nome)} (${d.codigo})`).join("; ") || "nenhuma";
+  const names = (list) => list.map((d) => {
+    const n = aluno.notas?.[d.codigo];
+    return `${titleCase(d.nome)} (${d.codigo}${n?.nota ? `, nota ${n.nota}` : ""}${n?.periodo ? `, ${n.periodo}` : ""})`;
+  }).join("; ") || "nenhuma";
   const done = (c) => aluno.status[c] === "concluida";
   const pending = all.filter((d) => !["concluida", "cursando"].includes(aluno.status[d.codigo]));
   const free = pending.filter((d) => d.pre_requisitos.every(done));
@@ -1271,7 +1387,10 @@ function alunoContext(aluno) {
     `Liberadas para cursar já (todos os pré-requisitos concluídos): ${names(free)}`,
     `Liberadas se for aprovado no semestre atual: ${names(afterNow)}`,
     `Ainda não liberadas: ${names(pending.filter((d) => !free.includes(d) && !afterNow.includes(d)))}`,
+    aluno.ira ? `I.R.A. (índice de rendimento acadêmico): ${aluno.ira}` : "",
     aluno.acc.prevista ? `Atividades complementares: ${aluno.acc.cumprida ?? "?"} h cumpridas de ${aluno.acc.prevista} h exigidas.` : "",
+    aluno.acc.tipos?.length ? `Horas por tipo de atividade complementar (contabilizada/máximo no curso): ${aluno.acc.tipos.map((t) => `${t.tipo}: ${t.contabilizada}/${t.max ?? "?"} h`).join("; ")}` : "",
+    aluno.extensao ? `Atividades curriculares de extensão: ${aluno.extensao.cumprida} h de ${aluno.extensao.prevista} h.` : "",
     "",
     "Tabelas copiadas do SUAP:",
     aluno.tabelas,
@@ -1289,6 +1408,8 @@ function setAluno(aluno) {
   if ($(".node", $("#tree-inner"))) { renderTree({ animate: false }); renderInfo(state.focus); }
   if ($("#empty")) renderEmpty();
   renderGrid();
+  renderSettings();
+  if (state.view === "me") renderMe();
 }
 
 function progressHtml() {
@@ -1312,6 +1433,234 @@ function progressHtml() {
       ${free.length ? `<h4 style="margin-top:14px">Já pode cursar</h4>${goChips(free)}` : ""}
     </div>`;
 }
+
+/* Engrenagem: configurações de exibição da árvore e da grade */
+const SETTINGS_KEY = "ppchat-tree-settings";
+Object.assign(state.settings, storage.get(SETTINGS_KEY) || {});
+
+function renderSettings() {
+  const connected = !!state.aluno;
+  $("#opt-grades").checked = state.settings.grades;
+  $("#opt-progress").checked = state.settings.progress;
+  $("#opt-grades").disabled = $("#opt-progress").disabled = !connected;
+  $("#settings-note").hidden = connected;
+}
+function setSetting(key, value) {
+  state.settings[key] = value;
+  storage.set(SETTINGS_KEY, state.settings);
+  if ($(".node", $("#tree-inner"))) renderTree({ animate: false });
+  renderGrid();
+}
+$("#tree-settings-btn").addEventListener("click", (event) => {
+  event.stopPropagation();
+  const pop = $("#tree-settings");
+  pop.hidden = !pop.hidden;
+  event.currentTarget.setAttribute("aria-expanded", !pop.hidden);
+  renderSettings();
+});
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".settings")) $("#tree-settings").hidden = true;
+});
+$("#opt-grades").addEventListener("change", (event) => setSetting("grades", event.target.checked));
+$("#opt-progress").addEventListener("change", (event) => setSetting("progress", event.target.checked));
+
+const gradeValue = (nota) => Number(String(nota).replace(",", "."));
+const gradeClass = (nota) => {
+  const v = gradeValue(nota);
+  return Number.isNaN(v) ? "g-mid" : v >= 8 ? "g-high" : v >= 6 ? "g-mid" : "g-low";
+};
+// Nota final no card (só com a opção ligada e a disciplina já feita)
+function gradeTag(code) {
+  if (!state.settings.grades || !state.aluno) return "";
+  const n = state.aluno.notas?.[code];
+  if (!n?.nota || state.aluno.status[code] !== "concluida") return "";
+  return `<span class="grade ${gradeClass(n.nota)}" title="Nota final">${escapeHtml(n.nota)}</span>`;
+}
+
+/* ───────────── Aba "Meu percurso" ───────────── */
+// Ideias por tipo de atividade complementar; são sugestões, o regulamento do curso decide o que vale
+const ACC_IDEAS = [
+  [/curso|forma[cç][aã]o|treinamento/i, "Cursos online com certificado na área (Alura, Coursera, Fundação Bradesco, cursos de extensão do IFSP)."],
+  [/organiza/i, "Ajude a organizar semanas acadêmicas, o InterIF, hackathons ou eventos do câmpus."],
+  [/artigo|apresenta/i, "Apresente trabalhos em jornadas científicas e congressos (jornadas de IC, CONNEPI)."],
+  [/competi/i, "Maratona de programação, OBI, hackathons e olimpíadas representando o IFSP."],
+  [/certifica/i, "Certificações de mercado em computação (nuvem, Scrum, linguagens). Confira o tipo certo antes de enviar."],
+  [/inicia[cç][aã]o|pesquisa/i, "Projetos de iniciação científica com professores do câmpus."],
+  [/monitor/i, "Seja monitor de uma disciplina que você já concluiu."],
+  [/evento|palestra|semin/i, "Assista a palestras, seminários e semanas acadêmicas com certificado."],
+];
+const accIdea = (tipo) => ACC_IDEAS.find(([re]) => re.test(tipo))?.[1] || "Veja no regulamento de atividades complementares o que conta neste tipo.";
+
+function ring(pct) {
+  const r = 52, c = 2 * Math.PI * r;
+  return `<svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="${r}" class="ring-bg"/>
+    <circle cx="60" cy="60" r="${r}" class="ring-fg" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct)}"/>
+    <text x="60" y="58" class="ring-pct">${Math.round(pct * 100)}%</text><text x="60" y="78" class="ring-sub">do curso</text></svg>`;
+}
+
+const bar = (value, max, cls = "") =>
+  `<div class="me-bar ${cls}"><i style="width:${max ? Math.min(100, (value / max) * 100) : 0}%"></i></div>`;
+const fmtH = (h) => (h == null ? "?" : `${Number(h).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} h`);
+
+function renderMe() {
+  const box = $("#me");
+  const a = state.aluno;
+  if (!a) {
+    box.innerHTML = `
+      <div class="me-empty">
+        <p class="eyebrow">Meu percurso</p>
+        <h3>Veja seu curso do seu jeito</h3>
+        <p class="muted">Conecte o SUAP para ver suas notas, o que falta para se formar e sugestões para completar as atividades complementares.</p>
+        <button class="btn btn-primary" data-me="connect">Conectar SUAP</button>
+      </div>`;
+    return;
+  }
+  const all = state.curriculum.disciplinas.filter((d) => d.semestre);
+  const statusOf = (c) => studentStatus(c);
+  const done = all.filter((d) => statusOf(d.codigo) === "concluida");
+  const doing = all.filter((d) => statusOf(d.codigo) === "cursando");
+  const free = all.filter((d) => statusOf(d.codigo) === "liberada");
+  const blocked = all.filter((d) => !statusOf(d.codigo) || statusOf(d.codigo) === "reprovada");
+  const graded = done.map((d) => gradeValue(a.notas?.[d.codigo]?.nota)).filter((v) => !Number.isNaN(v));
+  const media = graded.length ? (graded.reduce((s, v) => s + v, 0) / graded.length).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : null;
+  const acc = a.acc || {};
+  const accLeft = acc.prevista != null ? Math.max(0, acc.prevista - (acc.cumprida || 0)) : null;
+
+  // Linha do tempo: disciplinas agrupadas pelo semestre letivo em que foram cursadas
+  const periods = new Map();
+  for (const d of [...done, ...doing]) {
+    const n = a.notas?.[d.codigo] || {};
+    const key = statusOf(d.codigo) === "cursando" ? "Agora" : n.periodo || "Sem período";
+    if (!periods.has(key)) periods.set(key, []);
+    periods.get(key).push(d);
+  }
+  const order = [...periods.keys()].sort((x, y) => (x === "Agora") - (y === "Agora") || x.localeCompare(y));
+  const course = (d) => {
+    const n = a.notas?.[d.codigo] || {};
+    const st = statusOf(d.codigo);
+    return `<button class="me-course st-${st}" data-goto="${d.codigo}" title="Ver na árvore">
+      <span class="me-course-main"><b>${escapeHtml(titleCase(d.nome))}</b><small>${d.codigo}${n.freq ? ` · ${escapeHtml(n.freq)} freq.` : ""}</small></span>
+      ${st === "cursando" ? '<span class="st-badge st-cursando">cursando</span>'
+        : n.nota ? `<span class="grade big ${gradeClass(n.nota)}">${escapeHtml(n.nota)}</span>`
+        : `<span class="st-badge st-concluida">${/aproveit/i.test(n.situacao || "") ? "aproveitada" : "✓ feita"}</span>`}
+    </button>`;
+  };
+
+  const tipos = (acc.tipos || []).filter((t) => t.max).map((t) => ({ ...t, folga: Math.max(0, t.max - (t.contabilizada || 0)) }));
+  const room = tipos.filter((t) => t.folga > 0).sort((x, y) => y.folga - x.folga);
+  const roomTotal = room.reduce((s, t) => s + t.folga, 0);
+  const denied = (acc.lancamentos || []).filter((l) => /n[aã]o/i.test(l.deferida));
+
+  box.innerHTML = `
+    <section class="me-hero">
+      ${ring(done.length / all.length)}
+      <div class="me-hero-text">
+        <p class="eyebrow">Meu percurso · Engenharia de Software · IFSP São Carlos</p>
+        <h3>${done.length} de ${all.length} disciplinas concluídas</h3>
+        <p class="muted">Matrícula ${escapeHtml(a.matricula)} · dados do SUAP de
+          ${new Date(a.coletado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
+        <div class="me-actions">
+          <button class="btn btn-primary btn-sm" data-me="ask">${ICON.ask}Perguntar sobre meu percurso</button>
+          <button class="btn btn-sm" data-me="update">Atualizar do SUAP</button>
+        </div>
+      </div>
+      <div class="me-kpis">
+        ${a.ira ? `<div class="kpi"><b>${escapeHtml(a.ira)}</b><span>I.R.A.</span></div>` : ""}
+        ${media ? `<div class="kpi"><b>${media}</b><span>média das notas</span></div>` : ""}
+        <div class="kpi kpi-anc"><b>${doing.length}</b><span>cursando agora</span></div>
+        <div class="kpi kpi-accent"><b>${free.length}</b><span>já liberadas</span></div>
+        ${acc.prevista ? `<div class="kpi kpi-desc"><b>${fmtH(acc.cumprida)}</b><span>de ${fmtH(acc.prevista)} complementares</span></div>` : ""}
+        ${a.extensao ? `<div class="kpi"><b>${fmtH(a.extensao.cumprida)}</b><span>de ${fmtH(a.extensao.prevista)} de extensão</span></div>` : ""}
+      </div>
+    </section>
+
+    ${(a.versao || 1) < 2 ? `<div class="me-banner">Clique de novo no favorito <b>PPChat ← SUAP</b> com o SUAP aberto para trazer
+      as notas, os requisitos de conclusão e o detalhe das atividades complementares.</div>` : ""}
+
+    <div class="me-grid">
+      <div class="me-col">
+        ${a.requisitos?.length ? `
+        <article class="me-card">
+          <header><h4>Para se formar</h4><span class="muted">requisitos do SUAP</span></header>
+          <ul class="req-list">${a.requisitos.map((r) => {
+            const ok = /cumprid|conclu|ok\b/i.test(r.situacao) && !/n[aã]o|pendente/i.test(r.situacao);
+            return `<li class="${ok ? "is-ok" : ""}">
+              <div class="req-top"><span class="req-check">${ok ? ICON.check : ""}</span><b>${escapeHtml(r.nome)}</b>
+                <span class="req-sit">${escapeHtml(r.situacao || "")}</span></div>
+              ${r.prevista ? `${bar(r.cumprida || 0, r.prevista, ok ? "ok" : "")}
+                <div class="req-meta"><span>${fmtH(r.cumprida)} de ${fmtH(r.prevista)}</span>${r.pendente ? `<span>faltam ${fmtH(r.pendente)}</span>` : ""}</div>` : ""}
+            </li>`;
+          }).join("")}</ul>
+        </article>` : ""}
+
+        <article class="me-card">
+          <header><h4>Minhas disciplinas</h4><span class="muted">${done.length} feitas · ${doing.length} cursando</span></header>
+          <div class="timeline">${order.map((key) => {
+            const list = periods.get(key);
+            const nums = list.map((d) => gradeValue(a.notas?.[d.codigo]?.nota)).filter((v) => !Number.isNaN(v));
+            const avg = nums.length ? (nums.reduce((s, v) => s + v, 0) / nums.length).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : null;
+            return `<section class="tl-period ${key === "Agora" ? "is-now" : ""}">
+              <div class="tl-head"><span class="tl-dot"></span><b>${key === "Agora" ? "Cursando agora" : escapeHtml(key)}</b>
+                ${avg ? `<span class="muted">média ${avg}</span>` : ""}</div>
+              <div class="tl-courses">${list.map(course).join("")}</div>
+            </section>`;
+          }).join("")}</div>
+          <div class="me-pending">
+            <h5>Já pode cursar (${free.length})</h5>
+            ${free.length ? goChips(free.map((d) => d.codigo)) : '<p class="muted small-note">Nada liberado no momento.</p>'}
+            <h5>Ainda bloqueadas (${blocked.length})</h5>
+            ${blocked.length ? goChips(blocked.map((d) => d.codigo)) : '<p class="muted small-note">Nenhuma.</p>'}
+          </div>
+        </article>
+      </div>
+
+      <div class="me-col">
+        ${acc.prevista ? `
+        <article class="me-card">
+          <header><h4>Atividades complementares</h4><span class="muted">${fmtH(acc.cumprida)} de ${fmtH(acc.prevista)}</span></header>
+          <div class="acc-total">
+            <div><b>${fmtH(acc.cumprida)}</b><span>contabilizadas</span></div>
+            <div><b>${fmtH(accLeft)}</b><span>faltam</span></div>
+            ${acc.cadastrada && acc.cumprida != null && acc.cadastrada > acc.cumprida ? `<div><b>${fmtH(acc.cadastrada - acc.cumprida)}</b><span>enviadas sem contar</span></div>` : ""}
+          </div>
+          ${bar(acc.cumprida || 0, acc.prevista, "acc")}
+          ${tipos.length ? `<h5>Por tipo</h5><ul class="acc-types">${tipos.map((t) => `
+            <li><div class="acc-type-top"><span>${escapeHtml(t.tipo)}</span><span>${fmtH(t.contabilizada)} / ${fmtH(t.max)}</span></div>
+              ${bar(t.contabilizada || 0, t.max, t.folga === 0 ? "full" : "acc")}</li>`).join("")}</ul>` : ""}
+          ${acc.lancamentos?.length ? `<h5>Lançamentos</h5><ul class="acc-log">${acc.lancamentos.map((l) => `
+            <li class="${/n[aã]o/i.test(l.deferida) ? "is-denied" : ""}">
+              <div><b>${escapeHtml(l.atividade)}</b><small>${escapeHtml(l.tipo)}${l.periodo ? ` · ${escapeHtml(l.periodo)}` : ""}</small>
+                ${l.razao ? `<p class="acc-reason">${escapeHtml(l.razao)}</p>` : ""}</div>
+              <span class="st-badge ${/n[aã]o/i.test(l.deferida) ? "st-reprovada" : /sim/i.test(l.deferida) ? "st-concluida" : "st-cursando"}">
+                ${/n[aã]o/i.test(l.deferida) ? "indeferida" : /sim/i.test(l.deferida) ? "deferida" : "em análise"}</span>
+            </li>`).join("")}</ul>` : ""}
+        </article>
+
+        <article class="me-card me-tips">
+          <header><h4>Como completar as horas</h4>${accLeft ? `<span class="muted">faltam ${fmtH(accLeft)}</span>` : ""}</header>
+          ${accLeft === 0 ? `<p class="tip-done">${ICON.check} Você já cumpriu todas as horas de atividades complementares.</p>` : `
+          ${denied.map((l) => `<div class="tip tip-fix"><b>Corrija e reenvie: ${escapeHtml(l.atividade)}</b>
+            <p>${escapeHtml(l.razao || "Foi indeferida; confira o motivo no SUAP.")}</p></div>`).join("")}
+          ${room.map((t) => `<div class="tip"><span class="tip-hours">até +${fmtH(t.folga)}</span>
+            <div><b>${escapeHtml(t.tipo)}</b><p>${accIdea(t.tipo)}</p></div></div>`).join("")}
+          ${accLeft > roomTotal ? `<p class="small-note">Mesmo usando todo o limite dos tipos acima, faltariam ${fmtH(accLeft - roomTotal)}.
+            O regulamento tem outros tipos de atividade: pergunte ao PPChat quais combinam com você.</p>` : ""}
+          <button class="btn btn-primary btn-sm" data-me="plan">${ICON.ask}Montar um plano com o PPChat</button>
+          <p class="small-note">Sugestões gerais; o regulamento de atividades complementares do curso decide o que é aceito.</p>`}
+        </article>` : ""}
+      </div>
+    </div>`;
+}
+
+$("#me").addEventListener("click", (event) => {
+  const goto = event.target.closest("[data-goto]");
+  if (goto) { setView("tree"); return focusTree(goto.dataset.goto, { push: true }); }
+  const act = event.target.closest("[data-me]")?.dataset.me;
+  if (act === "connect" || act === "update") { renderSuapModal(); suapModal.showModal(); }
+  else if (act === "ask") { closeDrawer(); ask("Faça um resumo do meu percurso no curso: o que já fiz, como estou indo e o que devo priorizar agora."); }
+  else if (act === "plan") { closeDrawer(); ask("Monte um plano para eu completar as horas de atividades complementares que faltam, respeitando os limites de cada tipo e considerando o que já tenho."); }
+});
 
 /* Modal */
 const suapModal = $("#suap-modal");
@@ -1343,20 +1692,28 @@ function renderSuapModal() {
         Projeto independente, sem vínculo oficial com o IFSP.</p>`;
     return;
   }
+  // Conectado: o progresso fica na aba "Meu percurso"; aqui só atualizar, conferir e remover
   const recognized = Object.keys(a.status).length;
+  $("#suap-title").textContent = "Atualizar dados do SUAP";
   $("#suap-body").innerHTML = `
-    <p class="small-note" style="margin-top:0">Matrícula <b>${escapeHtml(a.matricula)}</b> · importado em
-      ${new Date(a.coletado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
-    ${recognized ? progressHtml() : `<div class="error-box">Li ${a.diag.reduce((n, d) => n + d.linhas, 0)} linhas, mas não reconheci
+    <p class="small-note" style="margin-top:0">Matrícula <b>${escapeHtml(a.matricula)}</b> · última importação em
+      ${new Date(a.coletado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+      · ${Object.values(a.status).filter((s) => s === "concluida").length} disciplinas concluídas</p>
+    ${recognized ? "" : `<div class="error-box">Li ${a.diag.reduce((n, d) => n + d.linhas, 0)} linhas, mas não reconheci
       nenhuma disciplina. O formato do SUAP pode ser diferente do esperado; mande um print da aba Histórico para ajustarmos.</div>`}
+    ${suapStepsHtml()}
     <details class="diag"><summary>O que foi lido do SUAP</summary>
-      <ul>${a.diag.map((d) => `<li><span>${escapeHtml(d.titulo)}</span><span>${d.tabelas} tabelas · ${d.linhas} linhas</span></li>`).join("")}</ul>
+      <ul class="diag-list">${a.diag.map((d) => `<li><span>${escapeHtml(d.titulo)}</span><span>${d.tabelas} tabelas · ${d.linhas} linhas</span></li>`).join("")}</ul>
     </details>
-    <details class="diag"><summary>Atualizar os dados</summary>${suapStepsHtml()}</details>
     <div class="info-actions"><button class="btn" data-act="remove-aluno">Remover meus dados deste navegador</button></div>`;
 }
 
-$("#suap-btn").addEventListener("click", () => { renderSuapModal(); suapModal.showModal(); });
+// Conectado: o botão leva ao "Meu percurso"; sem dados, abre as instruções do bookmarklet
+$("#suap-btn").addEventListener("click", () => {
+  if (state.aluno) return openDrawer("me");
+  renderSuapModal();
+  suapModal.showModal();
+});
 suapModal.addEventListener("click", async (event) => {
   if (event.target === suapModal || event.target.closest("[data-close]")) return suapModal.close();
   if (event.target.closest(".bookmarklet")) {
@@ -1388,8 +1745,9 @@ async function importFromHash() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || `Erro ${response.status}`);
     setAluno(buildAluno(data));
-    renderSuapModal();
-    suapModal.showModal();
+    // Recém-importado: mostra direto o "Meu percurso"
+    openDrawer("me");
+    toast("Dados do SUAP importados.");
   } catch (error) {
     toast(`Não consegui importar do SUAP: ${error.message}`);
   }
