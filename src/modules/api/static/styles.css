@@ -1128,3 +1128,5 @@ body.sidebar-open .drawer { left: 268px; }
 @media (max-width: 720px) {
   .lead-name { display: none; }
 }
+
+.model-select { height: 34px; max-width: 170px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 12.5px; padding: 0 8px; }

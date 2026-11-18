@@ -61,6 +61,7 @@ class ChatRequest(BaseModel):
     request_id: Optional[str] = Field(default=None, max_length=64)
     # Resumo acadêmico do aluno (importado do SUAP e guardado só no navegador dele)
     perfil: Optional[str] = Field(default=None, max_length=30_000)
+    model: Optional[str] = Field(default=None, max_length=120)
 
     @field_validator("history")
     @classmethod
@@ -91,7 +92,7 @@ def _check_rate_limit(http_request: Request) -> None:
 
 
 def _session(request: ChatRequest) -> ChatSession:
-    return ChatSession(history=[turn.model_dump() for turn in request.history])
+    return ChatSession(history=[turn.model_dump() for turn in request.history], model=request.model)
 
 
 def _usage(session: ChatSession) -> Optional[Usage]:
