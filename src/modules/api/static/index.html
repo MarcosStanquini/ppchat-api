@@ -128,6 +128,12 @@
           <button type="button" class="add-btn" id="add-discipline" title="Adicionar disciplina (@)" aria-label="Adicionar disciplina ao contexto">
             <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M12 7v6M9 10h6"/></svg>
           </button>
+          <select id="model-select" class="model-select" title="Modelo de IA" aria-label="Selecionar modelo de IA">
+            <option value="deepseek/deepseek-v4.1-flash">DeepSeek V4.1 Flash</option>
+            <option value="z-ai/glm-5.3-flash">GLM 5.3 Flash</option>
+            <option value="google/gemini-3.8-flash">Gemini 3.8 Flash</option>
+            <option value="qwen/qwen3.8-27b">Qwen 3.8 27B</option>
+          </select>
           <textarea id="input" rows="1" placeholder="Pergunte sobre o curso, ou digite @ para citar uma disciplina…" aria-label="Sua pergunta"></textarea>
           <button type="submit" class="send" id="send" aria-label="Enviar">
             <svg class="i-send" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>

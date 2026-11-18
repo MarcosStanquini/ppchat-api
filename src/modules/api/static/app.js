@@ -978,7 +978,8 @@ async function streamAnswer(question, disciplinas, ui) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       question, disciplinas, history: historyPayload(), request_id: state.requestId,
-      perfil: state.aluno?.contexto || null, // dados do SUAP, guardados só neste navegador
+      perfil: state.aluno?.contexto || null,
+      model: document.getElementById("model-select")?.value || null,
     }),
     signal: state.controller.signal,
   });
