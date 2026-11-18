@@ -178,6 +178,13 @@ def health() -> dict:
     return {"status": "ok", "disciplinas": len(kb.curriculo.disciplinas)}
 
 
+@app.get("/ifsp-docs")
+async def list_ifsp_docs() -> dict:
+    """Lista os formularios e tutoriais oficiais indexados do Drive IFSP."""
+    kb = get_knowledge_base()
+    return {"count": len(kb.ifsp_docs), "docs": [{"name": d["name"], "url": d["url"]} for d in kb.ifsp_docs]}
+
+
 @app.get("/curriculum")
 def curriculum() -> dict:
     """Currículo estruturado + análise do grafo, para a árvore e a grade do front."""

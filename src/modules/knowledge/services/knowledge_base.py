@@ -5,6 +5,7 @@ from typing import List
 from src.modules.ingestion.models.curriculum import Curriculo, Disciplina
 from src.modules.ingestion.services.ingestion_pipeline import CURRICULUM_FILE, DOCUMENT_FILE
 from src.modules.knowledge.services.curriculum_graph import CurriculumGraph
+from src.modules.knowledge.services.ifsp_drive import load_ifsp_docs, search_ifsp_docs
 from src.modules.shared.services.settings import get_settings
 
 ABORDAGEM = {"teorica": "teórica", "pratica": "prática", "teorico_pratica": "teórico-prática"}
@@ -31,6 +32,7 @@ class KnowledgeBase:
         self.curriculo = Curriculo.model_validate_json(curriculum_path.read_text("utf-8"))
         self.document_text = document_path.read_text("utf-8")
         self.graph = CurriculumGraph(self.curriculo)
+        self.ifsp_docs = load_ifsp_docs(processed_dir)
 
     def _names(self, codes: List[str]) -> str:
         return "; ".join(f"{self.graph.by_code[c].nome} ({c})" for c in codes) or "nenhuma"
@@ -99,6 +101,17 @@ class KnowledgeBase:
         return "\n\n".join(
             self._render_disciplina(self.graph.by_code[code]) for code in codes if code in self.graph.by_code
         )
+
+    def render_ifsp_docs(self, question: str) -> str:
+        """Seleciona ate 3 documentos relevantes do Drive IFSP (TokenOps)."""
+        hits = search_ifsp_docs(self.ifsp_docs, question, limit=3)
+        if not hits:
+            return ""
+        blocks = []
+        for d in hits:
+            body = d.get("text") or "(Planilha/formulario binario - indique o link oficial para download.)"
+            blocks.append(f"### {d['name']}\nLink oficial: {d['url']}\n{body}")
+        return "\n\n".join(blocks)
 
     @cached_property
     def full_context(self) -> str:
