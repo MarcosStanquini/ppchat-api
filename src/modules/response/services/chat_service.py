@@ -72,6 +72,14 @@ class ChatSession:
                 "text": "O estudante selecionou estas disciplinas como foco da pergunta:\n"
                 f"<disciplinas_selecionadas>\n{focus_sheet}\n</disciplinas_selecionadas>",
             })
+        ifsp_sheet = self.knowledge_base.render_ifsp_docs(question)
+        if ifsp_sheet:
+            blocks.append({
+                "type": "text",
+                "text": "Documentos oficiais do Drive IFSP (DDGA/Requerimentos SUAP) relevantes para esta pergunta. "
+                "Cite o nome do formulario e inclua o link oficial quando aplicavel:\n"
+                f"<documentos_ifsp>\n{ifsp_sheet}\n</documentos_ifsp>",
+            })
         if not blocks:
             return question
         return [*blocks, {"type": "text", "text": question}]
