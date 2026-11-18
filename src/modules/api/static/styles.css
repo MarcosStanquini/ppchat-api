@@ -1128,3 +1128,15 @@ body.sidebar-open .drawer { left: 268px; }
 @media (max-width: 720px) {
   .lead-name { display: none; }
 }
+
+
+/* --- Mobile-First & Touch Hitboxes --- */
+@media (max-width: 640px) {
+  .composer-row { flex-wrap: wrap; gap: 8px; align-items: center; }
+  #input { order: 1; flex: 1 1 100%; min-width: 100%; font-size: 16px; }
+  .add-btn { order: 2; width: 44px; height: 44px; }
+  .send { order: 4; width: 44px; height: 44px; margin-left: auto; }
+}
+@media (max-width: 900px) {
+  #view-tree .tree-info.is-mobile-open { display: block; z-index: 5; }
+}
