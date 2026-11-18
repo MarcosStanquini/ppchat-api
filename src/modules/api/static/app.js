@@ -30,7 +30,8 @@ const state = {
   aluno: null, // dados importados do SUAP: {matricula, coletado_em, status: {codigo: situação}, contexto}
   settings: { grades: false, progress: true, showDenied: false }, // preferências de exibição (salvas no navegador)
   history: [], // {role: "user", text, disciplinas} | {role: "assistant", text, thinking?, usage?, stopped?}
-  context: [], // disciplinas selecionadas para a próxima pergunta
+  context: [],
+  docs: [],
   busy: false,
   controller: null,
   focus: null, // disciplina em foco na árvore
@@ -970,7 +971,7 @@ function errorMessage(status, body) {
   return `Erro ${status}`;
 }
 
-async function streamAnswer(question, disciplinas, ui) {
+async function streamAnswer(question, disciplinas, ui, docs = []) {
   state.controller = new AbortController();
   state.requestId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const response = await fetchWithWake("/chat/stream", {
@@ -978,7 +979,8 @@ async function streamAnswer(question, disciplinas, ui) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       question, disciplinas, history: historyPayload(), request_id: state.requestId,
-      perfil: state.aluno?.contexto || null, // dados do SUAP, guardados só neste navegador
+      perfil: state.aluno?.contexto || null,
+      documentos: docs, // dados do SUAP, guardados só neste navegador
     }),
     signal: state.controller.signal,
   });
@@ -2131,3 +2133,20 @@ loadCurriculum()
 new ResizeObserver(([entry]) => {
   document.documentElement.style.setProperty("--topbar-h", `${entry.target.offsetHeight}px`);
 }).observe($(".topbar"));
+
+
+(() => {
+  const btn = document.getElementById("add-document");
+  const inp = document.getElementById("doc-input");
+  if (!btn || !inp) return;
+  btn.addEventListener("click", () => inp.click());
+  inp.addEventListener("change", async () => {
+    for (const file of inp.files) {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/documents/extract", { method: "POST", body: form });
+      if (res.ok) { const d = await res.json(); state.docs.push({ name: d.name, content: d.content }); }
+    }
+    inp.value = "";
+  });
+})();

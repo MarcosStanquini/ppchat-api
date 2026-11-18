@@ -4,7 +4,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator, Dict, List, Literal, Optional
 
-from fastapi import FastAPI, HTTPException, Request
+import fitz
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -45,6 +46,11 @@ suap_imports = ImportStore()
 running: Dict[str, asyncio.Task] = {}
 
 
+class AttachedDocument(BaseModel):
+    name: str = Field(max_length=120)
+    content: str = Field(max_length=45_000)
+
+
 class HistoryTurn(BaseModel):
     role: Literal["user", "assistant"]
     text: str = Field(max_length=MAX_TEXT)
@@ -61,6 +67,7 @@ class ChatRequest(BaseModel):
     request_id: Optional[str] = Field(default=None, max_length=64)
     # Resumo acadêmico do aluno (importado do SUAP e guardado só no navegador dele)
     perfil: Optional[str] = Field(default=None, max_length=30_000)
+    documentos: List['AttachedDocument'] = Field(default_factory=list, max_length=5)
 
     @field_validator("history")
     @classmethod
@@ -94,6 +101,13 @@ def _session(request: ChatRequest) -> ChatSession:
     return ChatSession(history=[turn.model_dump() for turn in request.history])
 
 
+def _merge_perfil_and_docs(perfil: Optional[str], documentos: List[AttachedDocument]) -> Optional[str]:
+    parts = [perfil] if perfil else []
+    for doc in documentos:
+        parts.append(f"[Documento anexado: {doc.name}]\n{doc.content}")
+    return "\n\n".join(parts) if parts else None
+
+
 def _usage(session: ChatSession) -> Optional[Usage]:
     message = session.last_message
     if message is None:
@@ -119,7 +133,7 @@ async def _stream_answer(request: ChatRequest, http_request: Request) -> AsyncIt
 
     async def produce():
         try:
-            async for kind, text in session.stream_events(request.question, request.disciplinas, request.perfil):
+            async for kind, text in session.stream_events(request.question, request.disciplinas, _merge_perfil_and_docs(request.perfil, request.documentos)):
                 events.put_nowait({"type": kind, "text": text})
             usage = _usage(session)
             events.put_nowait({"type": "done", "usage": usage.model_dump() if usage else None})
@@ -199,11 +213,29 @@ def curriculum() -> dict:
     }
 
 
+@app.post("/documents/extract")
+async def extract_document(file: UploadFile = File(...)) -> dict:
+    raw = await file.read()
+    if len(raw) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Arquivo excede o limite de 10 MB.")
+    name = file.filename or "documento"
+    ext = Path(name).suffix.lower()
+    if ext == ".pdf":
+        with fitz.open(stream=raw, filetype="pdf") as doc:
+            text = "\n\n".join(page.get_text("text") for page in doc)
+    elif ext in {".txt", ".md", ".csv", ".json"}:
+        text = raw.decode("utf-8", errors="replace")
+    else:
+        raise HTTPException(status_code=400, detail="Formato nao suportado.")
+    text = text.strip()
+    return {"name": name, "content": text[:40_000], "chars": len(text), "truncated": len(text) > 40_000}
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
     _check_rate_limit(http_request)
     session = _session(request)
-    answer = await session.ask(request.question, request.disciplinas, request.perfil)
+    answer = await session.ask(request.question, request.disciplinas, _merge_perfil_and_docs(request.perfil, request.documentos))
     return ChatResponse(answer=answer, usage=_usage(session))
 
 
