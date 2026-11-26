@@ -1191,24 +1191,71 @@ body.sidebar-open .drawer { left: 268px; }
 }
 body.exploring .composer, body.no-course .composer,
 body.no-course .nav-btn[data-nav="flow"], body.no-course .nav-btn[data-nav="me"] { display: none; }
-.explore { max-width: 860px; margin: 6vh auto 40px; animation: rise .5s ease both; }
-.explore h1 { margin: 0; font: 700 clamp(30px, 4.4vw, 46px)/1.05 var(--display); letter-spacing: -.03em; }
+.explore { max-width: 1080px; margin: 5vh auto 40px; animation: rise .5s ease both; }
+.explore h1 { margin: 0; font: 700 clamp(30px, 4.4vw, 48px)/1.05 var(--display); letter-spacing: -.03em; }
 .explore h1 em { font-style: normal; color: var(--accent); }
-.explore-group { margin: 26px 0 10px; font: 700 13px var(--font); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-.course-card {
-  display: flex; flex-direction: column; gap: 6px; padding: 16px; text-align: left; cursor: pointer;
-  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink);
-  transition: border-color .15s, transform .15s;
+.explore .lede { max-width: 62ch; }
+
+/* Cores das áreas: claras no tema claro, escurecidas no escuro (mesma lógica dos tons do Fluxograma) */
+.area-computacao { --area: #378add; --area-soft: #e6f1fb; --area-ink: #0c447c; }
+.area-aeronautica { --area: #d85a30; --area-soft: #faece7; --area-ink: #712b13; }
+.area-gestao { --area: #7f77dd; --area-soft: #eeedfe; --area-ink: #3c3489; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .area-computacao { --area: #5b9fe6; --area-soft: #10233a; --area-ink: #b5d4f4; }
+  :root:not([data-theme="light"]) .area-aeronautica { --area: #e57a55; --area-soft: #2e1810; --area-ink: #f5c4b3; }
+  :root:not([data-theme="light"]) .area-gestao { --area: #9a93e6; --area-soft: #1d1a38; --area-ink: #cecbf6; }
 }
-.course-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-.course-card.is-current { border-color: var(--accent); }
-.course-card-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+:root[data-theme="dark"] .area-computacao { --area: #5b9fe6; --area-soft: #10233a; --area-ink: #b5d4f4; }
+:root[data-theme="dark"] .area-aeronautica { --area: #e57a55; --area-soft: #2e1810; --area-ink: #f5c4b3; }
+:root[data-theme="dark"] .area-gestao { --area: #9a93e6; --area-soft: #1d1a38; --area-ink: #cecbf6; }
+
+.area-mosaic { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 8px; }
+.area-panel {
+  display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 20px;
+  background: var(--area-soft); border: 1px solid color-mix(in oklab, var(--area) 22%, transparent);
+}
+.area-title { display: flex; align-items: center; gap: 10px; margin: 2px 2px 4px; font: 700 18px var(--display); color: var(--area-ink); }
+.area-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 11px;
+  background: var(--area); color: #fff;
+}
+.area-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+.course-card {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+  transition: border-color .15s, transform .15s, box-shadow .15s; animation: rise .45s ease both;
+}
+.course-card:hover { border-color: var(--area); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.course-card.is-current { border-color: var(--area); }
+.course-card.is-ending { opacity: .72; }
+.course-card.is-ending:hover { opacity: 1; }
+.course-card-main {
+  display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; color: var(--ink);
+  text-align: left; cursor: pointer; font: inherit;
+}
+.course-mono {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 12px;
+  background: var(--area-soft); color: var(--area-ink); font: 700 12.5px var(--mono); letter-spacing: .02em;
+}
+.course-card-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.course-card-name { font: 700 16.5px/1.2 var(--display); letter-spacing: -.01em; }
+.course-card-kind { font-size: 12px; color: var(--muted); }
+.course-card-facts { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); }
+.sem-dots { display: inline-flex; gap: 3px; }
+.sem-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--area); }
+.sem-dots i.off { background: var(--line-2); }
+.course-card-ask {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0 0; border: 0;
+  border-top: 1px dashed var(--line-2); background: none; color: var(--ink-2); font: 13px/1.35 var(--font);
+  text-align: left; cursor: pointer;
+}
+.course-card-ask b { flex: none; font-weight: 600; color: var(--area); }
+.course-card-ask:hover span { color: var(--ink); }
 .course-sigla { font: 700 12px var(--mono); color: var(--accent); }
 .course-tag { padding: 1px 8px; border-radius: 999px; font-size: 11px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
-.course-tag.is-mine { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
-.course-card-name { font: 700 17px/1.2 var(--display); }
-.course-card-facts { font-size: 12.5px; color: var(--muted); }
+.course-tag.is-mine { background: var(--accent-soft); color: var(--accent); border-color: transparent; flex: none; }
+@media (max-width: 980px) { .area-mosaic { grid-template-columns: 1fr; } }
 .conv-course { margin-right: 6px; font: 700 10.5px var(--mono); color: var(--muted); }
 @media (max-width: 720px) {
   .course-switch { max-width: 150px; }

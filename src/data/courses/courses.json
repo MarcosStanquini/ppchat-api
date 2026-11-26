@@ -1,17 +1,16 @@
 {
   "campus": "IFSP São Carlos",
+  "areas": [
+    {"slug": "computacao", "nome": "Computação"},
+    {"slug": "aeronautica", "nome": "Aeronáutica"},
+    {"slug": "gestao", "nome": "Gestão"}
+  ],
   "cursos": [
-    {"slug": "engenharia-de-software", "nome": "Bacharelado em Engenharia de Software", "sigla": "BES", "tipo": "bacharelado", "status": "ativo",
-     "fonte": "https://drive.ifsp.edu.br/s/kaPBfDGLsHyxAN8", "nomes_suap": ["engenharia de software"]},
-    {"slug": "engenharia-aeronautica", "nome": "Bacharelado em Engenharia Aeronáutica", "sigla": "BEA", "tipo": "bacharelado", "status": "ativo",
-     "fonte": "https://drive.ifsp.edu.br/s/K825C6o2ePYgxjH", "nomes_suap": ["engenharia aeronautica"]},
-    {"slug": "administracao", "nome": "Bacharelado em Administração", "sigla": "ADM", "tipo": "bacharelado", "status": "ativo",
-     "fonte": "https://drive.ifsp.edu.br/s/kWTq6g4Lz9aCXc6", "nomes_suap": ["administracao"]},
-    {"slug": "analise-e-desenvolvimento-de-sistemas", "nome": "Tecnologia em Análise e Desenvolvimento de Sistemas", "sigla": "ADS", "tipo": "tecnologia", "status": "ativo",
-     "fonte": "https://drive.ifsp.edu.br/s/EDDgpkdJGbJ7KZW", "nomes_suap": ["analise e desenvolvimento de sistemas"]},
-    {"slug": "processos-gerenciais", "nome": "Tecnologia em Processos Gerenciais", "sigla": "TPG", "tipo": "tecnologia", "status": "ativo",
-     "fonte": "https://drive.ifsp.edu.br/s/7ZcNG1IiQ6yhHfl", "nomes_suap": ["processos gerenciais"]},
-    {"slug": "manutencao-de-aeronaves", "nome": "Tecnologia em Manutenção de Aeronaves", "sigla": "TMA", "tipo": "tecnologia", "status": "em_extincao",
-     "fonte": "https://drive.ifsp.edu.br/s/PMnmFMCf5pemiTk", "nomes_suap": ["manutencao de aeronaves"]}
+    {"slug": "engenharia-de-software", "nome": "Bacharelado em Engenharia de Software", "sigla": "BES", "tipo": "bacharelado", "status": "ativo", "fonte": "https://drive.ifsp.edu.br/s/kaPBfDGLsHyxAN8", "nomes_suap": ["engenharia de software"], "area": "computacao", "pergunta": "O que preciso cursar antes de Arquitetura de Software?"},
+    {"slug": "engenharia-aeronautica", "nome": "Bacharelado em Engenharia Aeronáutica", "sigla": "BEA", "tipo": "bacharelado", "status": "ativo", "fonte": "https://drive.ifsp.edu.br/s/K825C6o2ePYgxjH", "nomes_suap": ["engenharia aeronautica"], "area": "aeronautica", "pergunta": "Quando posso começar o estágio?"},
+    {"slug": "administracao", "nome": "Bacharelado em Administração", "sigla": "ADM", "tipo": "bacharelado", "status": "ativo", "fonte": "https://drive.ifsp.edu.br/s/kWTq6g4Lz9aCXc6", "nomes_suap": ["administracao"], "area": "gestao", "pergunta": "Quantas horas de atividades complementares preciso cumprir?"},
+    {"slug": "analise-e-desenvolvimento-de-sistemas", "nome": "Tecnologia em Análise e Desenvolvimento de Sistemas", "sigla": "ADS", "tipo": "tecnologia", "status": "ativo", "fonte": "https://drive.ifsp.edu.br/s/EDDgpkdJGbJ7KZW", "nomes_suap": ["analise e desenvolvimento de sistemas"], "area": "computacao", "pergunta": "Como funciona o TCC e quantas horas ele tem?"},
+    {"slug": "processos-gerenciais", "nome": "Tecnologia em Processos Gerenciais", "sigla": "TPG", "tipo": "tecnologia", "status": "ativo", "fonte": "https://drive.ifsp.edu.br/s/7ZcNG1IiQ6yhHfl", "nomes_suap": ["processos gerenciais"], "area": "gestao", "pergunta": "O estágio é obrigatório?"},
+    {"slug": "manutencao-de-aeronaves", "nome": "Tecnologia em Manutenção de Aeronaves", "sigla": "TMA", "tipo": "tecnologia", "status": "em_extincao", "fonte": "https://drive.ifsp.edu.br/s/PMnmFMCf5pemiTk", "nomes_suap": ["manutencao de aeronaves"], "area": "aeronautica", "pergunta": "Quais certificações da ANAC o curso permite?"}
   ]
 }

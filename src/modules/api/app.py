@@ -215,7 +215,8 @@ def courses() -> dict:
             "disciplinas": len(c.disciplinas),
             "vigencia": c.vigencia,
         })
-    return {"campus": get_registry().campus, "cursos": items}
+    registry = get_registry()
+    return {"campus": registry.campus, "areas": [a.model_dump() for a in registry.areas], "cursos": items}
 
 
 @app.get("/curriculum")
