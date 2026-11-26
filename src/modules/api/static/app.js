@@ -156,7 +156,8 @@ function applyCurriculum(slug, data) {
   namesByLength = null; // nomes usados para reconhecer disciplinas no SUAP mudam com o curso
 
   const c = courseInfo(slug);
-  $("#course-name-text").textContent = `${shortName(c)} · ${state.campus}`;
+  $("#course-name-text").textContent = shortName(c);
+  $("#course-name-sigla").textContent = c.sigla;
   $("#course-switch-label").textContent = shortName(c);
   $("#course-switch-mine").hidden = alunoCourse() !== slug;
   document.title = `PPChat · ${shortName(c)}`;
@@ -218,7 +219,9 @@ function coursePreviewHtml(c) {
     </div>
     <p class="preview-label">Comece por uma pergunta</p>
     <div class="preview-questions">${c.perguntas.map((q) => `
-      <button class="preview-q" data-course="${escapeHtml(c.slug)}" data-ask="${escapeHtml(q)}"><span>${escapeHtml(q)}</span><b aria-hidden="true">→</b></button>`).join("")}
+      <button class="preview-q" data-course="${escapeHtml(c.slug)}" data-ask="${escapeHtml(q)}">
+        <span class="preview-q-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>
+        <span class="preview-q-text">${escapeHtml(q)}</span><b aria-hidden="true">→</b></button>`).join("")}
     </div>
     <button class="btn btn-primary preview-open" data-course="${escapeHtml(c.slug)}">Conversar sobre ${escapeHtml(shortName(c))}</button>`;
 }
@@ -249,9 +252,12 @@ function renderExplore() {
     <button class="explore-item${c.status === "em_extincao" ? " is-ending" : ""}" role="tab" id="tab-${escapeHtml(c.slug)}"
       data-preview="${escapeHtml(c.slug)}"
       aria-controls="course-preview" style="animation-delay:${60 + i * 50}ms">
-      <span class="course-sigla">${escapeHtml(c.sigla)}</span>
-      <span class="explore-item-name">${escapeHtml(shortName(c))}</span>
+      <span class="explore-item-text">
+        <span class="explore-item-name">${escapeHtml(shortName(c))}</span>
+        <span class="explore-item-kind">${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnologia"} · ${c.duracao_semestres} semestres</span>
+      </span>
       ${c.slug === mineSlug ? '<span class="course-tag is-mine">Meu curso</span>' : ""}
+      <svg class="explore-item-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
     </button>`;
   $("#messages").innerHTML = `
     <div class="explore" id="explore">
