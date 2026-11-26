@@ -683,8 +683,56 @@ button.crumb svg { width: 14px; height: 14px; }
   cursor: grab; box-shadow: var(--shadow-md);
 }
 .bookmarklet::before { content: "⠿"; opacity: .7; }
+
+/* Demonstração animada do arrastar: um "fantasma" do botão sobe até a barra e o favorito aparece lá */
+.bm-demo {
+  position: relative; width: 300px; max-width: 100%; height: 92px; margin: 10px 0 4px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); font-size: 11.5px;
+}
+.bm-demo-bar {
+  display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; white-space: nowrap;
+  border-bottom: 1px solid var(--line); background: var(--surface); color: var(--muted);
+}
+.bm-demo-fav { padding: 2px 6px; border-radius: 6px; }
+.bm-demo-new { background: var(--accent-soft); color: var(--accent); font-weight: 600; animation: bm-appear 4s infinite; }
+.bm-demo-btn, .bm-demo-ghost {
+  position: absolute; left: 14px; top: 48px; padding: 5px 10px; border-radius: 8px; white-space: nowrap;
+  background: var(--accent); color: var(--accent-ink); font-weight: 700;
+}
+.bm-demo-btn { opacity: .35; }
+.bm-demo-ghost { box-shadow: var(--shadow-md); animation: bm-drag 4s infinite; }
+.bm-demo-ghost::after { content: "👆"; position: absolute; right: -10px; bottom: -14px; font-size: 16px; }
+@keyframes bm-drag {
+  0%, 12% { transform: translate(0, 0); opacity: 1; }
+  55% { transform: translate(126px, -48px) scale(.8); opacity: 1; }
+  62%, 100% { transform: translate(126px, -48px) scale(.8); opacity: 0; }
+}
+@keyframes bm-appear { 0%, 55% { opacity: 0; } 62%, 94% { opacity: 1; } 100% { opacity: 0; } }
+.bm-warn {
+  margin: 8px 0 0; padding: 8px 12px; border-radius: 10px; font-size: 13px;
+  background: var(--desc-soft); color: var(--ink); border: 1px solid color-mix(in oklab, var(--desc) 40%, transparent);
+}
+.bm-warn.shake { animation: bm-shake .4s; }
+@keyframes bm-shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.bm-more { margin-top: 8px; font-size: 13px; }
+.bm-more .small-note { margin-top: 6px; }
+.bar-help { margin-top: 8px; }
+.bar-help-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.bar-help-tab {
+  padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface);
+  color: var(--ink-2); font-size: 12px; cursor: pointer;
+}
+.bar-help-tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.bar-help-text { margin: 8px 0 0; color: var(--ink-2); }
+.suap-mobile { padding: 12px 14px; margin-bottom: 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.suap-mobile p { margin: 0 0 8px; }
+.suap-mobile .btn { margin-top: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  .bm-demo-ghost { animation: none; transform: translate(126px, -48px) scale(.8); }
+  .bm-demo-new { animation: none; opacity: 1; }
+}
 .diag { margin-top: 12px; font-size: 13px; }
-.diag summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+.diag summary, .bm-more summary { cursor: pointer; color: var(--muted); font-weight: 600; }
 .diag-list { margin: 8px 0 0; padding: 0; list-style: none; }
 .diag-list li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--line); }
 .diag-list li span:last-child { color: var(--muted); }

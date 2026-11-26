@@ -66,6 +66,9 @@ const semesterLabel = (d) => (d.semestre ? `${d.semestre}º sem` : "Optativa");
 let toastTimer;
 function toast(message) {
   const el = $("#toast");
+  // Um <dialog> aberto fica na camada do topo, acima de tudo; o aviso precisa ir para dentro dele para aparecer
+  const host = document.querySelector("dialog[open]") || document.body;
+  if (el.parentElement !== host) host.append(el);
   el.textContent = message;
   el.classList.add("show");
   clearTimeout(toastTimer);
@@ -1760,7 +1763,7 @@ function renderMe() {
       </div>
     </section>
 
-    ${(a.versao || 1) < 2 ? `<div class="me-banner">Clique de novo no favorito <b>PPChat ← SUAP</b> com o SUAP aberto para trazer
+    ${(a.versao || 1) < 2 ? `<div class="me-banner">Clique de novo no favorito do PPChat com o SUAP aberto para trazer
       as notas, os semestres e as atividades complementares.</div>` : ""}
 
     ${acc.prevista ? `<div class="segmented me-tabs" role="tablist">
@@ -2031,15 +2034,75 @@ const bookmarkletHref = () =>
   `javascript:(()=>{var s=document.createElement('script');s.src='${location.origin}/static/suap-export.js?v='+Date.now();` +
   `s.dataset.ppchat='${location.origin}';document.body.appendChild(s);})();`;
 
+// O nome do favorito vem do texto do link arrastado; o emoji faz as vezes de ícone, já que favoritos
+// `javascript:` não têm favicon em nenhum navegador.
+const BOOKMARK_NAME = "🎓 PPChat ← SUAP";
+
+// Sem barra de favoritos para arrastar (celular/tablet), o passo 1 não tem como funcionar
+const canDragBookmark = () => matchMedia("(pointer: fine)").matches && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+const modKey = () => (/Mac/i.test(navigator.platform) ? "Cmd" : "Ctrl");
+
+function detectBrowser() {
+  const ua = navigator.userAgent;
+  if (/Edg\//.test(ua)) return "edge";
+  if (/Firefox\//.test(ua)) return "firefox";
+  if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return "safari";
+  return "chrome";
+}
+
+function showBarHelp(browser) {
+  const mod = modKey();
+  const keys = `<kbd>${mod}</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>`;
+  const help = {
+    chrome: `Aperte ${keys}. A barra aparece logo abaixo do endereço do site.`,
+    edge: `Aperte ${keys}, ou vá em Configurações › Aparência › Mostrar barra de favoritos › Sempre.`,
+    firefox: `Aperte ${keys}, ou clique com o botão direito ao lado das abas e marque “Barra de favoritos”.`,
+    safari: `Aperte <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>, ou vá em Visualizar › Mostrar Barra de Favoritos.`,
+  };
+  if (!Object.hasOwn(help, browser)) browser = "chrome"; // só valores conhecidos chegam ao HTML
+  return `
+    <div class="bar-help">
+      <div class="bar-help-tabs" role="tablist" aria-label="Seu navegador">
+        ${["chrome", "edge", "firefox", "safari"].map((b) => `<button type="button" role="tab" class="bar-help-tab" data-browser="${b}"
+          aria-selected="${b === browser}">${{ chrome: "Chrome", edge: "Edge", firefox: "Firefox", safari: "Safari" }[b]}</button>`).join("")}
+      </div>
+      <p class="bar-help-text">${help[browser]}</p>
+    </div>`;
+}
+
 function suapStepsHtml() {
+  if (!canDragBookmark()) {
+    return `
+      <div class="suap-mobile">
+        <p><b>A importação do SUAP só funciona no computador.</b> Ela usa um favorito na barra do navegador,
+          e o navegador do celular não tem essa barra.</p>
+        <p class="small-note">Abra o PPChat no computador uma vez para importar. Os dados ficam guardados no navegador em que você importou.</p>
+        <button type="button" class="btn" data-act="copy-link">${navigator.share ? "Mandar o link para o computador" : "Copiar link do PPChat"}</button>
+      </div>`;
+  }
   return `
     <ol class="steps">
-      <li><b>Arraste este botão para a barra de favoritos</b> do navegador
-        <a class="bookmarklet" href="${bookmarkletHref()}" title="Arraste para a barra de favoritos">PPChat ← SUAP</a>
-        <span class="small-note">Barra escondida? <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>. Ou
-        <button class="link" data-act="copy-bookmarklet">copie o código</button> e crie um favorito com ele.</span></li>
+      <li><b>Arraste o botão verde até a barra de favoritos</b>, lá no topo do navegador
+        <div class="bm-demo" aria-hidden="true">
+          <div class="bm-demo-bar"><span>☆</span><span class="bm-demo-fav">Gmail</span><span class="bm-demo-fav">YouTube</span>
+            <span class="bm-demo-fav bm-demo-new">${BOOKMARK_NAME}</span></div>
+          <div class="bm-demo-btn">${BOOKMARK_NAME}</div>
+          <div class="bm-demo-ghost">${BOOKMARK_NAME}</div>
+        </div>
+        <a class="bookmarklet" href="${bookmarkletHref()}" title="Segure e arraste até a barra de favoritos">${BOOKMARK_NAME}</a>
+        <p class="bm-warn" role="status" hidden>Quase! Não é para clicar: <b>segure o botão e solte na barra de favoritos</b>, como na animação.</p>
+        <details class="bm-more">
+          <summary>Não vê a barra de favoritos?</summary>
+          ${showBarHelp(detectBrowser())}
+        </details>
+        <details class="bm-more">
+          <summary>Não consegue arrastar?</summary>
+          <p class="small-note"><button class="link" data-act="copy-bookmarklet">Copie o código</button>, crie um favorito novo
+            (<kbd>${modKey()}</kbd>+<kbd>D</kbd>), dê o nome que quiser e cole o código no lugar do endereço.</p>
+        </details></li>
       <li>Entre no <a href="https://suap.ifsp.edu.br" target="_blank" rel="noopener">SUAP</a> como sempre. <b>O PPChat nunca vê sua senha.</b></li>
-      <li>Com o SUAP aberto, clique no favorito <b>PPChat ← SUAP</b>, confira o que será enviado e clique em <b>Enviar</b>.</li>
+      <li>Com o SUAP aberto, clique no favorito <b>${BOOKMARK_NAME}</b>, confira o que será enviado e clique em <b>Enviar</b>.</li>
     </ol>`;
 }
 
@@ -2077,7 +2140,17 @@ suapModal.addEventListener("click", async (event) => {
   if (event.target === suapModal || event.target.closest("[data-close]")) return suapModal.close();
   if (event.target.closest(".bookmarklet")) {
     event.preventDefault(); // aqui no PPChat ele não faz nada: só funciona dentro do SUAP
-    return toast("Arraste o botão para a barra de favoritos e clique nele com o SUAP aberto.");
+    const warn = suapModal.querySelector(".bm-warn");
+    warn.hidden = false;
+    warn.classList.remove("shake");
+    void warn.offsetWidth; // reinicia a animação a cada clique
+    warn.classList.add("shake");
+    return;
+  }
+  const browserTab = event.target.closest("[data-browser]");
+  if (browserTab) {
+    browserTab.closest(".bm-more").querySelector(".bar-help").outerHTML = showBarHelp(browserTab.dataset.browser);
+    return;
   }
   if (event.target.closest("[data-goto]")) {
     suapModal.close();
@@ -2087,6 +2160,14 @@ suapModal.addEventListener("click", async (event) => {
   if (act === "copy-bookmarklet") {
     try { await navigator.clipboard.writeText(bookmarkletHref()); toast("Código copiado. Cole como endereço de um novo favorito."); }
     catch { toast("Não foi possível copiar."); }
+  } else if (act === "copy-link") {
+    // No celular, o menu de compartilhar do sistema manda o link por WhatsApp, e-mail etc.
+    if (navigator.share) {
+      try { return await navigator.share({ title: "PPChat", url: location.origin }); }
+      catch (error) { if (error.name === "AbortError") return; }
+    }
+    try { await navigator.clipboard.writeText(location.origin); toast("Link copiado. Abra no computador para importar."); }
+    catch { toast(`Abra no computador: ${location.origin}`); }
   } else if (act === "remove-aluno") {
     setAluno(null);
     renderSuapModal();
