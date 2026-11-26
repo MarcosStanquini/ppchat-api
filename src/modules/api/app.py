@@ -204,7 +204,7 @@ def health() -> dict:
 
 @app.get("/courses")
 def courses() -> dict:
-    """Cursos atendidos, com os números que aparecem nos cards da tela Explorar."""
+    """Cursos atendidos, com os números e as perguntas prontas da prévia na tela Explorar."""
     items = []
     for course in get_registry().cursos:
         c = get_knowledge_base(course.slug).curriculo
@@ -215,8 +215,7 @@ def courses() -> dict:
             "disciplinas": len(c.disciplinas),
             "vigencia": c.vigencia,
         })
-    registry = get_registry()
-    return {"campus": registry.campus, "areas": [a.model_dump() for a in registry.areas], "cursos": items}
+    return {"campus": get_registry().campus, "cursos": items}
 
 
 @app.get("/curriculum")

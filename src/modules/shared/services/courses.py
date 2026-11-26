@@ -5,7 +5,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field
 
 from src.modules.shared.services.settings import get_settings
 
@@ -21,8 +21,8 @@ class Course(BaseModel):
     status: Literal["ativo", "em_extincao"]
     fonte: str
     nomes_suap: list[str]  # trechos normalizados do nome do curso como aparece no SUAP
-    area: str  # slug de uma das `areas` do registro; agrupa os cursos na tela Explorar
-    pergunta: str  # pergunta pronta do card na tela Explorar (o PPC do curso responde)
+    # Perguntas prontas da prévia do curso na tela Explorar (todas respondidas pelo PPC do curso)
+    perguntas: list[str] = Field(min_length=1, max_length=4)
 
     @property
     def dir(self) -> Path:
@@ -49,25 +49,9 @@ class Course(BaseModel):
         return self.dir / "notas.md"  # instruções específicas do curso para o prompt (opcional)
 
 
-class Area(BaseModel):
-    slug: str
-    nome: str
-
-
 class CourseRegistry(BaseModel):
     campus: str
-    areas: list[Area]
     cursos: list[Course]
-
-    @model_validator(mode="after")
-    def _known_areas(self) -> "CourseRegistry":
-        known = {a.slug for a in self.areas}
-        if len(known) != len(self.areas):
-            raise ValueError("áreas com slug repetido no registro")
-        unknown = sorted({c.area for c in self.cursos} - known)
-        if unknown:
-            raise ValueError(f"cursos com área fora do registro: {unknown}")
-        return self
 
     @property
     def by_slug(self) -> dict[str, Course]:

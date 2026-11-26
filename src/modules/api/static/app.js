@@ -139,7 +139,6 @@ async function loadCourses() {
   if (!response.ok) throw new Error("Não foi possível carregar os cursos");
   const data = await response.json();
   state.courses = data.cursos;
-  state.areas = data.areas || [];
   state.campus = data.campus;
 }
 
@@ -201,59 +200,100 @@ async function setCourse(slug, { conversation = null, push = true } = {}) {
   return true;
 }
 
-// Tela Explorar cursos: primeira tela de quem não importou o SUAP e destino do botão do curso
-// Ícone de cada área no mosaico (traço, como os demais ícones do site)
-const AREA_ICON = {
-  computacao: '<svg viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg>',
-  aeronautica: '<svg viewBox="0 0 24 24"><path d="M10.5 3.5c.8-.8 2.2-.8 3 0s.8 2.2 0 3L11 9l2 9-2 2-3.5-7L4 16.5V19l-1.5 1.5L1 17l-1-1.5L1.5 14H4l3.5-3.5L.5 7l2-2 9 2z" transform="translate(2 1)"/></svg>',
-  gestao: '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>',
-};
+// Tela Explorar: lista dos cursos à esquerda e, à direita, a prévia do curso escolhido
+// (números, perguntas prontas e o botão para conversar)
+let previewSlug = null;
 
-// Tela Explorar: um painel por área, com os cursos dela e uma pergunta pronta em cada um
+function coursePreviewHtml(c) {
+  const ending = c.status === "em_extincao";
+  return `
+    <p class="preview-kind"><span class="course-sigla">${escapeHtml(c.sigla)}</span>
+      ${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnologia"}${c.slug === alunoCourse() ? ' <span class="course-tag is-mine">Meu curso</span>' : ""}</p>
+    <h2 class="preview-name">${escapeHtml(shortName(c))}</h2>
+    ${ending ? '<p class="preview-note">Curso em extinção: segue atendendo quem já está matriculado.</p>' : ""}
+    <div class="preview-stats">
+      <div><b>${c.duracao_semestres}</b><span>semestres</span></div>
+      <div><b>${hours(c.carga_horaria_total_curso)}</b><span>carga total</span></div>
+      <div><b>${c.disciplinas}</b><span>disciplinas</span></div>
+    </div>
+    <p class="preview-label">Comece por uma pergunta</p>
+    <div class="preview-questions">${c.perguntas.map((q) => `
+      <button class="preview-q" data-course="${escapeHtml(c.slug)}" data-ask="${escapeHtml(q)}"><span>${escapeHtml(q)}</span><b aria-hidden="true">→</b></button>`).join("")}
+    </div>
+    <button class="btn btn-primary preview-open" data-course="${escapeHtml(c.slug)}">Conversar sobre ${escapeHtml(shortName(c))}</button>`;
+}
+
+function previewCourse(slug, { focus = false } = {}) {
+  const c = courseInfo(slug);
+  if (!c || !$("#explore")) return;
+  previewSlug = slug;
+  $$(".explore-item").forEach((item) => {
+    const on = item.dataset.preview === slug;
+    item.classList.toggle("is-on", on);
+    item.setAttribute("aria-selected", on);
+    item.tabIndex = on ? 0 : -1; // só o curso escolhido fica no Tab; as setas andam entre os outros
+  });
+  const panel = $("#course-preview");
+  panel.innerHTML = coursePreviewHtml(c); // conteúdo novo: a animação de entrada roda sozinha
+  panel.setAttribute("aria-labelledby", `tab-${slug}`);
+  if (focus) panel.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
 function renderExplore() {
   stopAnswer();
   closeDrawer();
   document.body.classList.add("exploring");
   const mineSlug = alunoCourse();
-  const maxSem = Math.max(...state.courses.map((c) => c.duracao_semestres));
-  // Duração em bolinhas (uma por semestre), na mesma escala para todos os cursos
-  const dots = (c) => `<span class="sem-dots" aria-hidden="true">${
-    Array.from({ length: maxSem }, (_, i) => `<i${i < c.duracao_semestres ? "" : ' class="off"'}></i>`).join("")}</span>`;
-  const card = (c, i) => `
-    <article class="course-card${c.slug === state.course ? " is-current" : ""}${c.status === "em_extincao" ? " is-ending" : ""}"
-      style="animation-delay:${80 + i * 70}ms">
-      <button class="course-card-main" data-course="${escapeHtml(c.slug)}">
-        <span class="course-mono">${escapeHtml(c.sigla)}</span>
-        <span class="course-card-text">
-          <span class="course-card-name">${escapeHtml(shortName(c))}</span>
-          <span class="course-card-kind">${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnologia"}${c.status === "em_extincao" ? " · em extinção" : ""}</span>
-        </span>
-        ${c.slug === mineSlug ? '<span class="course-tag is-mine">Meu curso</span>' : ""}
-      </button>
-      <span class="course-card-facts">${dots(c)}${c.duracao_semestres} semestres · ${hours(c.carga_horaria_total_curso)}</span>
-      <button class="course-card-ask" data-course="${escapeHtml(c.slug)}" data-ask="${escapeHtml(c.pergunta)}">
-        <span>“${escapeHtml(c.pergunta)}”</span><b>Perguntar →</b>
-      </button>
-    </article>`;
-  let i = 0;
-  const panels = state.areas.map((area) => {
-    const list = state.courses.filter((c) => c.area === area.slug);
-    return list.length ? `
-      <section class="area-panel area-${escapeHtml(area.slug)}" aria-label="${escapeHtml(area.nome)}">
-        <h2 class="area-title"><span class="area-icon" aria-hidden="true">${AREA_ICON[area.slug] || ""}</span>${escapeHtml(area.nome)}</h2>
-        ${list.map((c) => card(c, i++)).join("")}
-      </section>` : "";
-  }).join("");
+  const start = [mineSlug, state.course, previewSlug].find((s) => s && courseInfo(s)) || state.courses[0]?.slug;
+  const item = (c, i) => `
+    <button class="explore-item${c.status === "em_extincao" ? " is-ending" : ""}" role="tab" id="tab-${escapeHtml(c.slug)}"
+      data-preview="${escapeHtml(c.slug)}"
+      aria-controls="course-preview" style="animation-delay:${60 + i * 50}ms">
+      <span class="course-sigla">${escapeHtml(c.sigla)}</span>
+      <span class="explore-item-name">${escapeHtml(shortName(c))}</span>
+      ${c.slug === mineSlug ? '<span class="course-tag is-mine">Meu curso</span>' : ""}
+    </button>`;
   $("#messages").innerHTML = `
     <div class="explore" id="explore">
       <p class="eyebrow">PPChat · ${escapeHtml(state.campus)}</p>
-      <h1>Qual curso você quer <em>entender?</em></h1>
-      <p class="lede">O PPC inteiro de cada graduação, com a página de cada resposta. Escolha um curso ou comece por uma pergunta pronta.
+      <h1>Escolha um <em>curso.</em></h1>
+      <p class="lede">O PPC inteiro de cada graduação, com a página de cada resposta.
         ${state.aluno ? "" : "Importando seu histórico do SUAP, o PPChat abre direto no seu curso."}</p>
-      <div class="area-mosaic">${panels}</div>
+      <div class="explore-split">
+        <div class="explore-list" role="tablist" aria-label="Cursos" aria-orientation="vertical">${state.courses.map(item).join("")}</div>
+        <section class="course-preview" id="course-preview" role="tabpanel"></section>
+      </div>
     </div>`;
+  if (start) previewCourse(start);
 }
+
+let hoverTimer = null;
+$("#messages").addEventListener("mouseover", (event) => {
+  const item = event.target.closest("#explore [data-preview]");
+  clearTimeout(hoverTimer);
+  // No mouse a prévia acompanha o ponteiro (depois de uma pausa curta); no toque ela muda pelo clique
+  if (!item || item.dataset.preview === previewSlug || !matchMedia("(hover: hover)").matches) return;
+  hoverTimer = setTimeout(() => item.matches(":hover") && previewCourse(item.dataset.preview), 110);
+});
+$("#messages").addEventListener("keydown", (event) => {
+  const item = event.target.closest("#explore [data-preview]");
+  if (!item || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+  event.preventDefault();
+  const items = $$(".explore-item");
+  const i = items.indexOf(item);
+  const next = { ArrowDown: items[(i + 1) % items.length], ArrowUp: items[(i - 1 + items.length) % items.length],
+    Home: items[0], End: items[items.length - 1] }[event.key];
+  next.focus();
+  previewCourse(next.dataset.preview);
+});
 $("#messages").addEventListener("click", (event) => {
+  const pick = event.target.closest("#explore [data-preview]");
+  if (pick) {
+    clearTimeout(hoverTimer);
+    const touch = !matchMedia("(hover: hover)").matches;
+    if (pick.dataset.preview !== previewSlug || touch) previewCourse(pick.dataset.preview, { focus: touch });
+    return;
+  }
   const card = event.target.closest("#explore [data-course]");
   if (!card || state.switching) return;
   // A pergunta pronta abre o curso e já pergunta, desde que o curso dela seja o que ficou aberto
