@@ -1216,3 +1216,30 @@ body.no-course .nav-btn[data-nav="flow"], body.no-course .nav-btn[data-nav="me"]
 }
 .topnav .nav-btn { white-space: nowrap; }
 @media (max-width: 1000px) { .course-switch { max-width: 190px; } }
+
+/* Menu de cursos (cabeçalho e barra lateral) */
+.course-name-btn {
+  display: inline-flex; align-items: center; gap: 3px; max-width: 100%; padding: 1px 4px 1px 0; margin-left: -1px;
+  border: 0; border-radius: 6px; background: none; color: var(--muted); font: inherit; font-size: 11.5px;
+  cursor: pointer; text-align: left;
+}
+.course-name-btn:hover, .course-name-btn[aria-expanded="true"] { color: var(--accent); }
+.course-name-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.course-name-btn svg { flex: none; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; }
+.course-switch[aria-expanded="true"] { border-color: var(--accent); }
+.course-menu {
+  position: fixed; z-index: 60; width: 300px; max-width: calc(100vw - 16px); max-height: calc(100vh - 80px); overflow: auto;
+  padding: 6px; border: 1px solid var(--line-2); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-lg);
+  animation: pop .14s ease both;
+}
+.course-menu-group { margin: 8px 8px 4px; font: 700 11px var(--font); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.course-menu-group:first-child { margin-top: 4px; }
+.course-menu-item, .course-menu-all {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 9px;
+  background: none; color: var(--ink); font: 500 13.5px var(--font); text-align: left; cursor: pointer;
+}
+.course-menu-item:hover, .course-menu-item:focus-visible, .course-menu-all:hover, .course-menu-all:focus-visible { background: var(--surface-2); outline: none; }
+.course-menu-item.is-current { background: var(--accent-soft); }
+.course-menu-item .course-sigla { width: 32px; flex: none; }
+.course-menu-name { flex: 1; min-width: 0; }
+.course-menu-all { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; color: var(--accent); }

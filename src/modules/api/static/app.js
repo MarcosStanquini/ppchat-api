@@ -156,7 +156,7 @@ function applyCurriculum(slug, data) {
   namesByLength = null; // nomes usados para reconhecer disciplinas no SUAP mudam com o curso
 
   const c = courseInfo(slug);
-  $("#course-name").textContent = `${shortName(c)} · ${state.campus}`;
+  $("#course-name-text").textContent = `${shortName(c)} · ${state.campus}`;
   $("#course-switch-label").textContent = shortName(c);
   $("#course-switch-mine").hidden = alunoCourse() !== slug;
   document.title = `PPChat · ${shortName(c)}`;
@@ -230,10 +230,98 @@ $("#messages").addEventListener("click", (event) => {
   const card = event.target.closest("[data-course]");
   if (card) setCourse(card.dataset.course).catch((error) => toast(error.message));
 });
-$("#course-switch").addEventListener("click", () => {
+function openExplore() {
   if (location.pathname !== "/") history.pushState(null, "", "/");
   renderExplore();
+}
+
+/* Menu de cursos: o mesmo menu abre pelo seletor do cabeçalho (barra fechada) ou pelo nome do curso
+   na barra lateral (barra aberta), e troca de curso sem passar pela tela Explorar */
+const courseMenu = $("#course-menu");
+const COURSE_TRIGGERS = ["#course-switch", "#course-name"];
+let courseMenuTrigger = null;
+
+function renderCourseMenu() {
+  const mineSlug = alunoCourse();
+  const item = (c) => `
+    <button class="course-menu-item${c.slug === state.course ? " is-current" : ""}" role="menuitemradio"
+      aria-checked="${c.slug === state.course}" data-menu-course="${escapeHtml(c.slug)}">
+      <span class="course-sigla">${escapeHtml(c.sigla)}</span>
+      <span class="course-menu-name">${escapeHtml(shortName(c))}</span>
+      ${c.status === "em_extincao" ? '<span class="course-tag">Em extinção</span>' : ""}
+    </button>`;
+  const others = state.courses.filter((c) => c.slug !== mineSlug);
+  const group = (tipo, title) => {
+    const list = others.filter((c) => c.tipo === tipo);
+    return list.length ? `<p class="course-menu-group">${title}</p>${list.map(item).join("")}` : "";
+  };
+  const mineCourse = courseInfo(mineSlug);
+  courseMenu.innerHTML = `
+    ${mineCourse ? `<p class="course-menu-group">Meu curso</p>${item(mineCourse)}` : ""}
+    ${group("bacharelado", "Bacharelados")}
+    ${group("tecnologia", "Tecnologias")}
+    <button class="course-menu-all" role="menuitem" data-menu-all>Ver todos os cursos</button>`;
+}
+
+function openCourseMenu(trigger) {
+  if (!state.courses.length) return;
+  renderCourseMenu();
+  courseMenu.hidden = false;
+  courseMenuTrigger = trigger;
+  trigger.setAttribute("aria-expanded", "true");
+  // Abre logo abaixo do botão que foi clicado, sem passar da borda da tela
+  const r = trigger.getBoundingClientRect();
+  const width = courseMenu.offsetWidth;
+  courseMenu.style.top = `${r.bottom + 6}px`;
+  courseMenu.style.left = `${Math.max(8, Math.min(r.left, innerWidth - width - 8))}px`;
+  (courseMenu.querySelector(".is-current") || courseMenu.querySelector("button"))?.focus();
+}
+
+function closeCourseMenu({ focus = false } = {}) {
+  if (courseMenu.hidden) return;
+  courseMenu.hidden = true;
+  courseMenuTrigger?.setAttribute("aria-expanded", "false");
+  if (focus) courseMenuTrigger?.focus();
+  courseMenuTrigger = null;
+}
+
+for (const selector of COURSE_TRIGGERS) {
+  $(selector).addEventListener("click", (event) => {
+    const trigger = event.currentTarget;
+    courseMenuTrigger === trigger ? closeCourseMenu() : (closeCourseMenu(), openCourseMenu(trigger));
+  });
+}
+courseMenu.addEventListener("click", (event) => {
+  const pick = event.target.closest("[data-menu-course]");
+  if (pick) {
+    closeCourseMenu({ focus: true });
+    const slug = pick.dataset.menuCourse;
+    // Clicar no curso aberto só fecha o menu (sair da tela Explorar volta para ele)
+    if (slug !== state.course || document.body.classList.contains("exploring")) {
+      setCourse(slug).then(() => {
+        if (isMobile() && document.body.classList.contains("sidebar-open")) { setSidebar(false); $("#course-switch").focus(); }
+      }).catch((error) => toast(error.message));
+    }
+  } else if (event.target.closest("[data-menu-all]")) {
+    closeCourseMenu({ focus: true });
+    closeSidebarOnMobile();
+    openExplore();
+  }
 });
+courseMenu.addEventListener("keydown", (event) => {
+  const items = [...courseMenu.querySelectorAll("button")];
+  const i = items.indexOf(document.activeElement);
+  if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); closeCourseMenu({ focus: true }); }
+  else if (event.key === "ArrowDown") { event.preventDefault(); items[(i + 1) % items.length].focus(); }
+  else if (event.key === "ArrowUp") { event.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  else if (event.key === "Tab") closeCourseMenu({ focus: true });
+});
+document.addEventListener("click", (event) => {
+  if (!courseMenu.hidden && !courseMenu.contains(event.target) && !event.target.closest(COURSE_TRIGGERS.join(","))) {
+    closeCourseMenu();
+  }
+});
+addEventListener("resize", () => closeCourseMenu());
 // Voltar/avançar do navegador entre cursos e a tela Explorar
 addEventListener("popstate", () => {
   const slug = location.pathname.slice(1);
