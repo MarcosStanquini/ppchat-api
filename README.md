@@ -1,8 +1,13 @@
 # PPChat — chat sobre o Projeto Pedagógico de Curso
 
-Assistente que responde perguntas sobre o PPC do Bacharelado em Engenharia de Software do IFSP São Carlos:
-disciplinas, ementas, cargas horárias, pré-requisitos, estágio, TCC, extensão e regras do curso. Também
-monta sequências de matrícula e estima a dificuldade de cada disciplina.
+Assistente que responde perguntas sobre os PPCs dos 6 cursos de graduação do IFSP São Carlos
+(Engenharia de Software, Engenharia Aeronáutica, Administração, ADS, Processos Gerenciais e Manutenção de
+Aeronaves): disciplinas, ementas, cargas horárias, pré-requisitos, estágio, TCC, extensão e regras do curso.
+Também monta sequências de matrícula e estima a dificuldade de cada disciplina.
+
+Sem o SUAP importado, o site abre na tela **Explorar cursos**. Importando o SUAP, o PPChat lê o curso na aba
+"Dados Acadêmicos" e abre direto nele (**Meu curso**); dá para explorar os outros cursos a qualquer momento.
+Cada curso tem endereço próprio (`/analise-e-desenvolvimento-de-sistemas`, `/administracao`...).
 
 ## Como funciona
 
@@ -21,12 +26,14 @@ PDF ──► texto limpo com [Página N] ────────────�
                                                chat multi-turno com streaming
 ```
 
-1. **Ingestão** (`python main.py ingest`, roda uma vez por versão do PDF)
-   - `PdfLoader` + `TextCleaner`: extraem o texto, removem o cabeçalho repetido e mantêm as quebras de linha das tabelas.
+1. **Ingestão** (`python main.py ingest --curso <slug>|all`, roda uma vez por versão do PDF)
+   - `PdfLoader` + `TextCleaner`: extraem o texto, removem cabeçalhos e rodapés repetidos (detectados em qualquer PPC, sem regex por curso) e mantêm as quebras de linha das tabelas.
    - `CurriculumExtractor`: o Claude lê o PPC e devolve, por saída estruturada, todas as disciplinas com código,
      semestre, carga horária, abordagem, laboratório, pré-requisitos (por código), tópicos e página do plano de
      ensino, além dos requisitos gerais (estágio, TCC, ACs, extensão).
-   - Saída em `src/data/processed/` (`ppc.md`, `curriculo.json`, `manifest.json`). Se o hash do PDF não mudou, a etapa é pulada.
+   - Cada curso tem uma pasta em `src/data/courses/<slug>/` (`ppc.pdf`, `ppc.md`, `curriculo.json`, `manifest.json` e
+     `notas.md` opcional com instruções específicas do curso para o prompt). O registro dos cursos fica em
+     `src/data/courses/courses.json`. Se o hash do PDF não mudou, a etapa é pulada; `--sem-extracao` gera só o texto.
 2. **Grafo** (`CurriculumGraph`, sem custo de API): pré-requisitos diretos e indiretos, o que cada disciplina
    libera, o que uma reprovação trava, cadeia crítica do curso, disciplinas-gargalo e um **índice de
    complexidade estimada** (0–10), que combina profundidade na cadeia (35%), base acumulada (25%), semestre (25%) e carga horária (15%).
@@ -58,9 +65,9 @@ A chave é criada em <https://platform.claude.com/settings/keys>.
 ## Uso
 
 ```bash
-python main.py ingest                 # processa o PDF (use --force para refazer)
-python main.py chat                   # chat interativo no terminal
-python main.py ask "Quais os pré-requisitos de Arquitetura de Software?"
+python main.py ingest --curso all     # processa os PDFs (use --force para refazer)
+python main.py chat --curso administracao   # chat interativo no terminal
+python main.py ask --curso engenharia-de-software "Quais os pré-requisitos de Arquitetura de Software?"
 python main.py serve --port 8000      # API + interface web em http://localhost:8000
 ```
 
@@ -128,7 +135,7 @@ padrões em `suap-export.js` (abas) e em `buildAluno` no `app.js` (situações).
 
 ## Deploy no Render (plano gratuito)
 
-O `render.yaml` já descreve o serviço. A base processada (`src/data/processed/`) está no repositório, então o
+O `render.yaml` já descreve o serviço. A base processada (`src/data/courses/`) está no repositório, então o
 deploy não roda a ingestão nem gasta API.
 
 1. Faça push do repositório para o GitHub.
@@ -137,7 +144,7 @@ deploy não roda a ingestão nem gasta API.
 4. Defina um **limite de gastos** no console da Anthropic: o site é público e não tem login.
 
 O plano gratuito dorme após 15 min sem uso; o primeiro acesso depois disso leva até 1 minuto, e o front mostra
-"Acordando o servidor…". Se mudar o PDF, rode `python main.py ingest --force` localmente e commite a base nova.
+"Acordando o servidor…". Se mudar o PDF, rode `python main.py ingest --curso <slug> --force` localmente e commite a base nova.
 
 ## Configuração (`.env`)
 

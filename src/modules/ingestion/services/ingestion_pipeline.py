@@ -7,18 +7,16 @@ from src.modules.ingestion.models.curriculum import Curriculo, PageText
 from src.modules.ingestion.services.curriculum_extractor import CurriculumExtractor
 from src.modules.ingestion.services.pdf_loader import PdfLoader
 from src.modules.ingestion.services.text_cleaner import TextCleaner
+from src.modules.shared.services.courses import Course
 from src.modules.shared.services.settings import get_settings
-
-DOCUMENT_FILE = "ppc.md"
-CURRICULUM_FILE = "curriculo.json"
-MANIFEST_FILE = "manifest.json"
 
 
 def build_document_text(pages: List[PageText], min_length: int = 20) -> str:
     """Junta as páginas limpas com marcadores [Página N] para o modelo poder citar a fonte."""
+    cleaner = TextCleaner([(page.page_number, page.text) for page in pages])
     parts = []
     for page in pages:
-        text = TextCleaner.clean(page.text)
+        text = cleaner.clean(page.text, page.page_number)
         if len(text) >= min_length:
             parts.append(f"[Página {page.page_number}]\n{text}")
     return "\n\n".join(parts)
@@ -47,39 +45,51 @@ def _sha256(path: Path) -> str:
 
 
 class IngestionPipeline:
-    def __init__(self):
+    """Processa o PPC de um curso para a pasta dele (src/data/courses/<slug>/)."""
+
+    def __init__(self, course: Course):
         self.settings = get_settings()
-        self.output_dir = self.settings.processed_dir
+        self.course = course
+        self.output_dir = course.dir
 
     def is_up_to_date(self) -> bool:
-        manifest = self.output_dir / MANIFEST_FILE
-        if not manifest.exists() or not (self.output_dir / CURRICULUM_FILE).exists():
+        manifest = self.course.manifest_path
+        if not manifest.exists() or not self.course.curriculum_path.exists():
             return False
-        return json.loads(manifest.read_text("utf-8")).get("pdf_sha256") == _sha256(self.settings.pdf_path)
+        return json.loads(manifest.read_text("utf-8")).get("pdf_sha256") == _sha256(self.course.pdf_path)
 
-    def run(self, force: bool = False) -> None:
-        if not force and self.is_up_to_date():
-            print("Base já processada para este PDF (use --force para refazer).")
+    def write_document(self) -> str:
+        """Só o texto (PyMuPDF, local e sem custo de API)."""
+        pages = PdfLoader.load(self.course.pdf_path)
+        document_text = build_document_text(pages)
+        self.course.document_path.write_text(document_text, "utf-8")
+        print(f"[{self.course.slug}] {len(pages)} páginas, {len(document_text):,} caracteres.")
+        return document_text
+
+    def run(self, force: bool = False, extract: bool = True) -> None:
+        if extract and not force and self.is_up_to_date():
+            print(f"[{self.course.slug}] Base já processada para este PDF (use --force para refazer).")
             return
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        document_text = self.write_document()
+        if not extract:
+            return
 
-        print("Extraindo texto do PDF...")
-        pages = PdfLoader.load(self.settings.pdf_path)
-        document_text = build_document_text(pages)
-        (self.output_dir / DOCUMENT_FILE).write_text(document_text, "utf-8")
-        print(f"{len(pages)} páginas, {len(document_text):,} caracteres.")
-
-        print(f"Extraindo currículo estruturado com {self.settings.extraction_model or self.settings.llm_model}...")
+        model = self.settings.extraction_model or self.settings.llm_model
+        print(f"[{self.course.slug}] Extraindo currículo estruturado com {model}...")
         curriculo = CurriculumExtractor().extract(document_text)
-        for warning in validate_curriculum(curriculo):
-            print(f"  aviso: {warning}")
+        save_curriculum(self.course, curriculo, model)
 
-        (self.output_dir / CURRICULUM_FILE).write_text(
-            curriculo.model_dump_json(indent=2), "utf-8"
-        )
-        (self.output_dir / MANIFEST_FILE).write_text(
-            json.dumps({"pdf_sha256": _sha256(self.settings.pdf_path), "model": self.settings.extraction_model or self.settings.llm_model}, indent=2),
-            "utf-8",
-        )
-        print(f"{len(curriculo.disciplinas)} disciplinas salvas em {self.output_dir}.")
+
+def save_curriculum(course: Course, curriculo: Curriculo, source: str) -> list[str]:
+    """Valida, grava o currículo e o manifest; devolve os avisos de consistência."""
+    warnings = validate_curriculum(curriculo)
+    for warning in warnings:
+        print(f"  aviso: {warning}")
+    course.curriculum_path.write_text(curriculo.model_dump_json(indent=2), "utf-8")
+    course.manifest_path.write_text(
+        json.dumps({"pdf_sha256": _sha256(course.pdf_path), "extraido_por": source}, indent=2), "utf-8"
+    )
+    print(f"[{course.slug}] {len(curriculo.disciplinas)} disciplinas salvas em {course.dir}.")
+    return warnings

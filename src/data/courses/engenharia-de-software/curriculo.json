@@ -31,7 +31,7 @@
         "Registros e arquivos",
         "Recursividade"
       ],
-      "pagina_plano_ensino": 63
+      "pagina_plano_ensino": 62
     },
     {
       "codigo": "SCLPPSW",
@@ -58,7 +58,7 @@
         "Ferramentas de apoio",
         "Atuação profissional"
       ],
-      "pagina_plano_ensino": 65
+      "pagina_plano_ensino": 64
     },
     {
       "codigo": "SCLIWEB",
@@ -81,7 +81,7 @@
         "CSS",
         "Elementos de design"
       ],
-      "pagina_plano_ensino": 67
+      "pagina_plano_ensino": 66
     },
     {
       "codigo": "SCLARCO",
@@ -108,7 +108,7 @@
         "Memória e cache",
         "Pipeline e paralelismo"
       ],
-      "pagina_plano_ensino": 69
+      "pagina_plano_ensino": 68
     },
     {
       "codigo": "SCLMATC",
@@ -134,7 +134,7 @@
         "Álgebra booleana",
         "Métodos quantitativos"
       ],
-      "pagina_plano_ensino": 71
+      "pagina_plano_ensino": 70
     },
     {
       "codigo": "SCLING1",
@@ -159,7 +159,7 @@
         "Vocabulário técnico de programação",
         "Documentação de código"
       ],
-      "pagina_plano_ensino": 73
+      "pagina_plano_ensino": 72
     },
     {
       "codigo": "SCLAPR2",
@@ -186,7 +186,7 @@
         "Métodos de busca",
         "Paradigmas de projeto de algoritmos"
       ],
-      "pagina_plano_ensino": 75
+      "pagina_plano_ensino": 74
     },
     {
       "codigo": "SCLIHCO",
@@ -213,7 +213,7 @@
         "Usabilidade e heurísticas",
         "Acessibilidade e direitos humanos"
       ],
-      "pagina_plano_ensino": 77
+      "pagina_plano_ensino": 76
     },
     {
       "codigo": "SCLPRW1",
@@ -243,7 +243,7 @@
         "Bibliotecas de script",
         "Chamadas assíncronas"
       ],
-      "pagina_plano_ensino": 79
+      "pagina_plano_ensino": 78
     },
     {
       "codigo": "SCLSOPE",
@@ -271,7 +271,7 @@
         "Entrada e saída",
         "Virtualização e sistemas distribuídos"
       ],
-      "pagina_plano_ensino": 81
+      "pagina_plano_ensino": 80
     },
     {
       "codigo": "SCLFADM",
@@ -298,7 +298,7 @@
         "Pesquisa operacional",
         "Responsabilidade social"
       ],
-      "pagina_plano_ensino": 83
+      "pagina_plano_ensino": 82
     },
     {
       "codigo": "SCLING2",
@@ -322,7 +322,7 @@
         "Documentação e comentários de código",
         "Abstracts"
       ],
-      "pagina_plano_ensino": 85
+      "pagina_plano_ensino": 84
     },
     {
       "codigo": "SCLESDD",
@@ -349,7 +349,7 @@
         "Árvores",
         "Grafos"
       ],
-      "pagina_plano_ensino": 87
+      "pagina_plano_ensino": 86
     },
     {
       "codigo": "SCLBDD1",
@@ -375,7 +375,7 @@
         "Normalização",
         "Engenharia reversa"
       ],
-      "pagina_plano_ensino": 89
+      "pagina_plano_ensino": 88
     },
     {
       "codigo": "SCLPROO",
@@ -405,7 +405,7 @@
         "Interfaces gráficas",
         "Manipulação de arquivos e banco de dados"
       ],
-      "pagina_plano_ensino": 91
+      "pagina_plano_ensino": 90
     },
     {
       "codigo": "SCLRQSW",
@@ -432,7 +432,7 @@
         "Requisitos em contextos ágeis e tradicionais",
         "Gerenciamento de requisitos"
       ],
-      "pagina_plano_ensino": 93
+      "pagina_plano_ensino": 92
     },
     {
       "codigo": "SCLPRW2",
@@ -460,7 +460,7 @@
         "Lógica de negócio",
         "Integração front-end e back-end"
       ],
-      "pagina_plano_ensino": 95
+      "pagina_plano_ensino": 94
     },
     {
       "codigo": "SCLSINF",
@@ -488,7 +488,7 @@
         "Segurança de SI",
         "TI verde"
       ],
-      "pagina_plano_ensino": 97
+      "pagina_plano_ensino": 96
     },
     {
       "codigo": "SCLBDD2",
@@ -517,7 +517,7 @@
         "Índices",
         "Bancos não relacionais"
       ],
-      "pagina_plano_ensino": 99
+      "pagina_plano_ensino": 98
     },
     {
       "codigo": "SCLAPOO",
@@ -546,7 +546,7 @@
         "Princípios de projeto",
         "Padrões de projeto"
       ],
-      "pagina_plano_ensino": 101
+      "pagina_plano_ensino": 100
     },
     {
       "codigo": "SCLPRW3",
@@ -576,7 +576,7 @@
         "Gerenciamento de sessão",
         "Autenticação e autorização"
       ],
-      "pagina_plano_ensino": 103
+      "pagina_plano_ensino": 102
     },
     {
       "codigo": "SCLPRES",
@@ -601,7 +601,7 @@
         "Distribuições de probabilidade",
         "Testes de hipótese"
       ],
-      "pagina_plano_ensino": 105
+      "pagina_plano_ensino": 104
     },
     {
       "codigo": "SCLAXB1",
@@ -627,7 +627,7 @@
         "Construção e gestão de bancos de dados",
         "Interação com stakeholders"
       ],
-      "pagina_plano_ensino": 107
+      "pagina_plano_ensino": 106
     },
     {
       "codigo": "SCLVVTS",
@@ -657,7 +657,7 @@
         "TDD",
         "Ferramentas de teste"
       ],
-      "pagina_plano_ensino": 109
+      "pagina_plano_ensino": 108
     },
     {
       "codigo": "SCLGCSW",
@@ -683,7 +683,7 @@
         "Integração e entrega contínuas",
         "Ferramentas de controle de versão"
       ],
-      "pagina_plano_ensino": 111
+      "pagina_plano_ensino": 110
     },
     {
       "codigo": "SCLPRDM",
@@ -711,7 +711,7 @@
         "Recursos de hardware e software",
         "HTTP e WebService"
       ],
-      "pagina_plano_ensino": 113
+      "pagina_plano_ensino": 112
     },
     {
       "codigo": "SCLRCO1",
@@ -740,7 +740,7 @@
         "Camada de aplicação",
         "Protocolos TCP/IP"
       ],
-      "pagina_plano_ensino": 115
+      "pagina_plano_ensino": 114
     },
     {
       "codigo": "SCLAMMD",
@@ -768,7 +768,7 @@
         "Algoritmos de aprendizado de máquina",
         "Análise de resultados experimentais"
       ],
-      "pagina_plano_ensino": 117
+      "pagina_plano_ensino": 116
     },
     {
       "codigo": "SCLMPQC",
@@ -795,7 +795,7 @@
         "Normas ABNT",
         "Experimentação em Engenharia de Software"
       ],
-      "pagina_plano_ensino": 119
+      "pagina_plano_ensino": 118
     },
     {
       "codigo": "SCLARSW",
@@ -823,7 +823,7 @@
         "Decisões arquiteturais",
         "Documentação e avaliação de arquiteturas"
       ],
-      "pagina_plano_ensino": 121
+      "pagina_plano_ensino": 120
     },
     {
       "codigo": "SCLGPSW",
@@ -850,7 +850,7 @@
         "Qualidade de processo",
         "Ferramentas de gestão"
       ],
-      "pagina_plano_ensino": 123
+      "pagina_plano_ensino": 122
     },
     {
       "codigo": "SCLRCO2",
@@ -880,7 +880,7 @@
         "Proxy e cache",
         "Backup"
       ],
-      "pagina_plano_ensino": 125
+      "pagina_plano_ensino": 124
     },
     {
       "codigo": "SCLEMPC",
@@ -907,7 +907,7 @@
         "Legislação em Computação",
         "Ética e aspectos étnico-raciais"
       ],
-      "pagina_plano_ensino": 127
+      "pagina_plano_ensino": 126
     },
     {
       "codigo": "SCLAXB2",
@@ -932,7 +932,7 @@
         "Verificação, validação e teste",
         "Interação com stakeholders"
       ],
-      "pagina_plano_ensino": 129
+      "pagina_plano_ensino": 128
     },
     {
       "codigo": "SCLCOSS",
@@ -958,7 +958,7 @@
         "Educação ambiental e TI verde",
         "História e Cultura Afro-brasileira e Indígena"
       ],
-      "pagina_plano_ensino": 131
+      "pagina_plano_ensino": 130
     },
     {
       "codigo": "SCLASEG",
@@ -988,7 +988,7 @@
         "Políticas de segurança",
         "Testes de invasão"
       ],
-      "pagina_plano_ensino": 133
+      "pagina_plano_ensino": 132
     },
     {
       "codigo": "SCLDMDM",
@@ -1014,7 +1014,7 @@
         "Persistência em arquivos e bancos de dados",
         "Sincronização de dados e WebServices"
       ],
-      "pagina_plano_ensino": 135
+      "pagina_plano_ensino": 134
     },
     {
       "codigo": "SCLTCDD",
@@ -1041,7 +1041,7 @@
         "Redes Complexas",
         "Ciência de Dados na Engenharia de Software"
       ],
-      "pagina_plano_ensino": 137
+      "pagina_plano_ensino": 136
     },
     {
       "codigo": "SCLAXB3",
@@ -1068,7 +1068,7 @@
         "Segurança e auditoria",
         "Interação com stakeholders"
       ],
-      "pagina_plano_ensino": 139
+      "pagina_plano_ensino": 138
     },
     {
       "codigo": "SCLTAED",
@@ -1097,7 +1097,7 @@
         "Análise de complexidade",
         "Aplicações na Engenharia de Software"
       ],
-      "pagina_plano_ensino": 141
+      "pagina_plano_ensino": 140
     },
     {
       "codigo": "SCLTTEC",
@@ -1124,7 +1124,7 @@
         "Técnicas e ferramentas de engenharia de software",
         "Tópicos de pesquisa em Computação"
       ],
-      "pagina_plano_ensino": 143
+      "pagina_plano_ensino": 142
     },
     {
       "codigo": "SCLAXB4",
@@ -1182,22 +1182,22 @@
     {
       "item": "Integralização",
       "descricao": "Integralização mínima em 8 semestres (semestres de 20 semanas, aulas de 50 min, turno integral). Carga horária total mínima de 3207,2 h (componentes obrigatórios + 640 h de atividades complementares); carga horária máxima de 3240,5 h com a optativa LIBRAS (33,3 h).",
-      "pagina": 24
+      "pagina": 23
     },
     {
       "item": "Atividades Complementares",
-      "descricao": "640 h obrigatórias, realizáveis ao longo de toda a graduação. Regulamento, controle e contabilização feitos pelo Colegiado de Curso, com limites de horas por tipo de atividade. Projetos desenvolvidos nas disciplinas de Atividades de Extensão não contam para as ACs. Resultado registrado como cumpriu/não cumpriu.",
-      "pagina": 31
+      "descricao": "640 h obrigatórias, realizáveis ao longo de toda a graduação. Regulamento, controle e contabilização feitos pelo Colegiado de Curso, com limites de horas por tipo de atividade. Estágio, prática profissional e TCC entram nas ACs (no máximo duas atividades no total entre estágio e prática profissional). Projetos desenvolvidos nas disciplinas de Atividades de Extensão não contam para as ACs. Resultado registrado como cumpriu/não cumpriu.",
+      "pagina": 30
     },
     {
-      "item": "Estágio Curricular Supervisionado",
-      "descricao": "Não é componente obrigatório isolado; insere-se nas Atividades Complementares. Podem ser feitos até dois estágios em momentos distintos, de até 280 h cada (14 h semanais), com objetivos distintos, na área do curso, sob orientação de docente do IFSP e supervisão na empresa, com relatórios parciais e final. O parecer final de aprovação é usado para contabilizar horas nas ACs (100 h sem comprovação explícita, limite de 280 h por estágio).",
-      "pagina": 28
+      "item": "Estágio Curricular Supervisionado e Prática Profissional",
+      "descricao": "Não é componente obrigatório isolado; insere-se nas Atividades Complementares. Podem ser feitos até dois estágios em momentos distintos, de até 280 h cada (14 h semanais), com objetivos distintos, na área do curso, sob orientação de docente do IFSP e supervisão na empresa, com relatórios parciais e final. O parecer final de aprovação é usado para contabilizar horas nas ACs (100 h sem comprovação explícita, limite de 280 h por estágio). Quem atua profissionalmente na área (como colaborador ou proprietário de empresa) pode validar Prática Profissional nas ACs, com comprovante de vínculo empregatício, declaração do empregador ou contratante e relatório de atividades; também até duas, com objetivos distintos. No total, valem no máximo duas experiências entre estágio e prática profissional (dois estágios, um estágio e uma prática, ou duas práticas).",
+      "pagina": 27
     },
     {
       "item": "Trabalho de Conclusão de Curso (TCC)",
       "descricao": "Insere-se nas Atividades Complementares. Podem ser feitos até dois TCCs em momentos distintos, de até 280 h cada (14 h semanais), com objetivos distintos. Exige monografia e defesa perante banca; a ata de defesa com aprovação é usada para contabilizar horas nas ACs. A disciplina Metodologia de Pesquisa Científica fornece a base para o TCC.",
-      "pagina": 30
+      "pagina": 29
     },
     {
       "item": "Curricularização da Extensão",
@@ -1207,17 +1207,17 @@
     {
       "item": "Pré-requisitos",
       "descricao": "Sistema de pré-requisitos definido no quadro da seção 6.4 condiciona a matrícula em diversas disciplinas ao cumprimento de componentes de semestres anteriores.",
-      "pagina": 26
+      "pagina": 25
     },
     {
       "item": "Critérios de aprovação",
       "descricao": "Aprovação com nota semestral ≥ 6,0 e frequência mínima de 75%. Nota entre 4,0 e 6,0 com frequência ≥ 75% dá direito a Instrumento Final de Avaliação, exigindo nota mínima 6,0.",
-      "pagina": 41
+      "pagina": 40
     },
     {
       "item": "Aproveitamento de estudos",
       "descricao": "Concedido quando conteúdo e carga horária equivalem a no mínimo 80% do componente; aproveitamento de disciplinas de outras instituições limitado a 50% da carga horária do curso. Não é permitido para dependências. Possibilidade de Extraordinário Aproveitamento de Estudos.",
-      "pagina": 47
+      "pagina": 46
     }
   ]
 }

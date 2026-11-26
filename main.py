@@ -3,17 +3,25 @@ import asyncio
 import sys
 
 from src.modules.ingestion.services.ingestion_pipeline import IngestionPipeline
+from src.modules.shared.services.courses import LEGACY_COURSE, get_course, get_registry
 
 
-def ingest(force: bool) -> None:
-    IngestionPipeline().run(force=force)
+def ingest(curso: str, force: bool, extract: bool) -> None:
+    courses = get_registry().cursos if curso == "all" else [get_course(curso)]
+    for course in courses:
+        IngestionPipeline(course).run(force=force, extract=extract)
 
 
-async def chat() -> None:
+def _session(curso: str):
+    from src.modules.knowledge.services.knowledge_base import get_knowledge_base
     from src.modules.response.services.chat_service import ChatSession
 
-    session = ChatSession()
-    print("PPChat — pergunte sobre o PPC de Engenharia de Software (Ctrl+C ou 'sair' para encerrar)\n")
+    return ChatSession(get_knowledge_base(curso))
+
+
+async def chat(curso: str) -> None:
+    session = _session(curso)
+    print(f"PPChat — pergunte sobre o PPC de {get_course(curso).nome} (Ctrl+C ou 'sair' para encerrar)\n")
     while True:
         try:
             # input() roda numa thread para não travar o loop do asyncio
@@ -37,10 +45,8 @@ async def chat() -> None:
         print()
 
 
-async def ask(question: str) -> None:
-    from src.modules.response.services.chat_service import ChatSession
-
-    async for chunk in ChatSession().stream(question):
+async def ask(curso: str, question: str) -> None:
+    async for chunk in _session(curso).stream(question):
         print(chunk, end="", flush=True)
     print()
 
@@ -58,10 +64,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="PPChat — chat sobre o PPC do curso")
     commands = parser.add_subparsers(dest="command", required=True)
 
+    slugs = [c.slug for c in get_registry().cursos]
     ingest_parser = commands.add_parser("ingest", help="Processa o PDF e extrai o currículo estruturado")
+    ingest_parser.add_argument("--curso", choices=[*slugs, "all"], default="all")
     ingest_parser.add_argument("--force", action="store_true", help="Refaz mesmo se o PDF não mudou")
-    commands.add_parser("chat", help="Chat interativo no terminal")
+    ingest_parser.add_argument("--sem-extracao", action="store_true", help="Gera só o texto (ppc.md), sem chamar a API")
+    chat_parser = commands.add_parser("chat", help="Chat interativo no terminal")
+    chat_parser.add_argument("--curso", choices=slugs, default=LEGACY_COURSE)
     ask_parser = commands.add_parser("ask", help="Faz uma única pergunta")
+    ask_parser.add_argument("--curso", choices=slugs, default=LEGACY_COURSE)
     ask_parser.add_argument("question")
     serve_parser = commands.add_parser("serve", help="Sobe a API HTTP (FastAPI)")
     serve_parser.add_argument("--host", default="127.0.0.1")
@@ -69,14 +80,14 @@ def main() -> None:
 
     args = parser.parse_args()
     if args.command == "ingest":
-        ingest(args.force)
+        ingest(args.curso, args.force, not args.sem_extracao)
     elif args.command == "chat":
         try:
-            asyncio.run(chat())
+            asyncio.run(chat(args.curso))
         except KeyboardInterrupt:
             pass
     elif args.command == "ask":
-        asyncio.run(ask(args.question))
+        asyncio.run(ask(args.curso, args.question))
     elif args.command == "serve":
         serve(args.host, args.port)
 

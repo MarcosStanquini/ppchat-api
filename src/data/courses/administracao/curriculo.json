@@ -1,0 +1,1387 @@
+{
+  "curso": "Bacharelado em Administração",
+  "campus": "São Carlos",
+  "vigencia": "1º Semestre/2023",
+  "duracao_semestres": 8,
+  "carga_horaria_total_curso": 3000.6,
+  "disciplinas": [
+    {
+      "codigo": "SCLCORG",
+      "nome": "COMUNICAÇÃO ORGANIZACIONAL",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Complementar/Línguas",
+        "Básica/Ciências Sociais"
+      ],
+      "topicos_principais": [
+        "Elementos da comunicação estratégica",
+        "Linguagem, contexto e produção de sentidos",
+        "Comunicação no contexto organizacional",
+        "Aspectos linguísticos e pragmáticos",
+        "Leitura e produção de textos organizacionais",
+        "Palestras para eventos corporativos",
+        "Comunicação e cultura: questões étnico-raciais",
+        "Comunicação e poder"
+      ],
+      "pagina_plano_ensino": 69
+    },
+    {
+      "codigo": "SCLSOAP",
+      "nome": "SOCIOLOGIA APLICADA À ADMINISTRAÇÃO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Ciências Sociais",
+        "Básica/Filosofia"
+      ],
+      "topicos_principais": [
+        "Introdução à sociologia",
+        "Indivíduo e sociedades",
+        "A organização como sistema social",
+        "Centralidade do trabalho",
+        "Política, poder e ideologia nas organizações",
+        "Relações étnico-raciais no trabalho",
+        "Mudança social e estratificação",
+        "Organização do trabalho e modelos de gestão"
+      ],
+      "pagina_plano_ensino": 71
+    },
+    {
+      "codigo": "SCLINFO",
+      "nome": "INFORMÁTICA APLICADA",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Sistemas de Informação"
+      ],
+      "topicos_principais": [
+        "Introdução à informática",
+        "Ambiente virtual Moodle",
+        "Planilha eletrônica",
+        "Gerador de apresentações",
+        "Editor de texto"
+      ],
+      "pagina_plano_ensino": 73
+    },
+    {
+      "codigo": "SCLFMAT",
+      "nome": "FUNDAMENTOS DE MATEMÁTICA",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Estudos Quantitativos e suas Tecnologias/Matemática, Probabilidade e Estatística"
+      ],
+      "topicos_principais": [
+        "Conjuntos numéricos",
+        "Equações do 1º e 2º grau",
+        "Relações",
+        "Funções",
+        "Função polinomial",
+        "Equações exponenciais e logarítmicas",
+        "Funções exponenciais e logarítmicas",
+        "Introdução a limites"
+      ],
+      "pagina_plano_ensino": 76
+    },
+    {
+      "codigo": "SCLPADM",
+      "nome": "PENSAMENTO ADMINISTRATIVO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Geral"
+      ],
+      "topicos_principais": [
+        "Pensamento clássico",
+        "Organizações empresariais e nova forma de trabalho",
+        "Linha do tempo da Administração",
+        "Escolas de administração do século XX",
+        "Pensamento administrativo emergente",
+        "Administração estratégica",
+        "Ética e responsabilidade social"
+      ],
+      "pagina_plano_ensino": 78
+    },
+    {
+      "codigo": "SCLCOMP",
+      "nome": "COMPORTAMENTO ORGANIZACIONAL",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração de Recursos Humanos"
+      ],
+      "topicos_principais": [
+        "Introdução ao comportamento organizacional",
+        "O indivíduo na organização",
+        "Os grupos na organização",
+        "O sistema organizacional"
+      ],
+      "pagina_plano_ensino": 81
+    },
+    {
+      "codigo": "SCLCNT1",
+      "nome": "CONTABILIDADE 1",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Ciências Contábeis"
+      ],
+      "topicos_principais": [
+        "Introdução à contabilidade",
+        "Fundamentos básicos",
+        "Plano de contas",
+        "Lançamentos contábeis",
+        "Demonstrações contábeis",
+        "Análise das demonstrações contábeis"
+      ],
+      "pagina_plano_ensino": 83
+    },
+    {
+      "codigo": "SCLGPE1",
+      "nome": "GESTÃO DE PESSOAS 1",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Filosofia",
+        "Profissional/Administração de Recursos Humanos"
+      ],
+      "topicos_principais": [
+        "Moderna gestão de pessoas",
+        "Planejamento estratégico de RH",
+        "Recrutamento e seleção",
+        "Modelo de cargos",
+        "Socialização no cargo",
+        "Cargos, salários e benefícios",
+        "Programas de benefícios",
+        "Temas contemporâneos em RH"
+      ],
+      "pagina_plano_ensino": 86
+    },
+    {
+      "codigo": "SCLMETC",
+      "nome": "METODOLOGIA DO TRABALHO CIENTÍFICO",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Metodologia Científica"
+      ],
+      "topicos_principais": [
+        "Ciência e pesquisa científica",
+        "Seleção e documentação de fontes",
+        "Processos cognitivos e construção do conhecimento",
+        "Linguagem da ciência",
+        "Etapas da pesquisa e redação científica",
+        "Artigo científico",
+        "Apresentação oral em eventos acadêmicos"
+      ],
+      "pagina_plano_ensino": 89
+    },
+    {
+      "codigo": "SCLALOR",
+      "nome": "AMBIENTE LEGAL DAS ORGANIZAÇÕES",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Direito",
+        "Profissional/Responsabilidade Ambiental e Social"
+      ],
+      "topicos_principais": [
+        "Ambiente legal das organizações",
+        "Direitos humanos nas organizações",
+        "Constituição e Código Civil",
+        "Legislação comercial",
+        "Legislação trabalhista",
+        "Código de Defesa do Consumidor",
+        "Legislação ambiental",
+        "Legislação tributária e fiscal"
+      ],
+      "pagina_plano_ensino": 92
+    },
+    {
+      "codigo": "SCLESTA",
+      "nome": "ESTATÍSTICA APLICADA",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Estudos Quantitativos e suas Tecnologias/Matemática, Probabilidade e Estatística"
+      ],
+      "topicos_principais": [
+        "Estatística descritiva e indutiva",
+        "População, amostra e amostragem",
+        "Tabelas de frequência e histogramas",
+        "Medidas de posição",
+        "Medidas de dispersão",
+        "Correlação e regressão",
+        "Distribuições de probabilidade discretas",
+        "Distribuições de probabilidade contínuas"
+      ],
+      "pagina_plano_ensino": 94
+    },
+    {
+      "codigo": "SCLFADM",
+      "nome": "FUNDAMENTOS DA ADMINISTRAÇÃO",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Geral"
+      ],
+      "topicos_principais": [
+        "Processo de planejamento",
+        "Processo de organização",
+        "Modelos de organização",
+        "Estrutura organizacional",
+        "Processo de direção",
+        "Processo decisório, poder e autoridade",
+        "Controle nos níveis hierárquicos",
+        "Temas emergentes"
+      ],
+      "pagina_plano_ensino": 97
+    },
+    {
+      "codigo": "SCLTDEC",
+      "nome": "TOMADA DE DECISÃO",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Filosofia",
+        "Profissional/Administração Geral"
+      ],
+      "topicos_principais": [
+        "Informação e comunicação na decisão",
+        "Processo decisório",
+        "Herbert Simon e modelos de decisão",
+        "Decisão individual e coletiva",
+        "Sistema de valores",
+        "Teoria dos jogos",
+        "Técnicas de apoio à decisão",
+        "Poder e liderança"
+      ],
+      "pagina_plano_ensino": 99
+    },
+    {
+      "codigo": "SCLFMEC",
+      "nome": "FUNDAMENTOS DE MICRO E MACROECONOMIA",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Economia"
+      ],
+      "topicos_principais": [
+        "Conceitos básicos de economia",
+        "Evolução do pensamento econômico",
+        "Microeconomia básica",
+        "Macroeconomia básica"
+      ],
+      "pagina_plano_ensino": 101
+    },
+    {
+      "codigo": "SCLCNT2",
+      "nome": "CONTABILIDADE 2",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [
+        "SCLCNT1"
+      ],
+      "grupos_conhecimento": [
+        "Básica/Ciências Contábeis"
+      ],
+      "topicos_principais": [
+        "Características das empresas",
+        "Impostos e contribuições",
+        "Contabilidade de custos",
+        "Custeio por absorção",
+        "Custeio ABC",
+        "Custo padrão"
+      ],
+      "pagina_plano_ensino": 104
+    },
+    {
+      "codigo": "SCLMFIN",
+      "nome": "MATEMÁTICA FINANCEIRA",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Financeira"
+      ],
+      "topicos_principais": [
+        "Introdução à matemática financeira",
+        "Juros simples e compostos",
+        "Operações de desconto",
+        "Séries de pagamentos",
+        "Sistemas de amortização",
+        "Métodos de análise de investimento"
+      ],
+      "pagina_plano_ensino": 107
+    },
+    {
+      "codigo": "SCLGPE2",
+      "nome": "GESTÃO DE PESSOAS 2",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [
+        "SCLGPE1"
+      ],
+      "grupos_conhecimento": [
+        "Básica/Filosofia",
+        "Profissional/Administração de Recursos Humanos"
+      ],
+      "topicos_principais": [
+        "Treinamento e desenvolvimento",
+        "Relacionamento com colaboradores",
+        "RH como consultoria e auditoria",
+        "Comunicação e endomarketing",
+        "Avaliação de desempenho",
+        "Novas relações de trabalho",
+        "Rotinas de departamento pessoal",
+        "Higiene, segurança e qualidade de vida no trabalho"
+      ],
+      "pagina_plano_ensino": 110
+    },
+    {
+      "codigo": "SCLGPO1",
+      "nome": "GESTÃO DA PRODUÇÃO E OPERAÇÕES 1",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Gestão de Operações"
+      ],
+      "topicos_principais": [
+        "Sistemas de produção",
+        "Objetivos e medidas de desempenho",
+        "Estratégia de operações",
+        "Tipos de processos",
+        "Planejamento e controle da produção",
+        "Gestão de operações em serviços",
+        "Abordagens contemporâneas em operações"
+      ],
+      "pagina_plano_ensino": 113
+    },
+    {
+      "codigo": "SCLEXT1",
+      "nome": "EXTENSÃO 1",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Ciências Sociais",
+        "Profissional/Empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Conceitos fundamentais de extensão",
+        "Planejamento de ações de extensão",
+        "Desenvolvimento de ações de extensão",
+        "Execução de ações de extensão",
+        "Encerramento de ações de extensão",
+        "Programas e projetos de extensão"
+      ],
+      "pagina_plano_ensino": 116
+    },
+    {
+      "codigo": "SCLGPRO",
+      "nome": "GESTÃO DE PROJETOS",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Gestão de Operações"
+      ],
+      "topicos_principais": [
+        "Conceito de projeto e gestão de projetos",
+        "Papel do gerente de projetos",
+        "Ciclo de vida do projeto",
+        "Estrutura organizacional",
+        "Gestão tradicional (PMBOK)",
+        "Gestão ágil de projetos"
+      ],
+      "pagina_plano_ensino": 118
+    },
+    {
+      "codigo": "SCLECON",
+      "nome": "ECONOMIA DE EMPRESAS",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Economia"
+      ],
+      "topicos_principais": [
+        "Estruturas de mercado",
+        "Eficiência econômica e falhas de mercado",
+        "Macroambiente empresarial",
+        "Competição e competitividade"
+      ],
+      "pagina_plano_ensino": 120
+    },
+    {
+      "codigo": "SCLAFO1",
+      "nome": "ADMINISTRAÇÃO FINANCEIRA E ORÇAMENTÁRIA 1",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [
+        "SCLCNT1"
+      ],
+      "grupos_conhecimento": [
+        "Profissional/Administração Financeira"
+      ],
+      "topicos_principais": [
+        "Conceitos fundamentais",
+        "Papel e ambiente da administração financeira",
+        "Tributação de empresas",
+        "Análise de demonstrações financeiras",
+        "Capital de giro e ativos circulantes",
+        "Gestão de passivos circulantes"
+      ],
+      "pagina_plano_ensino": 122
+    },
+    {
+      "codigo": "SCLGPO2",
+      "nome": "GESTÃO DA PRODUÇÃO E OPERAÇÕES 2",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [
+        "SCLGPO1"
+      ],
+      "grupos_conhecimento": [
+        "Profissional/Gestão de Operações"
+      ],
+      "topicos_principais": [
+        "Gestão de estoques",
+        "Produção enxuta",
+        "Teoria das restrições"
+      ],
+      "pagina_plano_ensino": 125
+    },
+    {
+      "codigo": "SCLEPCO",
+      "nome": "ÉTICA E PENSAMENTO CRÍTICO NAS ORGANIZAÇÕES",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Ciências Sociais",
+        "Básica/Filosofia",
+        "Profissional/Responsabilidade Ambiental e Social"
+      ],
+      "topicos_principais": [
+        "Ética e moral",
+        "Ética nas organizações",
+        "Desafios éticos contemporâneos",
+        "Responsabilidade socioambiental"
+      ],
+      "pagina_plano_ensino": 127
+    },
+    {
+      "codigo": "SCLFMKT",
+      "nome": "FUNDAMENTOS DE MARKETING",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Marketing"
+      ],
+      "topicos_principais": [
+        "Escopo e conceitos de marketing",
+        "Orientação da empresa ao mercado",
+        "Composto de marketing (4Ps, 4As, 4Cs)",
+        "Comportamento do consumidor",
+        "Valor e satisfação do cliente",
+        "Gestão de relacionamento com o cliente",
+        "Mercados organizacionais",
+        "Segmentação e posicionamento"
+      ],
+      "pagina_plano_ensino": 129
+    },
+    {
+      "codigo": "SCLEXT2",
+      "nome": "EXTENSÃO 2",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Ciências Sociais",
+        "Profissional/Empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Planejamento das ações de extensão",
+        "Organização das ações de extensão",
+        "Execução das ações de extensão",
+        "Avaliação e encerramento das ações"
+      ],
+      "pagina_plano_ensino": 131
+    },
+    {
+      "codigo": "SCLAFO2",
+      "nome": "ADMINISTRAÇÃO FINANCEIRA E ORÇAMENTÁRIA 2",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [
+        "SCLCNT1"
+      ],
+      "grupos_conhecimento": [
+        "Profissional/Administração Financeira"
+      ],
+      "topicos_principais": [
+        "Fluxos de caixa e planejamento financeiro",
+        "Risco e retorno",
+        "Orçamento de capital",
+        "Técnicas de orçamento de capital",
+        "Risco e orçamento de capital",
+        "Custo de capital",
+        "Alavancagem e estrutura de capital"
+      ],
+      "pagina_plano_ensino": 133
+    },
+    {
+      "codigo": "SCLMTPA",
+      "nome": "MÉTODOS E TÉCNICAS DE PESQUISA EM ADMINISTRAÇÃO",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Metodologia Científica"
+      ],
+      "topicos_principais": [
+        "Abordagens de pesquisa em Administração",
+        "Planejamento da pesquisa",
+        "Projeto de pesquisa",
+        "Cronograma de pesquisa"
+      ],
+      "pagina_plano_ensino": 136
+    },
+    {
+      "codigo": "SCLLOGS",
+      "nome": "LOGÍSTICA E GESTÃO DA CADEIA DE SUPRIMENTOS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Gestão de Operações",
+        "Profissional/Responsabilidade Ambiental e Social"
+      ],
+      "topicos_principais": [
+        "Visão estratégica da logística",
+        "Compras e abastecimento",
+        "Canais e distribuição física",
+        "Administração de transportes",
+        "Armazenagem",
+        "Logística reversa",
+        "Tópicos contemporâneos em logística"
+      ],
+      "pagina_plano_ensino": 138
+    },
+    {
+      "codigo": "SCLEST1",
+      "nome": "GESTÃO ESTRATÉGICA 1",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Geral"
+      ],
+      "topicos_principais": [
+        "Conceitos de estratégia (5Ps)",
+        "Visão baseada em recursos",
+        "Processo de administração estratégica",
+        "Análise SWOT e ambiente da indústria",
+        "Estratégias no nível de negócios",
+        "Dinâmica competitiva",
+        "Estratégia corporativa e diversificação",
+        "Estratégia internacional"
+      ],
+      "pagina_plano_ensino": 141
+    },
+    {
+      "codigo": "SCLGMKT",
+      "nome": "GESTÃO DE MARKETING",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Marketing"
+      ],
+      "topicos_principais": [
+        "Composto de marketing",
+        "Produto",
+        "Preço",
+        "Canais de marketing",
+        "Comunicação integrada de marketing"
+      ],
+      "pagina_plano_ensino": 143
+    },
+    {
+      "codigo": "SCLPQUA",
+      "nome": "GESTÃO POR PROCESSOS E QUALIDADE",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Gestão de Operações"
+      ],
+      "topicos_principais": [
+        "Histórico da gestão da qualidade",
+        "Gestão por processos",
+        "Ferramentas da qualidade",
+        "Programas de gestão da qualidade",
+        "Sistemas de gestão da qualidade",
+        "Qualidade em serviços",
+        "Abordagens contemporâneas"
+      ],
+      "pagina_plano_ensino": 146
+    },
+    {
+      "codigo": "SCLEXT3",
+      "nome": "EXTENSÃO 3",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Ciências Sociais",
+        "Profissional/Empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Planejamento das ações de extensão",
+        "Organização das ações de extensão",
+        "Execução das ações de extensão",
+        "Avaliação e encerramento das ações"
+      ],
+      "pagina_plano_ensino": 149
+    },
+    {
+      "codigo": "SCLECBR",
+      "nome": "ECONOMIA BRASILEIRA CONTEMPORÂNEA",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Economia",
+        "Profissional/Responsabilidade Ambiental e Social"
+      ],
+      "topicos_principais": [
+        "Evolução histórica da economia brasileira",
+        "Conjuntura macroeconômica atual",
+        "Brasil no cenário internacional",
+        "Infraestrutura",
+        "Desenvolvimento tecnológico",
+        "Cadeias de valor",
+        "Pequena e microempresa",
+        "Responsabilidade social e meio ambiente"
+      ],
+      "pagina_plano_ensino": 151
+    },
+    {
+      "codigo": "SCLPMKT",
+      "nome": "PLANEJAMENTO E CONTROLE DE MARKETING",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Marketing"
+      ],
+      "topicos_principais": [
+        "Plano de marketing e estrutura",
+        "Pesquisa de marketing",
+        "Análise SWOT",
+        "Objetivos, estratégias e planos de ação",
+        "Brand equity e posicionamento",
+        "Estratégias competitivas",
+        "Planos de distribuição e promoção",
+        "Avaliação de planos de marketing"
+      ],
+      "pagina_plano_ensino": 153
+    },
+    {
+      "codigo": "SCLEST2",
+      "nome": "GESTÃO ESTRATÉGICA 2",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Geral"
+      ],
+      "topicos_principais": [
+        "Conceito de estratégia",
+        "Dez escolas de formulação estratégica",
+        "Tipos de planejamento",
+        "Diagnóstico interno e externo",
+        "Cenários",
+        "Sistema de informações estratégicas",
+        "Objetivos, metas e estratégias",
+        "Controle e avaliação"
+      ],
+      "pagina_plano_ensino": 155
+    },
+    {
+      "codigo": "SCLINOV",
+      "nome": "GESTÃO DA INOVAÇÃO",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Conceitos e tipos de inovação",
+        "Fatores condicionantes da inovação",
+        "Inovação e competitividade"
+      ],
+      "pagina_plano_ensino": 157
+    },
+    {
+      "codigo": "SCLNINT",
+      "nome": "NEGÓCIOS INTERNACIONAIS",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Geral"
+      ],
+      "topicos_principais": [
+        "Teorias de comércio internacional",
+        "Comércio exterior brasileiro",
+        "Organismos internacionais",
+        "Políticas de comércio exterior",
+        "Negociação internacional",
+        "Procedimentos de exportação e importação",
+        "Integração econômica",
+        "Tópicos contemporâneos"
+      ],
+      "pagina_plano_ensino": 159
+    },
+    {
+      "codigo": "SCLREIN",
+      "nome": "RELAÇÕES INTERORGANIZACIONAIS",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Economia",
+        "Profissional/Administração Geral"
+      ],
+      "topicos_principais": [
+        "Cooperação na economia do século XXI",
+        "Gestão da cooperação",
+        "Redes, alianças e parcerias",
+        "Tópicos contemporâneos em cooperação"
+      ],
+      "pagina_plano_ensino": 162
+    },
+    {
+      "codigo": "SCLEXT4",
+      "nome": "EXTENSÃO 4",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Ciências Sociais",
+        "Profissional/Empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Planejamento das ações de extensão",
+        "Organização das ações de extensão",
+        "Execução das ações de extensão",
+        "Avaliação e encerramento das ações"
+      ],
+      "pagina_plano_ensino": 164
+    },
+    {
+      "codigo": "SCLASIG",
+      "nome": "ADMINISTRAÇÃO DE SISTEMAS DE INFORMAÇÃO",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Sistemas de Informação"
+      ],
+      "topicos_principais": [
+        "Introdução a sistemas de informação",
+        "Organização dos dados",
+        "Tipos de sistemas de informação",
+        "Sistemas e-business interfuncionais",
+        "Segurança da informação e ética"
+      ],
+      "pagina_plano_ensino": 166
+    },
+    {
+      "codigo": "SCLEMPR",
+      "nome": "EMPREENDEDORISMO",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Empreendedorismo",
+        "Profissional/Responsabilidade Ambiental e Social"
+      ],
+      "topicos_principais": [
+        "Empreendedorismo contemporâneo",
+        "Habilidades e atitudes empreendedoras",
+        "Inovação e competitividade",
+        "Negócios sustentáveis",
+        "Ação empreendedora",
+        "Ecossistema empreendedor"
+      ],
+      "pagina_plano_ensino": 169
+    },
+    {
+      "codigo": "SCLTOPC",
+      "nome": "TÓPICOS CONTEMPORÂNEOS",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Geral",
+        "Profissional/Empreendedorismo",
+        "Profissional/Responsabilidade Ambiental e Social"
+      ],
+      "topicos_principais": [
+        "Papel do administrador contemporâneo",
+        "Perspectiva social, ambiental e econômica",
+        "Sustentabilidade e inovação",
+        "Novos tipos de organizações",
+        "Novas estruturas organizacionais",
+        "Novas tecnologias",
+        "Tendências administrativas"
+      ],
+      "pagina_plano_ensino": 172
+    },
+    {
+      "codigo": "SCLMATD",
+      "nome": "MODELOS DE APOIO À TOMADA DE DECISÃO",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Estudos Quantitativos e suas Tecnologias/Pesquisa Operacional"
+      ],
+      "topicos_principais": [
+        "Programação matemática",
+        "Modelagem com programação linear",
+        "Programação linear no mundo real",
+        "Problema de transporte",
+        "Problema de designação",
+        "Método Simplex",
+        "Análise de sensibilidade"
+      ],
+      "pagina_plano_ensino": 174
+    },
+    {
+      "codigo": "SCLMFIC",
+      "nome": "MERCADO FINANCEIRO DE CAPITAIS",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Financeira"
+      ],
+      "topicos_principais": [
+        "Setor financeiro",
+        "Sistema Financeiro Nacional",
+        "Mercado monetário",
+        "Mercado de crédito",
+        "Mercado cambial",
+        "Mercado de capitais",
+        "Risco, incerteza e volatilidade"
+      ],
+      "pagina_plano_ensino": 176
+    },
+    {
+      "codigo": "SCLEXT5",
+      "nome": "EXTENSÃO 5",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Ciências Sociais",
+        "Profissional/Empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Planejamento das ações de extensão",
+        "Organização das ações de extensão",
+        "Execução das ações de extensão",
+        "Avaliação e encerramento das ações"
+      ],
+      "pagina_plano_ensino": 179
+    },
+    {
+      "codigo": "SCLACFP",
+      "nome": "ANÁLISE DE CUSTOS E FORMAÇÃO DE PREÇOS",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Financeira"
+      ],
+      "topicos_principais": [
+        "Introdução à gestão de custos",
+        "Custeio variável",
+        "Custos em comércio e serviços",
+        "Formação de preço de venda"
+      ],
+      "pagina_plano_ensino": 181
+    },
+    {
+      "codigo": "SCLJOGO",
+      "nome": "JOGOS DE EMPRESAS",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Profissional/Administração Geral",
+        "Estudos Quantitativos e suas Tecnologias/Pesquisa Operacional"
+      ],
+      "topicos_principais": [
+        "Conceitos básicos",
+        "Pensamento sistêmico",
+        "Processo decisório",
+        "Simulação organizacional"
+      ],
+      "pagina_plano_ensino": 184
+    },
+    {
+      "codigo": "SCLCOOP",
+      "nome": "COOPERATIVISMO, ECONOMIA SOLIDÁRIA E AUTOGESTÃO",
+      "semestre": 5,
+      "tipo": "optativa",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Básica/Economia",
+        "Profissional/Administração Geral",
+        "Profissional/Empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Contexto histórico",
+        "Autogestão: conceitos e princípios",
+        "Gestão de empreendimentos econômicos solidários",
+        "Tópicos contemporâneos em cooperativismo"
+      ],
+      "pagina_plano_ensino": 186
+    },
+    {
+      "codigo": "SCLLIBR",
+      "nome": "LÍNGUA BRASILEIRA DE SINAIS (LIBRAS)",
+      "semestre": 8,
+      "tipo": "optativa",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Complementar/Línguas"
+      ],
+      "topicos_principais": [
+        "Aspectos legais e culturais da Libras",
+        "Alfabeto e sinais básicos",
+        "Vocabulário do cotidiano",
+        "Frases e transcrição em Libras",
+        "Noções de interpretação",
+        "Questões sociais da surdez"
+      ],
+      "pagina_plano_ensino": 188
+    }
+  ],
+  "requisitos_gerais": [
+    {
+      "item": "Integralização",
+      "descricao": "Carga horária total mínima de 3.000,6 horas: 2.700,6 h em componentes obrigatórios (incluindo 333,5 h de extensão), 120 h de TCC, 60 h de Atividades Complementares e 120 h de Estágio Supervisionado. Prazo mínimo de 8 semestres e máximo de 16 semestres.",
+      "pagina": 24
+    },
+    {
+      "item": "Componentes optativos",
+      "descricao": "Libras (SCLLIBR) e Cooperativismo, Economia Solidária e Autogestão (SCLCOOP) são opcionais; cada um acrescenta 33,3 h à formação (66,6 h se cursar os dois), com carga horária total máxima de 3.067,2 h.",
+      "pagina": 24
+    },
+    {
+      "item": "Estágio Curricular Supervisionado",
+      "descricao": "Obrigatório, 120 horas, condição para colar grau. Só pode iniciar após aprovação em todos os componentes do 1º e 2º semestres. Exige relatório de atividades assinado entregue ao professor orientador; resultado aprovado/não aprovado.",
+      "pagina": 31
+    },
+    {
+      "item": "Trabalho de Conclusão de Curso (TCC)",
+      "descricao": "Obrigatório, 120 horas acrescidas à carga dos componentes, sem pré-requisitos. Trabalho monográfico (artigo, relatório, monografia etc.) com orientador do eixo de Gestão e Negócios, apresentado a banca examinadora ao final do curso; resultado: aprovado com mérito, aprovado ou reprovado.",
+      "pagina": 32
+    },
+    {
+      "item": "Atividades Complementares",
+      "descricao": "Obrigatórias, 60 horas, realizadas ao longo do curso em pelo menos dois itens diferentes; atividades da curricularização da extensão não contam como AC. Validadas por comissão indicada pelo Colegiado.",
+      "pagina": 34
+    },
+    {
+      "item": "Curricularização da Extensão",
+      "descricao": "333,5 horas (11,1% da carga mínima) cumpridas nos componentes obrigatórios SCLEXT1 a SCLEXT5 (66,7 h cada), vinculados a pelo menos dois projetos de extensão: o primeiro articula SCLEXT1, SCLEXT2 e SCLEXT3 (aprovado antes do 3º semestre) e o segundo SCLEXT4 e SCLEXT5 (aprovado antes do 6º semestre).",
+      "pagina": 48
+    },
+    {
+      "item": "Aprovação em componentes",
+      "descricao": "Aprovação com nota semestral igual ou superior a 6,0 e frequência mínima de 75%. Nota entre 4,0 e 6,0 com frequência de pelo menos 75% dá direito a Instrumento Final de Avaliação, no qual é preciso obter nota mínima 6,0.",
+      "pagina": 43
+    },
+    {
+      "item": "Diploma",
+      "descricao": "Recebe o diploma de Bacharel em Administração quem integralizar todos os componentes obrigatórios, cumprir as Atividades Complementares, realizar o Estágio Supervisionado obrigatório e tiver o TCC aprovado.",
+      "pagina": 190
+    }
+  ]
+}

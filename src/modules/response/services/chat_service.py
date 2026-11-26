@@ -3,8 +3,9 @@ from typing import AsyncIterator, List, Literal, Sequence, Tuple, TypedDict
 from anthropic import BetaFallbackState
 from anthropic.types.beta import BetaMessage, BetaMessageParam
 
-from src.modules.knowledge.services.knowledge_base import KnowledgeBase, get_knowledge_base
-from src.modules.response.services.prompts import SYSTEM_INSTRUCTIONS
+from src.modules.knowledge.services.knowledge_base import KnowledgeBase
+from src.modules.response.services.prompts import system_instructions
+from src.modules.shared.services.courses import get_registry
 from src.modules.shared.services.llm_client import get_async_llm_client
 from src.modules.shared.services.settings import get_settings
 
@@ -31,10 +32,10 @@ class ChatSession:
     enquanto o modelo ainda pensa) cancelando a task que consome `stream_events`.
     """
 
-    def __init__(self, knowledge_base: KnowledgeBase | None = None, history: Sequence[HistoryTurn] = ()):
+    def __init__(self, knowledge_base: KnowledgeBase, history: Sequence[HistoryTurn] = ()):
         self.settings = get_settings()
         self.client = get_async_llm_client()
-        self.knowledge_base = knowledge_base or get_knowledge_base()
+        self.knowledge_base = knowledge_base
         self.messages: List[BetaMessageParam] = [
             {
                 "role": turn["role"],
@@ -47,7 +48,12 @@ class ChatSession:
         self.fallback_state = BetaFallbackState()  # fixa a conversa no modelo de fallback se houver recusa
         self.last_message: BetaMessage | None = None
         self.system = [
-            {"type": "text", "text": SYSTEM_INSTRUCTIONS},
+            {
+                "type": "text",
+                "text": system_instructions(
+                    knowledge_base.course.nome, get_registry().campus, knowledge_base.notes
+                ),
+            },
             {
                 "type": "text",
                 "text": self.knowledge_base.full_context,

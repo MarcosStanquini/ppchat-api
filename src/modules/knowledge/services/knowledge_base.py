@@ -1,11 +1,9 @@
 from functools import cached_property, lru_cache
-from pathlib import Path
 from typing import List
 
 from src.modules.ingestion.models.curriculum import Curriculo, Disciplina
-from src.modules.ingestion.services.ingestion_pipeline import CURRICULUM_FILE, DOCUMENT_FILE
 from src.modules.knowledge.services.curriculum_graph import CurriculumGraph
-from src.modules.shared.services.settings import get_settings
+from src.modules.shared.services.courses import Course, get_course
 
 ABORDAGEM = {"teorica": "teórica", "pratica": "prática", "teorico_pratica": "teórico-prática"}
 TIPO = {"obrigatoria": "obrigatória", "optativa": "optativa", "eletiva": "eletiva"}
@@ -22,11 +20,13 @@ class KnowledgeBase:
     porque ele forma o prefixo que fica no cache de prompt.
     """
 
-    def __init__(self, processed_dir: Path):
-        curriculum_path = processed_dir / CURRICULUM_FILE
-        document_path = processed_dir / DOCUMENT_FILE
+    def __init__(self, course: Course):
+        self.course = course
+        curriculum_path, document_path = course.curriculum_path, course.document_path
         if not curriculum_path.exists() or not document_path.exists():
-            raise FileNotFoundError("Base não processada. Rode primeiro: python main.py ingest")
+            raise FileNotFoundError(f"Base de {course.slug} não processada. Rode: python main.py ingest --curso {course.slug}")
+        # Instruções específicas do curso (ex.: os dois sentidos de "extensão" em ES); vão no prompt
+        self.notes = course.notes_path.read_text("utf-8").strip() if course.notes_path.exists() else ""
 
         self.curriculo = Curriculo.model_validate_json(curriculum_path.read_text("utf-8"))
         self.document_text = document_path.read_text("utf-8")
@@ -109,5 +109,6 @@ class KnowledgeBase:
 
 
 @lru_cache
-def get_knowledge_base() -> KnowledgeBase:
-    return KnowledgeBase(get_settings().processed_dir)
+def get_knowledge_base(slug: str) -> KnowledgeBase:
+    """Uma base por curso, carregada na primeira pergunta sobre ele. Slug fora do registro: KeyError."""
+    return KnowledgeBase(get_course(slug))

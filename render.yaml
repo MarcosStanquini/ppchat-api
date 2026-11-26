@@ -5,7 +5,7 @@ services:
     runtime: python
     plan: free  # dorme após 15 min sem uso; o front mostra "acordando o servidor"
     buildCommand: pip install -r requirements.txt
-    # A base processada (src/data/processed) vai no repositório, então não precisa rodar a ingestão aqui
+    # A base processada (src/data/courses) vai no repositório, então não precisa rodar a ingestão aqui
     startCommand: python main.py serve --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     autoDeploy: true

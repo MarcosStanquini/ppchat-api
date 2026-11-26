@@ -24,6 +24,9 @@ const THINKING_STEPS = ["Lendo o PPC…", "Consultando o grafo de pré-requisito
 const ABORDAGEM = { teorica: "Teórica", pratica: "Prática", teorico_pratica: "Teórico-prática" };
 
 const state = {
+  course: null, // slug do curso aberto (o do SUAP é state.aluno.curso)
+  courses: [], // cursos atendidos, vindos de /courses
+  campus: "",
   curriculum: null,
   byCode: new Map(),
   requestId: null, // resposta em andamento, para o botão "parar"
@@ -119,41 +122,157 @@ async function fetchWithWake(url, options = {}) {
 }
 
 /* ───────────── Currículo ───────────── */
-async function loadCurriculum() {
-  const response = await fetchWithWake("/curriculum");
-  if (!response.ok) throw new Error("Não foi possível carregar o currículo");
-  const data = await response.json();
-  state.curriculum = data;
-  data.disciplinas.forEach((d) => state.byCode.set(d.codigo, d));
+const COURSE_KEY = "ppchat-curso"; // último curso aberto neste navegador
+// Antes do multi-curso o PPChat era só de Engenharia de Software: dados salvos sem curso são de ES
+const LEGACY_COURSE = "engenharia-de-software";
+const convCourse = (conv) => conv.curso || LEGACY_COURSE;
+const courseInfo = (slug = state.course) => state.courses.find((c) => c.slug === slug);
+const shortName = (c) => c.nome.replace(/^(Bacharelado|Tecnologia) em /, "");
+// Curso do aluno pelo SUAP. Importações anteriores ao multi-curso não têm o campo: eram todas de ES
+const alunoCourse = () => (!state.aluno ? null : "curso" in state.aluno ? state.aluno.curso : LEGACY_COURSE);
+// Status, notas e trilha só valem no próprio curso: os códigos são de outra matriz
+const mine = () => (state.aluno && alunoCourse() === state.course ? state.aluno : null);
+const pdfUrl = (page) => `/pdf?curso=${encodeURIComponent(state.course)}#page=${page}`;
 
-  $("#course-name").textContent = "Engenharia de Software · IFSP São Carlos";
+async function loadCourses() {
+  const response = await fetchWithWake("/courses");
+  if (!response.ok) throw new Error("Não foi possível carregar os cursos");
+  const data = await response.json();
+  state.courses = data.cursos;
+  state.campus = data.campus;
+}
+
+async function fetchCurriculum(slug) {
+  const response = await fetchWithWake(`/curriculum?curso=${encodeURIComponent(slug)}`);
+  if (!response.ok) throw new Error("Não foi possível carregar o currículo");
+  return response.json();
+}
+
+function applyCurriculum(slug, data) {
+  state.course = slug;
+  state.curriculum = data;
+  state.byCode = new Map();
+  data.disciplinas.forEach((d) => state.byCode.set(d.codigo, d));
+  namesByLength = null; // nomes usados para reconhecer disciplinas no SUAP mudam com o curso
+
+  const c = courseInfo(slug);
+  $("#course-name").textContent = `${shortName(c)} · ${state.campus}`;
+  $("#course-switch-label").textContent = shortName(c);
+  $("#course-switch-mine").hidden = alunoCourse() !== slug;
+  document.title = `PPChat · ${shortName(c)}`;
+  document.body.classList.remove("no-course");
 
   renderGrid();
 }
 
+// Abre um curso: recarrega currículo, fluxograma e PDF e começa conversa nova (ou abre a indicada)
+let switchSeq = 0; // só a troca de curso mais recente vale
+async function setCourse(slug, { conversation = null, push = true } = {}) {
+  const seq = ++switchSeq;
+  stopAnswer();
+  closeDrawer();
+  state.switching = true;
+  try {
+    const data = await fetchCurriculum(slug);
+    if (seq !== switchSeq) return;
+    applyCurriculum(slug, data);
+  } finally {
+    if (seq === switchSeq) state.switching = false;
+  }
+  stopAnswer();
+  storage.set(COURSE_KEY, slug);
+  if (push && location.pathname !== `/${slug}`) history.pushState(null, "", `/${slug}${location.hash}`);
+  state.focus = null;
+  state.focusHistory = [];
+  $("#tree-inner").innerHTML = "";
+  // Curso sem pré-requisitos não tem Conexões para mostrar: abre na Grade; os outros, em Conexões
+  state.flowMode = state.curriculum.disciplinas.some(isConnected) ? "tree" : "grid";
+  document.body.classList.remove("exploring");
+  if (mine()) state.aluno.contexto = alunoContext(state.aluno);
+  state.context = [];
+  renderContext();
+  state.convId = conversation?.id ?? null;
+  state.history = conversation?.history ?? [];
+  conversation ? renderHistory() : renderEmpty();
+  saveConversations();
+  renderConversations();
+  renderSettings();
+}
+
+// Tela Explorar cursos: primeira tela de quem não importou o SUAP e destino do botão do curso
+function renderExplore() {
+  stopAnswer();
+  closeDrawer();
+  document.body.classList.add("exploring");
+  const mineSlug = alunoCourse();
+  const card = (c) => `
+    <button class="course-card${c.slug === state.course ? " is-current" : ""}" data-course="${escapeHtml(c.slug)}">
+      <span class="course-card-top"><span class="course-sigla">${escapeHtml(c.sigla)}</span>
+        ${c.slug === mineSlug ? '<span class="course-tag is-mine">Meu curso</span>' : ""}
+        ${c.status === "em_extincao" ? '<span class="course-tag">Em extinção</span>' : ""}</span>
+      <span class="course-card-name">${escapeHtml(shortName(c))}</span>
+      <span class="course-card-facts">${c.duracao_semestres} semestres · ${hours(c.carga_horaria_total_curso)} · ${c.disciplinas} disciplinas</span>
+    </button>`;
+  const group = (tipo, title) => `
+    <h2 class="explore-group">${title}</h2>
+    <div class="course-grid">${state.courses.filter((c) => c.tipo === tipo).map(card).join("")}</div>`;
+  $("#messages").innerHTML = `
+    <div class="explore" id="explore">
+      <p class="eyebrow">PPChat · ${escapeHtml(state.campus)}</p>
+      <h1>Escolha um curso para <em>conversar com o PPC.</em></h1>
+      <p class="lede">Pergunte sobre disciplinas, pré-requisitos, estágio, TCC e regras de qualquer graduação do câmpus.
+        ${state.aluno ? "" : "Importando seu histórico do SUAP, o PPChat abre direto no seu curso."}</p>
+      ${group("bacharelado", "Bacharelados")}
+      ${group("tecnologia", "Tecnologias")}
+    </div>`;
+}
+$("#messages").addEventListener("click", (event) => {
+  const card = event.target.closest("[data-course]");
+  if (card) setCourse(card.dataset.course).catch((error) => toast(error.message));
+});
+$("#course-switch").addEventListener("click", () => {
+  if (location.pathname !== "/") history.pushState(null, "", "/");
+  renderExplore();
+});
+// Voltar/avançar do navegador entre cursos e a tela Explorar
+addEventListener("popstate", () => {
+  const slug = location.pathname.slice(1);
+  if (courseInfo(slug)) setCourse(slug, { push: false }).catch((error) => toast(error.message));
+  else renderExplore();
+});
+
 /* ───────────── Estado vazio ───────────── */
-function renderEmpty(eyebrow = "PPC · IFSP Câmpus São Carlos") {
+function renderEmpty(eyebrow = `PPC · ${state.campus}`) {
   const { disciplinas, gargalos } = state.curriculum;
   const deepest = [...disciplinas].sort((a, b) => b.profundidade - a.profundidade || b.indice_complexidade - a.indice_complexidade)
     .find((d) => d.tipo === "obrigatoria" && !/extens/i.test(d.nome)) || disciplinas[0];
   const gate = disc(gargalos[1] || gargalos[0]);
-  const pair = [gargalos[2], "SCLBDD1"].filter((c) => disc(c));
-  const items = state.aluno ? [
+  // Duas disciplinas do mesmo curso para a sugestão "em que ordem": prefere as que se ligam no grafo
+  const pair = [...new Set([gargalos[2], ...disciplinas.filter(isConnected).map((d) => d.codigo)].filter((c) => disc(c)))]
+    .slice(-2);
+  const hasGraph = gargalos.length > 0;
+  const items = mine() ? [
     // Com o SUAP importado, as sugestões falam do percurso do próprio aluno
     { icon: ICON.route, tag: "Meu percurso", text: "Quais disciplinas eu já posso cursar no próximo semestre?" },
     { icon: ICON.rules, tag: "Meu percurso", text: "Quanto falta para eu me formar, incluindo as atividades complementares?" },
     { icon: ICON.gauge, tag: "Dificuldade", text: "Das disciplinas que ainda faltam, quais devem ser as mais difíceis para mim?" },
     { icon: ICON.chain, tag: "Planejamento", text: "Monte um plano semestre a semestre para eu me formar no menor tempo." },
   ] : [
-    { icon: ICON.chain, tag: "Dependências", text: `Quais são todos os pré-requisitos de ${titleCase(deepest.nome)}?` },
-    { icon: ICON.route, tag: "Com disciplinas no contexto", text: "Em que ordem devo cursar estas disciplinas e por quê?", context: pair },
+    hasGraph
+      ? { icon: ICON.chain, tag: "Dependências", text: `Quais são todos os pré-requisitos de ${titleCase(deepest.nome)}?` }
+      : { icon: ICON.chain, tag: "Ementa", text: `O que se estuda em ${titleCase(deepest.nome)}?` },
+    pair.length === 2
+      ? { icon: ICON.route, tag: "Com disciplinas no contexto", text: "Em que ordem devo cursar estas disciplinas e por quê?", context: pair }
+      : { icon: ICON.route, tag: "Estágio", text: "Como funciona o estágio e quando posso começar?" },
     { icon: ICON.gauge, tag: "Dificuldade", text: "Quais são as disciplinas mais difíceis do curso e por quê?" },
-    { icon: ICON.rules, tag: "Planejamento", text: `Reprovei em ${titleCase(gate.nome)}. Como fica o resto do meu curso?` },
+    gate
+      ? { icon: ICON.rules, tag: "Planejamento", text: `Reprovei em ${titleCase(gate.nome)}. Como fica o resto do meu curso?` }
+      : { icon: ICON.rules, tag: "Regras", text: "O que preciso cumprir para me formar, além das disciplinas?" },
   ];
   $("#messages").innerHTML = `
     <div class="empty" id="empty">
       <p class="eyebrow">${eyebrow}</p>
-      <h1>Pergunte qualquer coisa sobre <em>Engenharia de Software no IFSP.</em></h1>
+      <h1>Pergunte qualquer coisa sobre <em>${escapeHtml(shortName(courseInfo()))} no IFSP.</em></h1>
       <p class="lede">Respostas baseadas no Projeto Pedagógico inteiro, com a página de cada informação.
         Digite <kbd>@</kbd> para colocar disciplinas no contexto da pergunta.</p>
       <p class="course-facts"><span><b>${disciplinas.length}</b> disciplinas</span><span><b>${state.curriculum.duracao_semestres}</b> semestres</span>
@@ -697,8 +816,8 @@ function renderCourseInfo() {
       <span class="pill">${disciplinas.length} disciplinas</span>
       <span class="pill">${hours(state.curriculum.carga_horaria_total_curso)}</span>
     </div>
-    ${state.aluno ? progressHtml() : ""}
-    <div class="info-section">
+    ${mine() ? progressHtml() : ""}
+    ${connected.length ? `<div class="info-section">
       <div class="stat-grid">
         <div class="stat-card anc"><b>${connected.length}</b><span>com pré-requisitos ou dependentes</span></div>
         <div class="stat-card desc"><b>${cadeia_critica.length}</b><span>etapas na cadeia mais longa</span></div>
@@ -711,7 +830,8 @@ function renderCourseInfo() {
     <div class="info-section">
       <h4>Mais travam o curso se reprovadas</h4>
       ${goChips(gargalos.slice(0, 6), (c) => ` <b>${disc(c).libera_transitivamente.length}</b>`)}
-    </div>
+    </div>` : `<div class="info-section"><p class="small-note">O PPC deste curso não define pré-requisitos entre
+      disciplinas: qualquer uma pode ser cursada no seu semestre, sem travar as outras.</p></div>`}
     ${isolated.length ? `<div class="info-section">
       <p class="small-note">${isolated.length} disciplinas não exigem nem liberam nenhuma outra: aparecem com
         <b>borda tracejada</b> no fim de cada semestre e podem ser cursadas sem travar nada.</p>
@@ -759,7 +879,7 @@ function renderInfo(code) {
       <p class="small-note">${d.nivel_estimado} · ${d.profundidade} etapa(s) de pré-requisito até ela. Estimativa, não é dado oficial do PPC.</p>
     </div>
     ${d.topicos_principais.length ? `<div class="info-section"><h4>Tópicos</h4><ul class="topics">${d.topicos_principais.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul></div>` : ""}
-    ${d.pagina_plano_ensino ? `<div class="info-section"><a class="btn btn-sm" href="/pdf#page=${d.pagina_plano_ensino}" target="_blank" rel="noopener">${ICON.page}Plano de ensino · p. ${d.pagina_plano_ensino}</a></div>` : ""}`;
+    ${d.pagina_plano_ensino ? `<div class="info-section"><a class="btn btn-sm" href="${pdfUrl(d.pagina_plano_ensino)}" target="_blank" rel="noopener">${ICON.page}Plano de ensino · p. ${d.pagina_plano_ensino}</a></div>` : ""}`;
 }
 
 $("#tree-info").addEventListener("click", (event) => {
@@ -814,7 +934,7 @@ $("#board-inner").addEventListener("click", (event) => {
 
 /* ───────────── Respostas: markdown + chips ───────────── */
 const pageChip = (from, to) =>
-  `<a class="page-ref" href="/pdf#page=${from}" target="_blank" rel="noopener" title="Abrir o PPC na página ${from}">${ICON.page}p. ${from}${to ? `–${to}` : ""}</a>`;
+  `<a class="page-ref" href="${pdfUrl(from)}" target="_blank" rel="noopener" title="Abrir o PPC na página ${from}">${ICON.page}p. ${from}${to ? `–${to}` : ""}</a>`;
 const REF_PATTERN = /\[(?:Páginas?|p\.)\s*(\d+)(?:\s*[–-]\s*(\d+))?\]|\b(SCL[A-Z0-9]{4,5})\b/g;
 
 function enhance(root) {
@@ -954,6 +1074,14 @@ function updateSendState() { $("#send").disabled = !state.busy && !input.value.t
 const MAX_HISTORY = 30; // igual ao limite da API
 
 // O servidor não guarda conversas: cada pergunta leva as últimas trocas completas
+function perfilPayload() {
+  if (!state.aluno?.contexto) return null;
+  if (mine()) return state.aluno.contexto;
+  const own = courseInfo(alunoCourse());
+  return `O estudante é de ${own ? own.nome : `outro curso (${state.aluno.curso_nome || "não identificado"})`} e está consultando ` +
+    `o PPC de ${courseInfo().nome}. Os dados abaixo são do curso dele.\n\n${state.aluno.contexto}`;
+}
+
 function historyPayload() {
   return state.history.slice(-MAX_HISTORY).map(({ role, text, disciplinas }) =>
     role === "user" ? { role, text, disciplinas: disciplinas || [] } : { role, text: text.slice(0, 20000) });
@@ -981,7 +1109,8 @@ async function streamAnswer(question, disciplinas, ui) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       question, disciplinas, history: historyPayload(), request_id: state.requestId,
-      perfil: state.aluno?.contexto || null, // dados do SUAP, guardados só neste navegador
+      curso: state.course,
+      perfil: perfilPayload(), // dados do SUAP, guardados só neste navegador
     }),
     signal: state.controller.signal,
   });
@@ -1052,6 +1181,8 @@ async function streamAnswer(question, disciplinas, ui) {
 async function ask(question) {
   question = question.trim();
   if (!question || state.busy) return;
+  // Durante a troca de curso a pergunta iria para um curso e a resposta para outro
+  if (state.switching || !state.course) return toast("Aguarde o curso terminar de carregar.");
   const disciplinas = [...state.context];
   state.context = [];
   renderContext();
@@ -1131,7 +1262,7 @@ function saveConversations() {
 function persist() {
   let conv = conversations.list.find((c) => c.id === state.convId);
   if (!conv) {
-    conv = { id: newConvId(), title: titleFrom(state.history[0].text), history: [] };
+    conv = { id: newConvId(), title: titleFrom(state.history[0].text), curso: state.course, history: [] };
     state.convId = conv.id;
   }
   conv.history = state.history;
@@ -1158,6 +1289,11 @@ function renderHistory() {
 function openConversation(id) {
   const conv = conversations.list.find((c) => c.id === id);
   if (!conv) return;
+  // Conversa de outro curso: abre o curso dela junto (as antigas são todas de Engenharia de Software)
+  if (convCourse(conv) !== state.course || document.body.classList.contains("exploring")) {
+    setCourse(convCourse(conv), { conversation: conv }).then(closeSidebarOnMobile).catch((error) => toast(error.message));
+    return;
+  }
   stopAnswer();
   state.convId = id;
   state.history = conv.history;
@@ -1208,7 +1344,7 @@ function renderConversations() {
     const active = c.id === state.convId;
     html += `
       <div class="conv ${active ? "is-active" : ""}" data-conv="${c.id}">
-        <button class="conv-open" data-act="open" title="${escapeHtml(c.title)}"${active ? ' aria-current="true"' : ""}>${escapeHtml(c.title)}</button>
+        <button class="conv-open" data-act="open" title="${escapeHtml(c.title)}"${active ? ' aria-current="true"' : ""}><span class="conv-course">${escapeHtml(courseInfo(convCourse(c))?.sigla || "")}</span>${escapeHtml(c.title)}</button>
         <span class="conv-actions">
           <button class="conv-btn" data-act="rename" title="Renomear" aria-label="Renomear conversa">
             <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
@@ -1344,11 +1480,12 @@ const CONTEXT_TABS = /dados acad|requisitos|complementares|extens|boletins?/i;
 
 // Situação de uma disciplina para o aluno; "liberada" = todos os pré-requisitos já concluídos
 function studentStatus(code) {
-  if (!state.aluno) return null;
-  const st = state.aluno.status[code];
+  const a = mine();
+  if (!a) return null;
+  const st = a.status[code];
   if (st) return st;
   const d = disc(code);
-  return d && d.pre_requisitos.every((p) => state.aluno.status[p] === "concluida") ? "liberada" : null;
+  return d && d.pre_requisitos.every((p) => a.status[p] === "concluida") ? "liberada" : null;
 }
 
 // Nomes do currículo do mais longo ao mais curto, para "Banco de Dados 1" não casar dentro de outro nome
@@ -1485,6 +1622,14 @@ function readExtensao(data) {
   return null;
 }
 
+// Curso do aluno na aba "Dados Acadêmicos": casa com os nomes conhecidos de cada curso do registro
+function courseFromSuap(data) {
+  const raw = findValue(tablesOf(data, /dados acad/i), /^curso:?$/i) || "";
+  const norm = normalize(raw);
+  const hit = state.courses.find((c) => c.nomes_suap.some((n) => norm.includes(n)));
+  return { curso: hit?.slug ?? null, curso_nome: raw.trim() || null };
+}
+
 function buildAluno(data) {
   const status = {};
   for (const aba of data.abas) for (const t of aba.tabelas) for (const row of t.linhas) {
@@ -1514,6 +1659,10 @@ function buildAluno(data) {
   return aluno;
 }
 
+// Disciplinas do curso aberto que cumprem a curricularização da extensão
+const extensionNames = () => state.curriculum.disciplinas.filter((d) => d.carga_horaria_extensao > 0 && /extens/i.test(d.nome))
+  .map((d) => `${titleCase(d.nome)} (${d.codigo})`).join(", ");
+
 // Resumo que vai junto das perguntas (o modelo recebe as listas já calculadas com o grafo)
 function alunoContext(aluno) {
   const all = state.curriculum.disciplinas.filter((d) => d.semestre);
@@ -1538,7 +1687,7 @@ function alunoContext(aluno) {
     aluno.ira ? `I.R.A. (índice de rendimento acadêmico): ${aluno.ira}` : "",
     aluno.acc.prevista ? `Atividades complementares: ${aluno.acc.cumprida ?? "?"} h cumpridas de ${aluno.acc.prevista} h exigidas.` : "",
     aluno.acc.tipos?.length ? `Horas por tipo de atividade complementar (contabilizada/máximo no curso): ${aluno.acc.tipos.map((t) => `${t.tipo}: ${t.contabilizada}/${t.max ?? "?"} h`).join("; ")}` : "",
-    aluno.extensao ? `Carga horária de extensão curricular (disciplinas Atividades de Extensão 1 a 4; não são atividades complementares): ${aluno.extensao.cumprida} h de ${aluno.extensao.prevista} h.` : "",
+    aluno.extensao ? `Carga horária de extensão curricular (${extensionNames() || "componentes de extensão do curso"}; não são atividades complementares): ${aluno.extensao.cumprida} h de ${aluno.extensao.prevista} h.` : "",
     "",
     "Tabelas copiadas do SUAP:",
     aluno.tabelas,
@@ -1548,15 +1697,17 @@ function alunoContext(aluno) {
 
 function setAluno(aluno) {
   state.aluno = aluno;
-  if (aluno) aluno.contexto = alunoContext(aluno);
+  // O resumo é calculado com o currículo do próprio curso; em outro curso, mantém o já salvo
+  if (aluno && (mine() || !aluno.contexto)) aluno.contexto = mine() ? alunoContext(aluno) : aluno.tabelas || "";
   aluno ? storage.set(ALUNO_KEY, aluno) : storage.remove(ALUNO_KEY);
   $("#suap-status").classList.toggle("is-on", !!aluno);
   $("#suap-status").title = aluno ? "SUAP conectado" : "SUAP não conectado";
   if ($(".node", $("#tree-inner"))) { renderTree({ animate: false }); renderInfo(state.focus); }
   if ($("#empty")) renderEmpty();
-  renderGrid();
+  if ($("#explore")) renderExplore();
+  if (state.curriculum) renderGrid();
   renderSettings();
-  if (state.view === "me") renderMe();
+  if (state.view === "me" && state.curriculum) renderMe();
 }
 
 function progressHtml() {
@@ -1634,7 +1785,7 @@ const gradeClass = (nota) => {
 };
 // Nota final no card (só com a opção ligada e a disciplina já feita)
 function gradeTag(code) {
-  if (!state.settings.grades || !state.aluno) return "";
+  if (!state.settings.grades || !mine()) return "";
   const n = state.aluno.notas?.[code];
   if (!n?.nota || state.aluno.status[code] !== "concluida") return "";
   return `<span class="grade ${gradeClass(n.nota)}" title="Nota final">${escapeHtml(n.nota)}</span>`;
@@ -1717,7 +1868,19 @@ function stopStats(a, stop) {
 
 function renderMe() {
   const box = $("#me");
-  const a = state.aluno;
+  const a = mine();
+  if (state.aluno && !a) {
+    const own = courseInfo(alunoCourse());
+    box.innerHTML = `
+      <div class="me-empty">
+        <p class="eyebrow">Meu percurso</p>
+        <h3>Seu percurso é de ${escapeHtml(own ? shortName(own) : "outro curso")}</h3>
+        <p class="muted">Você está vendo ${escapeHtml(shortName(courseInfo()))}. O percurso, as notas e a previsão de formatura
+          aparecem no seu curso.</p>
+        ${own ? `<button class="btn btn-primary" data-me="my-course">Abrir ${escapeHtml(shortName(own))}</button>` : ""}
+      </div>`;
+    return;
+  }
   if (!a) {
     box.innerHTML = `
       <div class="me-empty">
@@ -1742,7 +1905,7 @@ function renderMe() {
   box.innerHTML = `
     <section class="pc-hero">
       <div class="pc-hero-text">
-        <p class="eyebrow">Meu percurso · Engenharia de Software · IFSP São Carlos</p>
+        <p class="eyebrow">Meu percurso · ${escapeHtml(shortName(courseInfo()))} · ${escapeHtml(state.campus)}</p>
         <h3>${now ? `Você está no <em>${now.n}º semestre</em>` : `<em>${done.length}</em> de ${all.length} disciplinas`}${end.period && done.length < all.length ? `<span>formatura prevista em <b>${escapeHtml(end.period)}</b></span>` : ""}</h3>
         <p class="muted">Matrícula ${escapeHtml(a.matricula)} · dados do SUAP de
           ${new Date(a.coletado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</p>
@@ -1866,7 +2029,7 @@ function layoutTrail({ animate = true } = {}) {
 }
 
 function renderStop() {
-  const a = state.aluno;
+  const a = mine();
   const stop = trailStops.find((s) => s.key === state.trailSel);
   if (!a || !stop) return;
   $$(".stop").forEach((el) => el.classList.toggle("is-selected", el.dataset.stop === stop.key));
@@ -2024,6 +2187,7 @@ $("#me").addEventListener("click", (event) => {
   if (goto) { setView("tree"); return focusTree(goto.dataset.goto, { push: true }); }
   const act = event.target.closest("[data-me]")?.dataset.me;
   if (act === "connect" || act === "update") { renderSuapModal(); suapModal.showModal(); }
+  else if (act === "my-course") setCourse(alunoCourse()).then(() => openDrawer("me")).catch((error) => toast(error.message));
   else if (act === "ask-acc") { closeDrawer(); ask("Como posso completar as horas de atividades complementares que faltam, considerando o que já tenho e o limite de cada tipo?"); }
   else if (act === "ask") { closeDrawer(); ask("Faça um resumo do meu percurso no curso: o que já fiz, como estou indo e o que devo priorizar agora."); }
 });
@@ -2184,10 +2348,19 @@ async function importFromHash() {
     const response = await fetchWithWake(`/aluno/importar/${match[1]}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || `Erro ${response.status}`);
-    setAluno(buildAluno(data));
+    // O reconhecimento das disciplinas usa o currículo carregado: abre o curso do aluno antes de ler
+    const { curso, curso_nome } = courseFromSuap(data);
+    const target = curso || state.course || LEGACY_COURSE;
+    if (target !== state.course || document.body.classList.contains("exploring")) await setCourse(target);
+    setAluno({ ...buildAluno(data), curso, curso_nome });
+    $("#course-switch-mine").hidden = curso !== state.course;
+    if (!curso) {
+      toast(`Seu curso${curso_nome ? ` (${curso_nome})` : ""} ainda não está no PPChat.`);
+      return renderExplore();
+    }
     // Recém-importado: mostra direto o "Meu percurso"
     openDrawer("me");
-    toast("Dados do SUAP importados.");
+    toast(`Dados do SUAP importados · ${shortName(courseInfo(curso))}.`);
   } catch (error) {
     toast(`Não consegui importar do SUAP: ${error.message}`);
   }
@@ -2196,13 +2369,21 @@ async function importFromHash() {
 /* ───────────── Início ───────────── */
 marked.use({ gfm: true, breaks: false });
 updateSendState();
-loadCurriculum()
-  .then(() => {
+document.body.classList.add("no-course");
+loadCourses()
+  .then(async () => {
     const saved = storage.get(ALUNO_KEY);
-    if (saved?.status) setAluno(saved);
+    if (saved?.status) state.aluno = saved;
     loadConversations();
-    const current = conversations.list.find((c) => c.id === state.convId);
-    if (current) { state.history = current.history; renderHistory(); } else renderEmpty();
+    // Curso inicial: o do endereço (/ads), senão o do SUAP, senão o último aberto; sem nenhum, Explorar
+    const fromPath = location.pathname.slice(1);
+    const slug = [fromPath, alunoCourse(), storage.get(COURSE_KEY)].find((s) => s && courseInfo(s));
+    if (slug && !location.hash.startsWith("#suap=")) {
+      const current = conversations.list.find((c) => c.id === state.convId && convCourse(c) === slug);
+      await setCourse(slug, { conversation: current, push: false });
+      if (location.pathname !== `/${slug}`) history.replaceState(null, "", `/${slug}`);
+    } else if (!location.hash.startsWith("#suap=")) renderExplore();
+    if (state.aluno) setAluno(state.aluno);
     renderConversations();
     importFromHash();
   })

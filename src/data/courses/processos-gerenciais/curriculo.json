@@ -1,0 +1,920 @@
+{
+  "curso": "Tecnologia em Processos Gerenciais",
+  "campus": "São Carlos",
+  "vigencia": "2º Semestre/2023",
+  "duracao_semestres": 5,
+  "carga_horaria_total_curso": 1786.9,
+  "disciplinas": [
+    {
+      "codigo": "SCLCTEG",
+      "nome": "CIÊNCIA, TECNOLOGIA E SOCIEDADE",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciência e tecnologia",
+        "Temas transversais"
+      ],
+      "topicos_principais": [
+        "CTS, trabalho e formação",
+        "Alfabetização científica e tecnológica",
+        "Direitos humanos e educação CTS",
+        "Dimensões sociais da ciência e tecnologia",
+        "Determinismo tecnológico",
+        "Ciência e tecnologia como construção social",
+        "Tecnologias sociais",
+        "Tópicos contemporâneos"
+      ],
+      "pagina_plano_ensino": 71
+    },
+    {
+      "codigo": "SCLFADG",
+      "nome": "FUNDAMENTOS DA ADMINISTRAÇÃO E ORGANIZAÇÃO EMPRESARIAL",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e Sistemas Organizacionais"
+      ],
+      "topicos_principais": [
+        "Conceito e processo de administração",
+        "Habilidades do administrador",
+        "Administração Científica (Taylor)",
+        "Teoria Clássica (Fayol) e Fordismo",
+        "Teoria da Burocracia",
+        "Relações Humanas",
+        "Teorias Estruturalista e Comportamental",
+        "Teoria Neoclássica"
+      ],
+      "pagina_plano_ensino": 73
+    },
+    {
+      "codigo": "SCLIAPG",
+      "nome": "INFORMÁTICA APLICADA À GESTÃO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Inovação e empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Conceitos básicos de informática",
+        "Sistemas operacionais, redes e internet",
+        "Editor de texto e documentos empresariais",
+        "Formatação de TCC",
+        "Planilha eletrônica",
+        "Tabelas dinâmicas e macros",
+        "Apresentações empresariais"
+      ],
+      "pagina_plano_ensino": 76
+    },
+    {
+      "codigo": "SCLMETG",
+      "nome": "MÉTODOS QUANTITATIVOS APLICADOS À GESTÃO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Gestão e Governança",
+        "Inovação e Empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Expressões algébricas",
+        "Conjuntos numéricos",
+        "Grandezas proporcionais e porcentagem",
+        "Potenciação e radiciação",
+        "Equações do 1º grau e funções",
+        "Logaritmos",
+        "Estatística descritiva",
+        "Medidas de posição e dispersão"
+      ],
+      "pagina_plano_ensino": 78
+    },
+    {
+      "codigo": "SCLCEMG",
+      "nome": "COMUNICAÇÃO EMPRESARIAL",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Gestão e governança",
+        "Temas transversais"
+      ],
+      "topicos_principais": [
+        "Elementos da comunicação estratégica",
+        "Missão, visão e valores institucionais",
+        "Comunicação no contexto organizacional",
+        "Identidade, imagem e reputação",
+        "Aspectos linguísticos e pragmáticos",
+        "Produção de textos técnicos",
+        "Palestras para eventos corporativos",
+        "Persuasão, influência e negociação"
+      ],
+      "pagina_plano_ensino": 80
+    },
+    {
+      "codigo": "SCLIEX1",
+      "nome": "INTRODUÇÃO À EXTENSÃO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 33.3,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e sistemas organizacionais",
+        "Inovação e empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Conceitos fundamentais de extensão",
+        "Planejamento e execução de ações de extensão",
+        "Encerramento de ações de extensão",
+        "Elaboração de programas e projetos de extensão"
+      ],
+      "pagina_plano_ensino": 82
+    },
+    {
+      "codigo": "SCLMAFG",
+      "nome": "MATEMÁTICA FINANCEIRA",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Finanças"
+      ],
+      "topicos_principais": [
+        "Valor do dinheiro no tempo",
+        "Juros simples e compostos",
+        "Taxas proporcionais e equivalentes",
+        "Descontos",
+        "Séries de pagamentos",
+        "Fluxo de caixa, VPL, payback e TIR",
+        "Sistemas de amortização Price e SAC",
+        "Taxas de juros em operações financeiras"
+      ],
+      "pagina_plano_ensino": 84
+    },
+    {
+      "codigo": "SCLRELG",
+      "nome": "RELAÇÕES INTERPESSOAIS E LIDERANÇA",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Gestão e governança"
+      ],
+      "topicos_principais": [
+        "Competências do novo gestor",
+        "Liderança organizacional",
+        "Teorias motivacionais",
+        "Relações de poder",
+        "Gestão de mudanças",
+        "Gestão de conflitos",
+        "Trabalho em equipe",
+        "Tópicos contemporâneos de relações interpessoais"
+      ],
+      "pagina_plano_ensino": 86
+    },
+    {
+      "codigo": "SCLCNTG",
+      "nome": "CONTABILIDADE",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Finanças"
+      ],
+      "topicos_principais": [
+        "Introdução à contabilidade",
+        "Características e tipos de empresas",
+        "Princípios contábeis e patrimônio",
+        "Estudo das contas e plano de contas",
+        "Escrituração e partidas dobradas",
+        "Depreciação, exaustão e amortização",
+        "Apuração do resultado do exercício",
+        "Demonstrações contábeis e sua análise"
+      ],
+      "pagina_plano_ensino": 88
+    },
+    {
+      "codigo": "SCLCOCG",
+      "nome": "COMUNICAÇÃO CIENTÍFICA",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciência e tecnologia"
+      ],
+      "topicos_principais": [
+        "Ciência e pesquisa científica",
+        "Integridade e ética na pesquisa",
+        "Fontes de informação e revisão de literatura",
+        "Normas de citação e plágio",
+        "Processos cognitivos e construção do conhecimento",
+        "Linguagem da ciência: textos e diagramas",
+        "Artigo científico",
+        "Apresentação oral em eventos acadêmicos"
+      ],
+      "pagina_plano_ensino": 91
+    },
+    {
+      "codigo": "SCLEXT2",
+      "nome": "EXTENSÃO 1",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e sistemas organizacionais",
+        "Inovação e empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Conceitos de ações de extensão",
+        "Planejamento e execução de ações de extensão",
+        "Avaliação e encerramento de ações de extensão"
+      ],
+      "pagina_plano_ensino": 94
+    },
+    {
+      "codigo": "SCLETCG",
+      "nome": "ÉTICA, CIDADANIA E RESPONSABILIDADE SOCIOAMBIENTAL",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Temas transversais"
+      ],
+      "topicos_principais": [
+        "Ética e moral",
+        "Ética profissional e códigos de ética",
+        "Ética e desenvolvimento sustentável",
+        "Cidadania formal e substantiva",
+        "Direitos humanos e políticas afirmativas",
+        "Relações étnico-raciais no Brasil",
+        "Gestão da responsabilidade socioambiental",
+        "Ferramentas normativas de responsabilidade social"
+      ],
+      "pagina_plano_ensino": 95
+    },
+    {
+      "codigo": "SCLPREG",
+      "nome": "PROCESSOS DE RECURSOS HUMANOS",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Gestão e Governança",
+        "Temas Transversais"
+      ],
+      "topicos_principais": [
+        "Processos de gestão de pessoas",
+        "Recrutamento e seleção",
+        "Desenho de cargos",
+        "Treinamento e desenvolvimento",
+        "Avaliação de desempenho",
+        "Remuneração e benefícios",
+        "Qualidade de vida no trabalho",
+        "Gestão por competências"
+      ],
+      "pagina_plano_ensino": 97
+    },
+    {
+      "codigo": "SCLEPRG",
+      "nome": "ELABORAÇÃO DE PROJETOS DE PESQUISA",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciência e Tecnologia"
+      ],
+      "topicos_principais": [
+        "Projeto de pesquisa: roteiro básico",
+        "Tema, problema e objetivos de pesquisa",
+        "Justificativa",
+        "Metodologia e classificação da pesquisa",
+        "Universo e amostra",
+        "Instrumentos de coleta de dados",
+        "Cronograma e referências"
+      ],
+      "pagina_plano_ensino": 99
+    },
+    {
+      "codigo": "SCLPROG",
+      "nome": "PROCESSOS DE GESTÃO E OPERAÇÃO",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e Sistemas Organizacionais"
+      ],
+      "topicos_principais": [
+        "Processos de produção e operações de serviços",
+        "Tipos de sistemas de produção",
+        "Localização e arranjo físico",
+        "Projeto e organização do trabalho",
+        "Planejamento e controle da produção",
+        "Previsão de demanda e plano mestre",
+        "Melhoria da produção e indicadores",
+        "Produção e meio ambiente"
+      ],
+      "pagina_plano_ensino": 102
+    },
+    {
+      "codigo": "SCLGFI1",
+      "nome": "GESTÃO FINANCEIRA 1",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Finanças"
+      ],
+      "topicos_principais": [
+        "Papel da gestão financeira",
+        "Decisões de investimento e financiamento",
+        "Análise de demonstrações financeiras",
+        "Indicadores financeiros",
+        "Regimes de tributação",
+        "Planejamento financeiro",
+        "Capital de giro",
+        "Gestão de caixa e contas a receber"
+      ],
+      "pagina_plano_ensino": 104
+    },
+    {
+      "codigo": "SCLEXT3",
+      "nome": "EXTENSÃO 2",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 66.7,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e sistemas organizacionais",
+        "Inovação e empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Conceitos de ações de extensão",
+        "Planejamento e execução de ações de extensão",
+        "Avaliação e encerramento de ações de extensão"
+      ],
+      "pagina_plano_ensino": 106
+    },
+    {
+      "codigo": "SCLEMPG",
+      "nome": "EMPREENDEDORISMO E PLANO DE NEGÓCIOS",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Inovação e Empreendedorismo",
+        "Temas Transversais"
+      ],
+      "topicos_principais": [
+        "Cultura empreendedora",
+        "Perfil do empreendedor",
+        "Inovação e novas tendências",
+        "Empreendimentos sociais e startups",
+        "Agentes do ecossistema empreendedor",
+        "Identificação de oportunidades",
+        "Business Model Canvas",
+        "Plano de negócios"
+      ],
+      "pagina_plano_ensino": 108
+    },
+    {
+      "codigo": "SCLGFI2",
+      "nome": "GESTÃO FINANCEIRA 2",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Finanças"
+      ],
+      "topicos_principais": [
+        "Gestão financeira de longo prazo",
+        "Custo e estrutura de capital",
+        "Alavancagem financeira",
+        "Orçamento de capital",
+        "Sistema Financeiro Nacional",
+        "Ativos financeiros",
+        "Mercados monetário, de crédito e cambial",
+        "Mercado de capitais"
+      ],
+      "pagina_plano_ensino": 110
+    },
+    {
+      "codigo": "SCLESTG",
+      "nome": "GESTÃO ESTRATÉGICA",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Objetivos e estratégias gerenciais"
+      ],
+      "topicos_principais": [
+        "Evolução do pensamento estratégico",
+        "Tomada de decisão e níveis da estratégia",
+        "Vantagem competitiva",
+        "Estratégias concorrenciais",
+        "Missão, visão e valores",
+        "Análise ambiental",
+        "Planejamento estratégico",
+        "Implementação e controle da estratégia"
+      ],
+      "pagina_plano_ensino": 112
+    },
+    {
+      "codigo": "SCLQUAG",
+      "nome": "GESTÃO DA QUALIDADE",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e sistemas organizacionais"
+      ],
+      "topicos_principais": [
+        "Evolução e eras da qualidade",
+        "Gurus e conceitos da qualidade",
+        "Ferramentas da qualidade",
+        "Perspectivas estratégicas da qualidade",
+        "Gestão por indicadores",
+        "Normas ISO 9000 e 14000",
+        "Prêmios da qualidade",
+        "Abordagens contemporâneas"
+      ],
+      "pagina_plano_ensino": 114
+    },
+    {
+      "codigo": "SCLECNG",
+      "nome": "ECONOMIA EMPRESARIAL",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Inovação e empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Introdução à economia e escassez",
+        "Comportamento do consumidor e demanda",
+        "Elasticidades",
+        "Teoria da produção e dos custos",
+        "Estruturas de mercado",
+        "Contabilidade social e renda nacional",
+        "Política fiscal",
+        "Moeda e inflação"
+      ],
+      "pagina_plano_ensino": 116
+    },
+    {
+      "codigo": "SCLPMKG",
+      "nome": "PROCESSOS DE MARKETING",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e sistemas organizacionais"
+      ],
+      "topicos_principais": [
+        "Conceitos de marketing",
+        "Segmentação de mercado",
+        "Os 4 Ps do marketing",
+        "Marketing de serviços",
+        "Marca e posicionamento",
+        "Comportamento do consumidor",
+        "Satisfação e fidelidade do cliente",
+        "Marketing e responsabilidade socioambiental"
+      ],
+      "pagina_plano_ensino": 119
+    },
+    {
+      "codigo": "SCLGCOG",
+      "nome": "GESTÃO DO CONHECIMENTO",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciência e tecnologia",
+        "Inovação e empreendedorismo",
+        "Objetivos e estratégias gerenciais"
+      ],
+      "topicos_principais": [
+        "Definição e tipos de inovação",
+        "Inovação e competitividade",
+        "Fontes de conhecimento e redes de inovação",
+        "Inovação aberta",
+        "Aprendizagem organizacional",
+        "Conhecimento tácito e explícito",
+        "Inteligência competitiva",
+        "Propriedade intelectual"
+      ],
+      "pagina_plano_ensino": 121
+    },
+    {
+      "codigo": "SCLEXT4",
+      "nome": "EXTENSÃO 3",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 33.3,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e sistemas organizacionais",
+        "Inovação e empreendedorismo"
+      ],
+      "topicos_principais": [
+        "Conceitos de ações de extensão",
+        "Planejamento e execução de ações de extensão",
+        "Avaliação e encerramento de ações de extensão"
+      ],
+      "pagina_plano_ensino": 123
+    },
+    {
+      "codigo": "SCLCEXG",
+      "nome": "COMÉRCIO EXTERIOR, IMPORTAÇÃO E EXPORTAÇÃO",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e sistemas organizacionais"
+      ],
+      "topicos_principais": [
+        "Histórico do comércio exterior brasileiro",
+        "Teorias do comércio internacional",
+        "Organismos internacionais (GATT, OMC, FMI)",
+        "Negociação internacional e globalização",
+        "Barreiras tarifárias e não tarifárias",
+        "Sistemática de exportação e importação",
+        "Blocos econômicos"
+      ],
+      "pagina_plano_ensino": 124
+    },
+    {
+      "codigo": "SCLGCFG",
+      "nome": "GESTÃO DE CUSTOS E FORMAÇÃO DE PREÇOS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Finanças"
+      ],
+      "topicos_principais": [
+        "Tipificação de gastos e custos",
+        "Custos fixos, variáveis, diretos e indiretos",
+        "Sistemas de custeio (absorção, ABC, direto)",
+        "Análise custo-volume-lucro",
+        "Margem de contribuição e ponto de equilíbrio",
+        "Alavancagem operacional",
+        "Formação de preços e mark-up",
+        "Tributação na formação de preços"
+      ],
+      "pagina_plano_ensino": 126
+    },
+    {
+      "codigo": "SCLGING",
+      "nome": "GESTÃO DE SISTEMAS DE INFORMAÇÃO",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Gestão e governança"
+      ],
+      "topicos_principais": [
+        "Fundamentos de sistemas de informação",
+        "TI como vantagem competitiva",
+        "Modelagem de processos",
+        "Organização dos dados",
+        "Sistemas de processamento de transação",
+        "Sistemas de informações gerenciais (ERP, CRM)",
+        "E-commerce (B2B, B2C, EDI)",
+        "Sistemas de apoio à decisão"
+      ],
+      "pagina_plano_ensino": 129
+    },
+    {
+      "codigo": "SCLLOGG",
+      "nome": "PROCESSOS LOGÍSTICOS E CADEIA DE SUPRIMENTOS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e Sistemas Organizacionais"
+      ],
+      "topicos_principais": [
+        "Logística e cadeia de suprimentos",
+        "Logística e valor para o cliente",
+        "Dimensionamento e controle de estoques",
+        "Armazenagem e distribuição",
+        "Processos de aquisição",
+        "Sistemas empurrados e puxados",
+        "Logística reversa e meio ambiente"
+      ],
+      "pagina_plano_ensino": 131
+    },
+    {
+      "codigo": "SCLTEGG",
+      "nome": "TÓPICOS ESPECIAIS EM GESTÃO",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e sistemas organizacionais"
+      ],
+      "topicos_principais": [
+        "Definições de projeto e gestão de projetos",
+        "Ciclo de vida e critérios de sucesso",
+        "Gestor e partes envolvidas",
+        "Processos e áreas de conhecimento",
+        "Estruturas organizacionais para projetos",
+        "Gerenciamento de escopo e EAP",
+        "Gerenciamento de cronograma, custo e riscos (PMBOK)",
+        "Gestão contemporânea de projetos"
+      ],
+      "pagina_plano_ensino": 133
+    },
+    {
+      "codigo": "SCLTMDG",
+      "nome": "TÓPICOS EM MARKETING DIGITAL",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos e sistemas organizacionais"
+      ],
+      "topicos_principais": [
+        "Conceito de marketing digital",
+        "E-business, e-commerce e m-commerce",
+        "Consumidor na era digital",
+        "Branding online",
+        "Marketing outbound e inbound",
+        "SEO e SEM",
+        "Estratégias em mídias sociais",
+        "Métricas de mensuração e controle"
+      ],
+      "pagina_plano_ensino": 135
+    },
+    {
+      "codigo": "SCLLIBG",
+      "nome": "LÍNGUA BRASILEIRA DE SINAIS",
+      "semestre": null,
+      "tipo": "optativa",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Gestão e Governança"
+      ],
+      "topicos_principais": [
+        "Aspectos legais e culturais da LIBRAS",
+        "Alfabeto, numerais e cumprimentos",
+        "Leitura de LIBRAS e vocabulário cotidiano",
+        "Verbos e frases: transcrição em LIBRAS",
+        "Expressão facial e aspectos linguísticos",
+        "Noções de interpretação simultânea",
+        "História das línguas de sinais",
+        "Questões sociais da surdez e SignWriting"
+      ],
+      "pagina_plano_ensino": 138
+    }
+  ],
+  "requisitos_gerais": [
+    {
+      "item": "Integralização",
+      "descricao": "Integralização mínima em 5 semestres e máxima em 10 semestres. Carga horária mínima de 1786,9 h (1666,9 h em componentes obrigatórios presenciais + 120 h de TCC) e máxima de 1820,2 h (com a optativa LIBRAS, 33,3 h). Diploma de Tecnólogo em Processos Gerenciais ao integralizar todos os componentes obrigatórios.",
+      "pagina": 27
+    },
+    {
+      "item": "Trabalho de Conclusão de Curso (TCC)",
+      "descricao": "Atividade curricular obrigatória de 120 horas, em forma de monografia ou relatório técnico, sem pré-requisitos. Aspectos metodológicos no 2º módulo; a partir do 3º módulo o aluno conta com orientador docente do eixo de gestão até a entrega e apresentação final. Regras no Manual do TCC (Colegiado de Curso). Resultado registrado como cumpriu/não cumpriu.",
+      "pagina": 32
+    },
+    {
+      "item": "Estágio Curricular Supervisionado",
+      "descricao": "Facultativo (optativo). Quando realizado, deve totalizar 120 horas no histórico, com atividades correlatas ao curso, Relatório de atividades assinado, Professor Orientador do IFSP e Supervisor na empresa; coordenado pela Coordenadoria de Extensão (CEX). Segue o Regulamento de Estágio do IFSP (Portaria 1204/2011) e a Lei 11.788/2008.",
+      "pagina": 31
+    },
+    {
+      "item": "Curricularização da Extensão",
+      "descricao": "200 horas de extensão (11,2% da carga mínima; mínimo legal de 10%), cumpridas nos componentes obrigatórios Introdução à Extensão (33,3 h, 1º sem.), Extensão 1 (66,7 h, 2º sem.), Extensão 2 (66,7 h, 3º sem.) e Extensão 3 (33,3 h, 4º sem.), vinculados a projeto de extensão curricularizada.",
+      "pagina": 26
+    },
+    {
+      "item": "Aprovação nos componentes",
+      "descricao": "Aprovado com nota semestral ≥ 6,0 e frequência mínima de 75%. Com nota entre 4,0 e 6,0 e frequência ≥ 75%, faz Instrumento Final de Avaliação e precisa de nota ≥ 6,0 nele.",
+      "pagina": 43
+    }
+  ]
+}

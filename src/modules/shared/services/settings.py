@@ -33,9 +33,8 @@ class Settings(BaseSettings):
     # Origens do SUAP de onde o bookmarklet pode enviar os dados do aluno (CORS)
     suap_origins: List[str] = ["https://suap.ifsp.edu.br"]
 
-    # Arquivos
-    pdf_path: Path = ROOT_DIR / "src" / "data" / "documents" / "PPCENGSOFTWARE.pdf"
-    processed_dir: Path = ROOT_DIR / "src" / "data" / "processed"
+    # Uma pasta por curso (ppc.pdf, ppc.md, curriculo.json...) e o registro courses.json
+    courses_dir: Path = ROOT_DIR / "src" / "data" / "courses"
 
 
 @lru_cache

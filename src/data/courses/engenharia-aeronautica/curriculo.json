@@ -1,0 +1,1868 @@
+{
+  "curso": "Bacharelado em Engenharia Aeronáutica",
+  "campus": "São Carlos",
+  "vigencia": "1º Semestre/2022",
+  "duracao_semestres": 10,
+  "carga_horaria_total_curso": 3762.5,
+  "disciplinas": [
+    {
+      "codigo": "CDIE1",
+      "nome": "CÁLCULO DIFERENCIAL E INTEGRAL 1",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação básica/Matemática"
+      ],
+      "topicos_principais": [
+        "Funções",
+        "Limites",
+        "Derivadas",
+        "Integral indefinida"
+      ],
+      "pagina_plano_ensino": 88
+    },
+    {
+      "codigo": "GALE1",
+      "nome": "GEOMETRIA ANALÍTICA",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo Básico/Matemática"
+      ],
+      "topicos_principais": [
+        "Geometria Analítica no plano",
+        "Vetores no espaço",
+        "Planos e retas",
+        "Quádricas"
+      ],
+      "pagina_plano_ensino": 89
+    },
+    {
+      "codigo": "FA1E1",
+      "nome": "FÍSICA APLICADA 1",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 95,
+      "carga_horaria_ensino": 79.2,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 79.2,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo Básico/Física"
+      ],
+      "topicos_principais": [
+        "Medidas",
+        "Cinemática",
+        "Dinâmica: as Leis de Newton",
+        "Trabalho e Energia Mecânica",
+        "Conservação da energia",
+        "Conservação do momento linear",
+        "Colisões",
+        "Rotação: cinemática e dinâmica"
+      ],
+      "pagina_plano_ensino": 91
+    },
+    {
+      "codigo": "QGEE1",
+      "nome": "QUÍMICA GERAL E EXPERIMENTAL",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciência dos Materiais"
+      ],
+      "topicos_principais": [
+        "Fundamentos de Química Geral",
+        "Teorias Atômicas",
+        "Tabela Periódica",
+        "Ligações Químicas",
+        "Forças intermoleculares",
+        "Funções inorgânicas",
+        "Introdução às reações inorgânicas"
+      ],
+      "pagina_plano_ensino": 93
+    },
+    {
+      "codigo": "DETE1",
+      "nome": "DESENHO TÉCNICO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Expressão Gráfica"
+      ],
+      "topicos_principais": [
+        "Introdução ao desenho técnico",
+        "Projeção",
+        "Cotagem",
+        "Escalas numéricas",
+        "Cortes pleno ou total",
+        "Representação de elementos de máquina"
+      ],
+      "pagina_plano_ensino": 95
+    },
+    {
+      "codigo": "IEAE1",
+      "nome": "INTRODUÇÃO A ENGENHARIA AERONÁUTICA",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Aerodinâmica e fenômenos associados com o voo das aeronaves"
+      ],
+      "topicos_principais": [
+        "A aviação na sociedade moderna",
+        "Os primeiros engenheiros aeronáuticos",
+        "Balões e a atmosfera",
+        "Aerodinâmica básica",
+        "Aerofólios, asas e outras formas aerodinâmicas",
+        "Princípios de estabilidade e controle",
+        "Propulsão"
+      ],
+      "pagina_plano_ensino": 97
+    },
+    {
+      "codigo": "INFE1",
+      "nome": "INFORMÁTICA",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação Básico / Informática"
+      ],
+      "topicos_principais": [
+        "Conhecimentos básicos de informática",
+        "Fundamentos da programação de computadores",
+        "Algoritmos e Programação",
+        "Linguagem de programação"
+      ],
+      "pagina_plano_ensino": 99
+    },
+    {
+      "codigo": "COEE1",
+      "nome": "COMUNICAÇÃO E EXPRESSÃO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação Básico/Comunicação e Expressão"
+      ],
+      "topicos_principais": [
+        "Língua falada e língua escrita",
+        "Adequação da linguagem ao contexto e gênero",
+        "Elementos da comunicação e argumentação",
+        "Redação técnica e científica",
+        "Tipos de apresentações"
+      ],
+      "pagina_plano_ensino": 101
+    },
+    {
+      "codigo": "CDIE2",
+      "nome": "CÁLCULO DIFERENCIAL E INTEGRAL 2",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação básica/Matemática"
+      ],
+      "topicos_principais": [
+        "Integral definida",
+        "Sequências e séries infinitas",
+        "Derivadas das funções de várias variáveis"
+      ],
+      "pagina_plano_ensino": 103
+    },
+    {
+      "codigo": "ALGE2",
+      "nome": "ÁLGEBRA LINEAR",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação básica/Matemática"
+      ],
+      "topicos_principais": [
+        "Matrizes",
+        "Sistemas lineares",
+        "Espaços vetoriais",
+        "Transformações lineares",
+        "Produto interno"
+      ],
+      "pagina_plano_ensino": 104
+    },
+    {
+      "codigo": "FA2E2",
+      "nome": "FÍSICA APLICADA 2",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 95,
+      "carga_horaria_ensino": 79.2,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 79.2,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo Básico/Física"
+      ],
+      "topicos_principais": [
+        "Fluidos",
+        "Osciladores",
+        "Ondas",
+        "Temperatura, Calor e Primeira Lei da Termodinâmica",
+        "Teoria Cinética dos Gases",
+        "Entropia e Segunda Lei da Termodinâmica",
+        "Atividades de laboratório"
+      ],
+      "pagina_plano_ensino": 106
+    },
+    {
+      "codigo": "ESTE2",
+      "nome": "ESTÁTICA",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Física"
+      ],
+      "topicos_principais": [
+        "Sistemas de forças",
+        "Equilíbrio de uma partícula",
+        "Resultantes de um sistema de forças",
+        "Equilíbrio de um corpo rígido",
+        "Análise estrutural",
+        "Forças internas nas estruturas",
+        "Atrito em estruturas e máquinas",
+        "Trabalho virtual"
+      ],
+      "pagina_plano_ensino": 108
+    },
+    {
+      "codigo": "DACE2",
+      "nome": "DESENHO ASSISTIDO PELO COMPUTADOR",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Expressão Gráfica",
+        "Engenharia assistida pelo computador"
+      ],
+      "topicos_principais": [
+        "Ambiente do desenho assistido por computador",
+        "Desenho de representação de elementos normalizados",
+        "Sistema ISO de tolerâncias e ajustes",
+        "Desenho de Aeronaves e dispositivos"
+      ],
+      "pagina_plano_ensino": 110
+    },
+    {
+      "codigo": "CMAE2",
+      "nome": "CIÊNCIA DOS MATERIAIS",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciência dos Materiais"
+      ],
+      "topicos_principais": [
+        "Estrutura atômica e ligações interatômicas",
+        "Estrutura cristalina de sólidos",
+        "Processos de difusão",
+        "Propriedades mecânicas de metais, polímeros e cerâmicas",
+        "Curvas tensão-deformação",
+        "Imperfeições em sólidos",
+        "Conceitos de mecânica da fratura, fadiga e fluência",
+        "Diagramas de fases"
+      ],
+      "pagina_plano_ensino": 111
+    },
+    {
+      "codigo": "HCSE2",
+      "nome": "HUMANIDADES E CIÊNCIAS SOCIAIS",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Políticas de Educação Ambiental",
+        "Educação em Direitos Humanos",
+        "Educação em Políticas de Gênero",
+        "Educação das Relações étnico-raciais e História e Cultura afro-brasileira, africana e indígena",
+        "Educação para a terceira idade",
+        "Criatividade e inovação"
+      ],
+      "topicos_principais": [
+        "Tecnologia e Sociedade",
+        "Cidadania, responsabilidade social e ambiental",
+        "Ética e cidadania",
+        "Legislação da área"
+      ],
+      "pagina_plano_ensino": 115
+    },
+    {
+      "codigo": "MEPE2",
+      "nome": "METODOLOGIA DE PESQUISA",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Metodologia Científica e Tecnológica"
+      ],
+      "topicos_principais": [
+        "Termos e conceitos",
+        "Pós-graduação",
+        "Plágio no meio acadêmico-científico",
+        "Citações",
+        "Fontes confiáveis",
+        "Gêneros textuais",
+        "Metodologia de pesquisa",
+        "Normas e formatação para publicação"
+      ],
+      "pagina_plano_ensino": 113
+    },
+    {
+      "codigo": "CDIE3",
+      "nome": "CÁLCULO DIFERENCIAL E INTEGRAL 3",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação básica/Matemática"
+      ],
+      "topicos_principais": [
+        "Integrais Múltiplas",
+        "Funções vetoriais",
+        "Integrais de linha e de superfície"
+      ],
+      "pagina_plano_ensino": 117
+    },
+    {
+      "codigo": "ESAE3",
+      "nome": "ESTATÍSTICA APLICADA",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação básica/Estatística"
+      ],
+      "topicos_principais": [
+        "Estatística descritiva",
+        "Medidas de dispersão e de posição",
+        "Uso de calculadoras e planilhas eletrônicas",
+        "Análise Combinatória",
+        "Probabilidade",
+        "Distribuições de Probabilidade",
+        "Intervalos de Confiança e Testes de Hipóteses",
+        "Mínimos quadrados e regressão"
+      ],
+      "pagina_plano_ensino": 118
+    },
+    {
+      "codigo": "EEAE3",
+      "nome": "ELETRICIDADE E ELETROMAGNETISMO",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Eletricidade"
+      ],
+      "topicos_principais": [
+        "Eletrostática e lei de Coulomb",
+        "O Campo Elétrico",
+        "Lei de Gauss",
+        "Potencial elétrico",
+        "Corrente e Resistência Elétrica",
+        "Lei de Ohm, condutores ôhmicos e não-ôhmicos",
+        "Lei de Kirchhoff",
+        "O campo magnético"
+      ],
+      "pagina_plano_ensino": 119
+    },
+    {
+      "codigo": "POLE3",
+      "nome": "INTRODUÇÃO AOS POLÍMEROS",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciência dos Materiais"
+      ],
+      "topicos_principais": [
+        "Principais grupos funcionais orgânicos",
+        "Principais polímeros e seus processos de obtenção",
+        "Reações de adição e condensação",
+        "Propriedades dos principais polímeros"
+      ],
+      "pagina_plano_ensino": 121
+    },
+    {
+      "codigo": "MTRE3",
+      "nome": "METROLOGIA",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Metrologia"
+      ],
+      "topicos_principais": [
+        "Sistemas métricos, conversão de unidades de medidas",
+        "Metrologia mecânica dimensional",
+        "Instrumentos de medição",
+        "Estatística básica",
+        "Metrologia da superfície"
+      ],
+      "pagina_plano_ensino": 122
+    },
+    {
+      "codigo": "MESE3",
+      "nome": "MECÂNICA DOS SÓLIDOS 1",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Mecânica de Sólidos"
+      ],
+      "topicos_principais": [
+        "Tensão",
+        "Deformação",
+        "Propriedades mecânicas dos materiais",
+        "Carga axial",
+        "Flexão de vigas",
+        "Cisalhamento de vigas",
+        "Flexão e carga axial combinadas",
+        "Torção"
+      ],
+      "pagina_plano_ensino": 124
+    },
+    {
+      "codigo": "INTE3",
+      "nome": "INGLÊS PARA ENGENHARIA AERONÁUTICA 1",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Língua Estrangeira (Inglês)"
+      ],
+      "topicos_principais": [
+        "Estratégias de leitura e interpretação",
+        "Estruturas gramaticais recorrentes nos textos da área",
+        "Vocabulário técnico da engenharia aeronáutica",
+        "Vocabulário técnico por temas"
+      ],
+      "pagina_plano_ensino": 126
+    },
+    {
+      "codigo": "EXTE3",
+      "nome": "ATIVIDADES DE EXTENSÃO 1",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 47.5,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Políticas de Educação Ambiental",
+        "Educação em Direitos Humanos",
+        "Educação para a terceira idade",
+        "Criatividade e inovação"
+      ],
+      "topicos_principais": [
+        "História do Ensino Superior no Brasil",
+        "Relação entre Ensino, Pesquisa e Extensão",
+        "Concepções e Tendências da Extensão",
+        "Legislação da Extensão",
+        "Procedimentos Metodológicos, Didáticos e Técnico-Científicos",
+        "Etapas para a Elaboração de Atividades e Projetos de Extensão"
+      ],
+      "pagina_plano_ensino": 127
+    },
+    {
+      "codigo": "EQDE4",
+      "nome": "EQUAÇÕES DIFERENCIAIS E APLICAÇÕES",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação básica/Matemática"
+      ],
+      "topicos_principais": [
+        "Equações diferenciais ordinárias",
+        "Equações diferenciais Parciais"
+      ],
+      "pagina_plano_ensino": 129
+    },
+    {
+      "codigo": "DINE4",
+      "nome": "DINÂMICA",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Física"
+      ],
+      "topicos_principais": [
+        "Cinemática da partícula",
+        "Equações de movimento da partícula",
+        "Trabalho e energia de partículas",
+        "Impulso e quantidade de movimento",
+        "Cinemática do movimento plano de um corpo rígido",
+        "Equações de movimento de corpos rígidos em um plano",
+        "Trabalho e energia de corpo rígido",
+        "Movimento geral de um corpo rígido"
+      ],
+      "pagina_plano_ensino": 130
+    },
+    {
+      "codigo": "MENE4",
+      "nome": "MÉTODOS NUMÉRICOS",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação básica/Matemática"
+      ],
+      "topicos_principais": [
+        "Zeros de funções",
+        "Sistemas de equações lineares",
+        "Ajuste de Curvas",
+        "Interpolação polinomial",
+        "Integração numérica",
+        "Equações diferenciais"
+      ],
+      "pagina_plano_ensino": 132
+    },
+    {
+      "codigo": "MCFE4",
+      "nome": "MECÂNICA DOS FLUIDOS",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fenômenos de Transporte",
+        "Fenômenos de Transporte – Complementar"
+      ],
+      "topicos_principais": [
+        "Introdução e conceitos fundamentais",
+        "Estática dos fluídos",
+        "Manometria, sistemas hidráulicos",
+        "Análise dimensional e semelhança",
+        "Equações básicas para um volume de controle",
+        "Sistemas e volumes de controle",
+        "Equação geral de transformação",
+        "Conservação da massa"
+      ],
+      "pagina_plano_ensino": 134
+    },
+    {
+      "codigo": "ELME4",
+      "nome": "ELEMENTOS DE MÁQUINAS",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Elementos de máquina"
+      ],
+      "topicos_principais": [
+        "Noções básicas sobre projetos de elementos de máquinas",
+        "Revisão de resistência e propriedade dos materiais",
+        "Fadiga dos materiais",
+        "Elementos de fixação",
+        "Elementos de transmissão de potência",
+        "Elementos de Apoio",
+        "Elementos mecânicos de acionamento utilizados em aeronaves"
+      ],
+      "pagina_plano_ensino": 135
+    },
+    {
+      "codigo": "MESE4",
+      "nome": "MECÂNICA DOS SÓLIDOS 2",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Mecânica de Sólidos",
+        "Mecânica de Sólidos – Complementar"
+      ],
+      "topicos_principais": [
+        "Transformação de tensão",
+        "Transformação da deformação",
+        "Critérios de Resistência",
+        "Deflexão em vigas e eixos",
+        "Flambagem de colunas",
+        "Tipos de Juntas"
+      ],
+      "pagina_plano_ensino": 137
+    },
+    {
+      "codigo": "PFBE4",
+      "nome": "PROCESSOS DE FABRICAÇÃO",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 15.8,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Processos de fabricação"
+      ],
+      "topicos_principais": [
+        "Conceitos fundamentais de Segurança e Saúde do Trabalho",
+        "Conceitos de usinagem dos Metais",
+        "Processos rotacionais de usinagem de peças",
+        "Processos não rotacionais de usinagem de peças",
+        "Materiais para ferramentas",
+        "Forças e Potências de corte",
+        "Análise econômica do processo de usinagem",
+        "Processos não convencionais de usinagem"
+      ],
+      "pagina_plano_ensino": 139
+    },
+    {
+      "codigo": "INTE4",
+      "nome": "INGLÊS PARA ENGENHARIA AERONÁUTICA 2",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 15.8,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Língua Estrangeira (Inglês)"
+      ],
+      "topicos_principais": [
+        "Estruturas gramaticais recorrentes na área",
+        "Vocabulário técnico da engenharia aeronáutica",
+        "Vocabulário técnico por temas",
+        "Gêneros textuais da engenharia aeronáutica"
+      ],
+      "pagina_plano_ensino": 140
+    },
+    {
+      "codigo": "ETBE5",
+      "nome": "ESTABILIDADE DE AERONAVES",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Aerodinâmica e fenômenos associados com o voo das aeronaves",
+        "Dinâmica e estabilidade das aeronaves"
+      ],
+      "topicos_principais": [
+        "Forças em uma aeronave",
+        "Estabilidade estática de asas",
+        "Estabilidade estática de asa e fuselagem",
+        "Estabilidade estática de aeronaves",
+        "Efeitos das superfícies de comando",
+        "Modelos de estabilidade"
+      ],
+      "pagina_plano_ensino": 142
+    },
+    {
+      "codigo": "DNEE5",
+      "nome": "DINÂMICA DAS ESTRUTURAS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Física"
+      ],
+      "topicos_principais": [
+        "Graus de liberdade",
+        "Dinâmica de sistemas de um grau de liberdade",
+        "Dinâmica de sistemas com dois graus de liberdade",
+        "Dinâmica de sistemas com N graus de liberdade",
+        "Superposição modal",
+        "Ortogonalidade dos modos de vibrar",
+        "Métodos numéricos em dinâmica"
+      ],
+      "pagina_plano_ensino": 144
+    },
+    {
+      "codigo": "AEDE5",
+      "nome": "AERODINÂMICA 1",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Aerodinâmica e fenômenos associados com o voo das aeronaves"
+      ],
+      "topicos_principais": [
+        "Conceitos fundamentais",
+        "Fundamentos do escoamento potencial incompressível",
+        "Aerofólios",
+        "Asas"
+      ],
+      "pagina_plano_ensino": 145
+    },
+    {
+      "codigo": "TMDE5",
+      "nome": "TERMODINÂMICA APLICADA",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo Profissionalizante/Termodinâmica"
+      ],
+      "topicos_principais": [
+        "Conceitos e definições",
+        "Segunda Lei da Termodinâmica",
+        "Ciclos Termodinâmicos"
+      ],
+      "pagina_plano_ensino": 147
+    },
+    {
+      "codigo": "ELEE5",
+      "nome": "ELETRÔNICA ANALÓGICA",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 15.8,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Eletrônica",
+        "Criatividade e inovação"
+      ],
+      "topicos_principais": [
+        "Componentes eletrônicos passivos",
+        "Componentes eletrônicos ativos/semicondutores",
+        "Filtragem analógica",
+        "Regulação de tensão",
+        "Componentes optoeletrônicos",
+        "Sensores e atuadores"
+      ],
+      "pagina_plano_ensino": 149
+    },
+    {
+      "codigo": "ENDE5",
+      "nome": "ENSAIOS DESTRUTIVOS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciência dos Materiais",
+        "Ciência dos materiais – Complementar",
+        "Mecânica de Sólidos",
+        "Mecânica de Sólidos – Complementar",
+        "Ensaios mecânicos"
+      ],
+      "topicos_principais": [
+        "Ensaio de tração",
+        "Ensaios de dureza",
+        "Ensaios relacionados a fratura frágil",
+        "Ensaio de flexão",
+        "Ensaio de compressão",
+        "Ensaio de torção",
+        "Ensaio de fadiga",
+        "Ensaio de fluência"
+      ],
+      "pagina_plano_ensino": 150
+    },
+    {
+      "codigo": "FACE5",
+      "nome": "FABRICAÇÃO ASSISTIDA POR COMPUTADOR",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 15.8,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Engenharia assistida pelo computador"
+      ],
+      "topicos_principais": [
+        "Comando Numérico Computadorizado",
+        "Elaboração e execução de programas em máquinas CNC",
+        "Manufatura Assistida por Computador",
+        "Prototipagem rápida e engenharia reversa"
+      ],
+      "pagina_plano_ensino": 153
+    },
+    {
+      "codigo": "DIVE6",
+      "nome": "DINÂMICA DE VOO",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Dinâmica e estabilidade das aeronaves"
+      ],
+      "topicos_principais": [
+        "Sistemas de coordenadas de veículos aéreos",
+        "Aplicação das leis de Newton em veículos aéreos",
+        "Linearização das equações de movimento",
+        "Simulação computacional do movimento de aeronaves"
+      ],
+      "pagina_plano_ensino": 154
+    },
+    {
+      "codigo": "EARE6",
+      "nome": "ESTRUTURAS DE AERONAVES",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Dinâmica estrutural",
+        "Materiais de construção aeronáutica",
+        "Aerodinâmica e fenômenos associados com o voo das aeronaves"
+      ],
+      "topicos_principais": [
+        "Noções fundamentais",
+        "Estruturas aeronáuticas",
+        "Resistência final",
+        "Principais estruturas das aeronaves e seus tipos"
+      ],
+      "pagina_plano_ensino": 157
+    },
+    {
+      "codigo": "AEDE6",
+      "nome": "AERODINÂMICA 2",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Aerodinâmica e fenômenos associados com o voo das aeronaves"
+      ],
+      "topicos_principais": [
+        "Aerodinâmica dos escoamentos compressíveis",
+        "Escoamentos viscosos e camada limite",
+        "Controle de escoamentos viscosos"
+      ],
+      "pagina_plano_ensino": 159
+    },
+    {
+      "codigo": "TCAE6",
+      "nome": "TRANSFERÊNCIA DE CALOR",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fenômenos de Transporte"
+      ],
+      "topicos_principais": [
+        "Introdução à Transferência de Calor",
+        "Condução de Calor",
+        "Convecção",
+        "Radiação",
+        "Trocadores de calor"
+      ],
+      "pagina_plano_ensino": 161
+    },
+    {
+      "codigo": "ELEE6",
+      "nome": "ELETRÔNICA DIGITAL",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Eletrônica"
+      ],
+      "topicos_principais": [
+        "Conceitos fundamentais de lógica digital",
+        "Circuitos combinacionais",
+        "Dispositivos para lógica combinacional",
+        "Circuitos sequenciais",
+        "Dispositivos para lógica sequencial",
+        "Organização básica de um microprocessador",
+        "Programação de um microcontrolador",
+        "Elementos de interfaceamento de microcontroladores"
+      ],
+      "pagina_plano_ensino": 163
+    },
+    {
+      "codigo": "ESDE6",
+      "nome": "ENSAIOS NÃO DESTRUTIVOS",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciência dos Materiais",
+        "Mecânica dos Sólidos"
+      ],
+      "topicos_principais": [
+        "Defeitos oriundos dos processos de produção",
+        "Inspeção visual e sonora de materiais e produtos",
+        "Visão geral de novas técnicas"
+      ],
+      "pagina_plano_ensino": 165
+    },
+    {
+      "codigo": "PCPE6",
+      "nome": "PLANEJAMENTO E CONTROLE DA PRODUÇÃO",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 15.8,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Administração e Economia"
+      ],
+      "topicos_principais": [
+        "Natureza do planejamento e controle",
+        "Planejamento e controle de capacidade",
+        "Planejamento e controle de estoque",
+        "Planejamento e controle da rede de suprimentos",
+        "Material Requirements Planning",
+        "Planejamento e controle Just in Time",
+        "Planejamento e controle de projetos",
+        "Planejamento e controle de qualidade"
+      ],
+      "pagina_plano_ensino": 168
+    },
+    {
+      "codigo": "EXTE6",
+      "nome": "ATIVIDADES DE EXTENSÃO 2",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 95,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 79.2,
+      "carga_horaria_total": 79.2,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Políticas de Educação Ambiental",
+        "Educação em Direitos Humanos",
+        "Educação para a terceira idade",
+        "Criatividade e inovação"
+      ],
+      "topicos_principais": [
+        "Atuação e gerência de equipes em projetos de intervenção",
+        "Definição do escopo do projeto",
+        "Identificação dos riscos do projeto",
+        "Interlocução com as partes interessadas",
+        "Planejamento de projetos",
+        "Alinhamento entre os benefícios do projeto e da organização",
+        "Execução e monitoramento das ações realizadas",
+        "Ferramenta de avaliação das ações realizadas"
+      ],
+      "pagina_plano_ensino": 170
+    },
+    {
+      "codigo": "SISE7",
+      "nome": "SISTEMAS DE CONTROLE 1",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Aerodinâmica e fenômenos associados com o voo das aeronaves",
+        "Controle de aeronaves"
+      ],
+      "topicos_principais": [
+        "Introdução aos Sistemas de Controle",
+        "Transformada de Laplace",
+        "Modelagem Matemática de Sistemas Dinâmicos",
+        "Sistemas de controle automático",
+        "Análise da resposta em regime transitório e estacionário",
+        "Análise do Lugar das Raízes",
+        "Projeto pelo Lugar das Raízes",
+        "Resposta em frequência"
+      ],
+      "pagina_plano_ensino": 171
+    },
+    {
+      "codigo": "PRPE7",
+      "nome": "PROPULSÃO 1",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Aerodinâmica e fenômenos associados com o voo das aeronaves",
+        "Controle de aeronaves"
+      ],
+      "topicos_principais": [
+        "Introdução à propulsão de aeronaves",
+        "Métodos de propulsão atmosférica",
+        "Motores a combustão interna",
+        "Motores a reação",
+        "Introdução à propulsão elétrica em aeronaves",
+        "Princípios de propulsão espacial"
+      ],
+      "pagina_plano_ensino": 175
+    },
+    {
+      "codigo": "AECE7",
+      "nome": "AERODINÂMICA COMPUTACIONAL",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Aerodinâmica e fenômenos associados com o voo das aeronaves",
+        "Algoritmos e Programação",
+        "Engenharia assistida pelo computador"
+      ],
+      "topicos_principais": [
+        "Métodos numéricos clássicos",
+        "Dinâmica dos fluidos computacional",
+        "Aplicativos utilizados na indústria aeronáutica"
+      ],
+      "pagina_plano_ensino": 177
+    },
+    {
+      "codigo": "SHPE7",
+      "nome": "SISTEMAS HIDRÁULICOS E PNEUMÁTICOS",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Sistemas Aeronáuticos",
+        "Sistemas hidráulicos e pneumáticos"
+      ],
+      "topicos_principais": [
+        "Introdução à hidráulica e pneumática",
+        "Sistemas pneumáticos",
+        "Sistemas hidráulicos",
+        "Prática em sistema hidráulico / pneumático"
+      ],
+      "pagina_plano_ensino": 179
+    },
+    {
+      "codigo": "SEAE7",
+      "nome": "SISTEMAS ELÉTRICOS DE AERONAVES",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Instrumentação e técnica de medida",
+        "Sistemas Aeronáuticos",
+        "Sistemas de elétricos, eletroeletrônicos e instrumentos de aeronaves"
+      ],
+      "topicos_principais": [
+        "Sistemas elétricos",
+        "Geradores e motores elétricos de aviação",
+        "Sistemas elétricos de acionamento em aeronaves",
+        "Sistemas de armazenamento de energia elétrica em aeronaves"
+      ],
+      "pagina_plano_ensino": 181
+    },
+    {
+      "codigo": "IMFE7",
+      "nome": "INTRODUÇÃO AO MÉTODO DOS ELEMENTOS FINITOS",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Mecânica de Sólidos",
+        "Métodos de energia",
+        "Engenharia assistida pelo computador",
+        "Simulação estrutural mecânica"
+      ],
+      "topicos_principais": [
+        "Introdução",
+        "Problema de Valor de Contorno Unidimensional",
+        "Elasticidade Plana",
+        "Problemas de Elasticidade Tridimensional",
+        "Elementos de barra",
+        "Problemas de potencial",
+        "Elementos Isoparamétricos",
+        "Integração Numérica"
+      ],
+      "pagina_plano_ensino": 184
+    },
+    {
+      "codigo": "PFAE7",
+      "nome": "PROCESSOS DE FABRICAÇÃO DE AERONAVES 1",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 15.8,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fabricação de aeronaves"
+      ],
+      "topicos_principais": [
+        "Fundamentos gerais da conformação de metais",
+        "Fabricação de tubos e chapas",
+        "Ferramentas de conformação de peças",
+        "Fabricação de aviões convencionais e não convencionais",
+        "Técnicas de soldagem de estruturas aeronáuticas",
+        "Práticas de Conformação Metálica",
+        "Práticas de fabricação de componentes aeronáuticos"
+      ],
+      "pagina_plano_ensino": 187
+    },
+    {
+      "codigo": "EXTE7",
+      "nome": "ATIVIDADES DE EXTENSÃO 3",
+      "semestre": 7,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 95,
+      "carga_horaria_ensino": 0.0,
+      "carga_horaria_extensao": 79.2,
+      "carga_horaria_total": 79.2,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Criatividade e inovação"
+      ],
+      "topicos_principais": [
+        "Atuação e gerência de equipes em projetos de intervenção",
+        "Definição do escopo do projeto",
+        "Identificação dos riscos do projeto",
+        "Interlocução com as partes interessadas",
+        "Planejamento de projetos",
+        "Alinhamento entre os benefícios do projeto e da organização",
+        "Execução e monitoramento das ações realizadas",
+        "Ferramenta de avaliação das ações realizadas"
+      ],
+      "pagina_plano_ensino": 189
+    },
+    {
+      "codigo": "SISE8",
+      "nome": "SISTEMAS DE CONTROLE 2",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Controle de aeronaves"
+      ],
+      "topicos_principais": [
+        "Introdução aos sistemas de controle discreto",
+        "Introdução aos sistemas de controle de sistemas amostrados",
+        "Novas metodologias de projeto de sistemas de controle",
+        "Projeto de controle de veículos aeronáuticos"
+      ],
+      "pagina_plano_ensino": 190
+    },
+    {
+      "codigo": "PRPE8",
+      "nome": "PROPULSÃO 2",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Propulsão de aeronaves"
+      ],
+      "topicos_principais": [
+        "Introdução ao projeto de motores",
+        "Condições impostas aos sistemas de propulsão",
+        "Análise da missão",
+        "Seleção dos motores",
+        "Integração motor/aeronave",
+        "Dimensionamento dos motores",
+        "Especificação dos componentes dos motores",
+        "Metodologias de ensaios de motores"
+      ],
+      "pagina_plano_ensino": 192
+    },
+    {
+      "codigo": "CARE8",
+      "nome": "CARGAS E AEROELASTICIDADE",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação específica/Aerodinâmica e fenômenos associados com o voo das aeronaves"
+      ],
+      "topicos_principais": [
+        "Revisão de conceitos fundamentais",
+        "Aeroelasticidade estática",
+        "Introdução à aerodinâmica não estacionária",
+        "Aeroelasticidade dinâmica",
+        "Aeroservoelasticidade",
+        "Manobras em equilíbrio",
+        "Manobras dinâmicas",
+        "Cargas devidas a rajadas e turbulência"
+      ],
+      "pagina_plano_ensino": 193
+    },
+    {
+      "codigo": "MATE8",
+      "nome": "MANUTENÇÃO DE AERONAVES",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Manutenção de aeronaves"
+      ],
+      "topicos_principais": [
+        "Introdução à manutenção aeronáutica",
+        "Os processos primários de manutenção",
+        "Conceitos de mantenabilidade",
+        "Conceitos de manutenção preventiva",
+        "Limites operacionais das aeronaves",
+        "Falhas de componentes e manutenção não programada",
+        "Regulamentação",
+        "Manuais de manutenção"
+      ],
+      "pagina_plano_ensino": 195
+    },
+    {
+      "codigo": "IAEE8",
+      "nome": "INSTRUMENTOS E AVIÔNICA",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Sistemas elétricos, eletrônicos e instrumentos de aeronaves"
+      ],
+      "topicos_principais": [
+        "Instrumentos de voo",
+        "Instrumentos de motores",
+        "Instrumentos de aviônica militar",
+        "Sistemas de navegação e comunicação",
+        "Requisitos de certificação ligados à aviônica"
+      ],
+      "pagina_plano_ensino": 197
+    },
+    {
+      "codigo": "GEQE8",
+      "nome": "GESTÃO E GARANTIA DA QUALIDADE",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 15.8,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Administração e Economia"
+      ],
+      "topicos_principais": [
+        "Conceitos básicos de administração e qualidade",
+        "Conceito de sistemas para gerenciamento da qualidade",
+        "Normas ISO 9000",
+        "Gestão da qualidade total",
+        "Controle da qualidade total",
+        "Elaboração de documentos da qualidade",
+        "Metodologia seis sigma",
+        "Ferramentas para tomada de decisão"
+      ],
+      "pagina_plano_ensino": 198
+    },
+    {
+      "codigo": "PFAE8",
+      "nome": "PROCESSOS DE FABRICAÇÃO DE AERONAVES 2",
+      "semestre": 8,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 15.8,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Fabricação de aeronaves"
+      ],
+      "topicos_principais": [
+        "Introdução ao estudo de materiais compósitos",
+        "Materiais compósitos reforçados com fibras",
+        "Materiais compósitos de matrizes poliméricas",
+        "Processos de fabricação de materiais compósitos",
+        "Propriedades físicas de materiais compósitos",
+        "Propriedades mecânicas de materiais compósitos",
+        "Defeitos em compósitos",
+        "Compósitos estruturais tipo sanduíche"
+      ],
+      "pagina_plano_ensino": 200
+    },
+    {
+      "codigo": "PRJE9",
+      "nome": "PROJETO DE AERONAVES 1",
+      "semestre": 9,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Projeto de aeronaves"
+      ],
+      "topicos_principais": [
+        "Conceitos básicos de projeto de aeronaves",
+        "Dimensionamento inicial de aeronaves",
+        "Propulsão e sistemas de combustível",
+        "Sistemas de trem de pouso",
+        "Cargas aplicadas nas aeronaves",
+        "Estabilidade e controle de aeronaves",
+        "Estudo de casos de projetos de aeronaves"
+      ],
+      "pagina_plano_ensino": 202
+    },
+    {
+      "codigo": "HOAE9",
+      "nome": "HOMOLOGAÇÃO DE AERONAVES",
+      "semestre": 9,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Homologação e certificação de aeronaves"
+      ],
+      "topicos_principais": [
+        "Objetivos da homologação aeronáutica",
+        "Sistema internacional de homologação",
+        "Regulamentos de homologação e publicações técnicas",
+        "O processo de homologação",
+        "Atestado de conformidade",
+        "Inspeção de estado e conformidade"
+      ],
+      "pagina_plano_ensino": 204
+    },
+    {
+      "codigo": "PMAE9",
+      "nome": "PRÁTICAS DE MANUTENÇÃO EM AERONAVES",
+      "semestre": 9,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 76,
+      "carga_horaria_ensino": 63.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 63.3,
+      "abordagem": "pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Manutenção de aeronaves"
+      ],
+      "topicos_principais": [
+        "Programação e aplicação de tarefas de manutenção",
+        "Realização de inspeções visuais",
+        "Análise de danos e aplicação de reparos",
+        "Boletins de serviço e diretrizes de aeronavegabilidade",
+        "Leitura e interpretação do manual de manutenção de aeronaves",
+        "Controle de Componentes com Vida Limite",
+        "Prevenção e combate a incêndio"
+      ],
+      "pagina_plano_ensino": 205
+    },
+    {
+      "codigo": "LEME9",
+      "nome": "LEITURA E ELABORAÇÃO DE MANUAIS DE AERONAVES",
+      "semestre": 9,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 57,
+      "carga_horaria_ensino": 47.5,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 47.5,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Língua Estrangeira (Inglês)"
+      ],
+      "topicos_principais": [
+        "Gêneros textuais",
+        "Normas ABNT e internacionais de escrita",
+        "Os documentos das aeronaves",
+        "Elaboração de documentos da aviação"
+      ],
+      "pagina_plano_ensino": 207
+    },
+    {
+      "codigo": "PRJE10",
+      "nome": "PROJETO DE AERONAVES 2",
+      "semestre": 10,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Projeto de aeronaves"
+      ],
+      "topicos_principais": [
+        "Propulsão e sistemas de combustível",
+        "Sistemas de trem de pouso",
+        "Cargas aplicadas nas aeronaves",
+        "Estabilidade e controle de aeronaves",
+        "Desempenho da aeronave",
+        "Projeto detalhado de componentes",
+        "Estudo de casos de projetos de aeronaves"
+      ],
+      "pagina_plano_ensino": 208
+    },
+    {
+      "codigo": "GAEE10",
+      "nome": "GESTÃO AMBIENTAL PARA ENGENHEIROS",
+      "semestre": 10,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 95,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 47.5,
+      "carga_horaria_total": 79.2,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Ciências do ambiente"
+      ],
+      "topicos_principais": [
+        "Desenvolvimento e Sustentabilidade",
+        "Estudo de impacto ambiental",
+        "Licenciamento ambiental",
+        "Gestão de recursos hídricos",
+        "Gestão de resíduos sólidos",
+        "Poluição atmosférica",
+        "Legislação ambiental e normas técnicas",
+        "Sistema de gestão ambiental"
+      ],
+      "pagina_plano_ensino": 210
+    },
+    {
+      "codigo": "LIBRA",
+      "nome": "INTRODUÇÃO A LÍNGUA BRASILEIRA DE SINAIS (LIBRAS)",
+      "semestre": null,
+      "tipo": "optativa",
+      "aulas_semanais": 2,
+      "total_aulas": 38,
+      "carga_horaria_ensino": 31.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 31.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "Núcleo de formação Básico/Libras"
+      ],
+      "topicos_principais": [
+        "Surdez e linguagem",
+        "A cultura e a comunidade surda",
+        "Papel social da Língua Brasileira de Sinais",
+        "Introdução às características da LIBRAS",
+        "Ensino prático em LIBRAS"
+      ],
+      "pagina_plano_ensino": 211
+    }
+  ],
+  "requisitos_gerais": [
+    {
+      "item": "Integralização",
+      "descricao": "Regime seriado semestral; integralização mínima em 10 semestres e máxima em 20 semestres, com semestres de 19 semanas letivas e aulas de 50 minutos. Para o diploma, é preciso ser aprovado em todas as disciplinas obrigatórias e no Projeto de Final de Curso (PFC) e cumprir o Estágio Supervisionado.",
+      "pagina": 30
+    },
+    {
+      "item": "Carga horária total",
+      "descricao": "Carga horária mínima de 3.762,5 h: 3.562,5 h de componentes obrigatórios (incluindo 379,8 h de extensão) + 40 h de PFC + 160 h de Estágio Supervisionado. Máximo de 3.794,2 h com a optativa Libras (31,7 h).",
+      "pagina": 31
+    },
+    {
+      "item": "Curricularização da Extensão",
+      "descricao": "379,8 h de atividades de extensão (10% da carga horária mínima), distribuídas em 12 componentes obrigatórios: Atividades de extensão 1, 2 e 3, Processos de Fabricação, Inglês para Engenharia Aeronáutica 2, Eletrônica Analógica, Fabricação Assistida por Computador, Planejamento e Controle da Produção, Processos de Fabricação de Aeronaves 1 e 2, Gestão e Garantia da Qualidade e Gestão Ambiental para Engenheiros.",
+      "pagina": 32
+    },
+    {
+      "item": "Estágio Curricular Supervisionado",
+      "descricao": "Obrigatório, mínimo de 160 h, jornada de até 40 h semanais, na área de Engenharia Aeronáutica ou correlatas. Só pode iniciar após concluir as disciplinas dos dois primeiros anos (parte básica do curso). Avaliado por relatórios, com menção aprovado/reprovado. O estágio facultativo dura no máximo 2 anos.",
+      "pagina": 37
+    },
+    {
+      "item": "Projeto de Final de Curso (PFC)",
+      "descricao": "Obrigatório, 40 h. Pode ser iniciado a partir da matrícula regular nas disciplinas do 2º semestre e deve obrigatoriamente ser iniciado a partir da matrícula no 9º semestre. Individual ou em grupo de até 3 discentes, com professor orientador; monografia ou artigo científico com defesa pública perante banca de 3 membros. Correções finais em até 15 dias corridos; menção aprovado/reprovado, sem limite de novas tentativas em caso de reprovação.",
+      "pagina": 39
+    },
+    {
+      "item": "Componente optativo",
+      "descricao": "Introdução a Língua Brasileira de Sinais (Libras), 31,7 h, é a única optativa e não é exigida para a integralização.",
+      "pagina": 31
+    },
+    {
+      "item": "Critério de aprovação",
+      "descricao": "Aprovação no componente com nota semestral ≥ 6,0 e frequência mínima de 75%. Com nota entre 4,0 e 6,0 e frequência ≥ 75%, o estudante faz o Instrumento Final de Avaliação e precisa de nota mínima 6,0 nele. Estágio e PFC recebem menção aprovado/reprovado.",
+      "pagina": 52
+    }
+  ]
+}

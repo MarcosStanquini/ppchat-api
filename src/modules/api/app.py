@@ -12,8 +12,17 @@ from pydantic import BaseModel, Field, field_validator
 
 from src.modules.api.rate_limit import RateLimiter, client_ip
 from src.modules.api.suap_import import ImportStore, SuapImport
-from src.modules.knowledge.services.knowledge_base import get_knowledge_base
+from src.modules.knowledge.services.knowledge_base import (
+    KnowledgeBase,
+    get_knowledge_base,
+)
 from src.modules.response.services.chat_service import ChatSession
+from src.modules.shared.services.courses import (
+    LEGACY_COURSE,
+    Course,
+    get_course,
+    get_registry,
+)
 from src.modules.shared.services.settings import get_settings
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -23,7 +32,9 @@ MAX_TEXT = 20_000  # caracteres por mensagem do histórico
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    get_knowledge_base()  # falha cedo se a base processada não existir
+    # Carrega a base de todos os cursos agora: um curso quebrado falha o deploy, não a visita de um aluno
+    for course in get_registry().cursos:
+        get_knowledge_base(course.slug)
     yield
 
 
@@ -53,6 +64,8 @@ class HistoryTurn(BaseModel):
 
 class ChatRequest(BaseModel):
     question: str = Field(min_length=1, max_length=4000)
+    # Slug do curso aberto no navegador; clientes antigos não mandam e caem em Engenharia de Software
+    curso: str = Field(default=LEGACY_COURSE, max_length=64)
     # A API não guarda conversas: o navegador reenvia o histórico a cada pergunta
     history: List[HistoryTurn] = Field(default_factory=list, max_length=MAX_HISTORY)
     # Códigos das disciplinas selecionadas no chat; a ficha delas vai junto da pergunta
@@ -90,8 +103,20 @@ def _check_rate_limit(http_request: Request) -> None:
         raise HTTPException(status_code=429, detail=error)
 
 
+def _course(slug: str) -> Course:
+    """Só slugs do registro chegam ao disco; qualquer outro é 404."""
+    try:
+        return get_course(slug)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Curso não encontrado.") from None
+
+
+def _knowledge_base(slug: str) -> KnowledgeBase:
+    return get_knowledge_base(_course(slug).slug)
+
+
 def _session(request: ChatRequest) -> ChatSession:
-    return ChatSession(history=[turn.model_dump() for turn in request.history])
+    return ChatSession(_knowledge_base(request.curso), history=[turn.model_dump() for turn in request.history])
 
 
 def _usage(session: ChatSession) -> Optional[Usage]:
@@ -163,10 +188,10 @@ def index() -> HTMLResponse:
 
 
 @app.get("/pdf", include_in_schema=False)
-def pdf() -> FileResponse:
+def pdf(curso: str = LEGACY_COURSE) -> FileResponse:
     # inline para o navegador abrir no visualizador e respeitar #page=N
     return FileResponse(
-        settings.pdf_path,
+        _course(curso).pdf_path,
         media_type="application/pdf",
         headers={"Content-Disposition": "inline; filename=PPC.pdf"},
     )
@@ -174,16 +199,32 @@ def pdf() -> FileResponse:
 
 @app.get("/health")
 def health() -> dict:
-    kb = get_knowledge_base()
-    return {"status": "ok", "disciplinas": len(kb.curriculo.disciplinas)}
+    return {"status": "ok", "cursos": len(get_registry().cursos)}
+
+
+@app.get("/courses")
+def courses() -> dict:
+    """Cursos atendidos, com os números que aparecem nos cards da tela Explorar."""
+    items = []
+    for course in get_registry().cursos:
+        c = get_knowledge_base(course.slug).curriculo
+        items.append({
+            **course.model_dump(exclude={"fonte"}),
+            "duracao_semestres": c.duracao_semestres,
+            "carga_horaria_total_curso": c.carga_horaria_total_curso,
+            "disciplinas": len(c.disciplinas),
+            "vigencia": c.vigencia,
+        })
+    return {"campus": get_registry().campus, "cursos": items}
 
 
 @app.get("/curriculum")
-def curriculum() -> dict:
+def curriculum(curso: str = LEGACY_COURSE) -> dict:
     """Currículo estruturado + análise do grafo, para a árvore e a grade do front."""
-    kb = get_knowledge_base()
+    kb = _knowledge_base(curso)
     c, graph = kb.curriculo, kb.graph
     return {
+        "slug": kb.course.slug,
         "curso": c.curso,
         "campus": c.campus,
         "vigencia": c.vigencia,
@@ -240,3 +281,10 @@ async def aluno_resgatar(code: str) -> SuapImport:
     if data is None:
         raise HTTPException(status_code=404, detail="Código expirado ou já usado. Rode o bookmarklet de novo no SUAP.")
     return data
+
+
+# Por último: rotas fixas (/pdf, /health, /courses...) têm prioridade sobre o link direto de um curso
+@app.get("/{slug}", include_in_schema=False)
+def course_page(slug: str) -> HTMLResponse:
+    _course(slug)
+    return index()

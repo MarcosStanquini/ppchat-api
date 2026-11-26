@@ -1,0 +1,1314 @@
+{
+  "curso": "Tecnologia em Manutenção de Aeronaves",
+  "campus": "São Carlos",
+  "vigencia": "1º Semestre/2018",
+  "duracao_semestres": 6,
+  "carga_horaria_total_curso": 2480.0,
+  "disciplinas": [
+    {
+      "codigo": "FMAA1",
+      "nome": "FUNDAMENTOS DE MATEMÁTICA",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Aritmética",
+        "Geometria: áreas e volumes",
+        "Representação de dados e sistemas de medidas",
+        "Polinômios e fatoração",
+        "Equações",
+        "Inequações",
+        "Funções de 1º e 2º graus",
+        "Relações trigonométricas no triângulo retângulo"
+      ],
+      "pagina_plano_ensino": 77
+    },
+    {
+      "codigo": "IMAA1",
+      "nome": "INTRODUÇÃO À MANUTENÇÃO DE AERONAVES",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Princípios da inspeção e documentação da manutenção",
+        "Ensaios não destrutivos",
+        "Regulamentação da aviação civil",
+        "Regulamentação da profissão de mecânico",
+        "Primeiros socorros",
+        "Segurança operacional e SIPAER"
+      ],
+      "pagina_plano_ensino": 80
+    },
+    {
+      "codigo": "TSCA1",
+      "nome": "TUBULAÇÕES E SISTEMAS DE COMBUSTÍVEL",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Tubulações e conexões",
+        "Formação e reparo de tubulações",
+        "Tubos flexíveis e rígidos",
+        "Tipos de combustíveis",
+        "Contaminação dos sistemas de combustível",
+        "Componentes e indicadores dos sistemas de combustível",
+        "Reparos nos tanques de combustível"
+      ],
+      "pagina_plano_ensino": 84
+    },
+    {
+      "codigo": "DTAA1",
+      "nome": "DESENHO TÉCNICO DE AERONAVES",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Plantas",
+        "Métodos de desenhar objetos",
+        "Significado das linhas",
+        "Diagramas",
+        "Esboços de desenhos",
+        "Armazenagem e normas ABNT"
+      ],
+      "pagina_plano_ensino": 87
+    },
+    {
+      "codigo": "FEMA1",
+      "nome": "FERRAMENTAS MANUAIS E DE MEDIÇÃO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Ferramentas manuais",
+        "Ferramentas de medição",
+        "Sistemas métricos e conversão de unidades",
+        "Metrologia mecânica dimensional",
+        "Ajustes e tolerâncias",
+        "Ajustagem, traçagem e montagem",
+        "Tubulações e conexões"
+      ],
+      "pagina_plano_ensino": 89
+    },
+    {
+      "codigo": "MAEA1",
+      "nome": "MATERIAIS AERONÁUTICOS",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Tecnologia dos materiais aeronáuticos",
+        "Ferragens de aviação",
+        "Ligações mecânicas e frenagem",
+        "Tratamento térmico e dureza",
+        "Controle de corrosão",
+        "Acabamento e limpeza"
+      ],
+      "pagina_plano_ensino": 92
+    },
+    {
+      "codigo": "FISA1",
+      "nome": "FÍSICA APLICADA",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 100,
+      "carga_horaria_ensino": 83.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 83.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Sistema de unidades",
+        "Mecânica",
+        "Fluidos",
+        "Processos térmicos",
+        "Ondulatória",
+        "Eletricidade e eletrônica básicas",
+        "Geradores e motores elétricos"
+      ],
+      "pagina_plano_ensino": 95
+    },
+    {
+      "codigo": "CMEA1",
+      "nome": "COMUNICAÇÃO E EXPRESSÃO",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Comunicação oral e escrita",
+        "Questões culturais e étnico-raciais",
+        "Elementos da comunicação e argumentação",
+        "Redação técnica e científica",
+        "Apresentações escritas e orais"
+      ],
+      "pagina_plano_ensino": 98
+    },
+    {
+      "codigo": "IGMA1",
+      "nome": "INGLÊS PARA MANUTENÇÃO DE AERONAVES 1",
+      "semestre": 1,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Inglês técnico",
+        "Estratégias de leitura e interpretação de textos",
+        "Estruturas gramaticais recorrentes",
+        "Vocabulário técnico de manutenção aeronáutica"
+      ],
+      "pagina_plano_ensino": 101
+    },
+    {
+      "codigo": "CDIA2",
+      "nome": "CÁLCULO DIFERENCIAL E INTEGRAL",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 100,
+      "carga_horaria_ensino": 83.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 83.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Funções",
+        "Limites",
+        "Derivadas",
+        "Integrais"
+      ],
+      "pagina_plano_ensino": 104
+    },
+    {
+      "codigo": "CMAA2",
+      "nome": "CIÊNCIAS DOS MATERIAIS",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico",
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Ligações químicas",
+        "Estrutura cristalina e imperfeições em sólidos",
+        "Mecanismos de endurecimento",
+        "Difusão em sólidos",
+        "Diagrama de equilíbrio de fases",
+        "Cerâmicas, polímeros e metais",
+        "Controle de corrosão"
+      ],
+      "pagina_plano_ensino": 106
+    },
+    {
+      "codigo": "FNTA2",
+      "nome": "FENÔMENOS DE TRANSPORTE",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Conceitos fundamentais",
+        "Dinâmica dos fluidos",
+        "Termodinâmica aplicada",
+        "Escoamento externo"
+      ],
+      "pagina_plano_ensino": 109
+    },
+    {
+      "codigo": "MAVA2",
+      "nome": "MECÂNICA APLICADA E VETORIAL",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Estática dos pontos materiais",
+        "Estática dos sólidos",
+        "Equilíbrio dos corpos rígidos",
+        "Forças distribuídas",
+        "Momento de inércia",
+        "Atrito"
+      ],
+      "pagina_plano_ensino": 111
+    },
+    {
+      "codigo": "EELA2",
+      "nome": "ELETRICIDADE E ELETROMAGNETISMO",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Princípios básicos de eletricidade",
+        "Circuitos de corrente contínua",
+        "Magnetismo e baterias",
+        "Corrente alternada",
+        "Semicondutores",
+        "Medidores",
+        "Geradores e motores elétricos de aviação"
+      ],
+      "pagina_plano_ensino": 113
+    },
+    {
+      "codigo": "APBA2",
+      "nome": "AERODINÂMICA, PESO E BALANCEAMENTO",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Teoria de voo",
+        "Comandos de voo",
+        "Aerodinâmica de helicóptero e de alta velocidade",
+        "Teoria de peso e balanceamento",
+        "Procedimento de pesagem de aeronaves",
+        "Carta de carregamento e envelope de CG",
+        "Peso e balanceamento de helicópteros"
+      ],
+      "pagina_plano_ensino": 116
+    },
+    {
+      "codigo": "FABA2",
+      "nome": "FABRICAÇÃO MECÂNICA",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Processos de usinagem",
+        "Usinagem de peças rotacionais e não rotacionais",
+        "Ferramentas de corte",
+        "Forças e potências de corte",
+        "Máquinas de comando numérico",
+        "Reparos em estruturas metálicas"
+      ],
+      "pagina_plano_ensino": 119
+    },
+    {
+      "codigo": "IGMA2",
+      "nome": "INGLÊS PARA MANUTENÇÃO DE AERONAVES 2",
+      "semestre": 2,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico",
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Inglês básico e técnico",
+        "Inglês técnico – célula",
+        "Estruturas gramaticais recorrentes",
+        "Vocabulário técnico de manutenção aeronáutica",
+        "Gêneros textuais da área"
+      ],
+      "pagina_plano_ensino": 121
+    },
+    {
+      "codigo": "ESTA3",
+      "nome": "ESTRUTURAS DE AERONAVES",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 100,
+      "carga_horaria_ensino": 83.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 83.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Estruturas de aeronaves",
+        "Sistemas de controle de voo",
+        "Tensão e deformação",
+        "Tensão normal e de cisalhamento",
+        "Treliças",
+        "Flexão de vigas",
+        "Torção e flambagem",
+        "Análise de estruturas"
+      ],
+      "pagina_plano_ensino": 124
+    },
+    {
+      "codigo": "SPIA3",
+      "nome": "SISTEMAS DE PROTEÇÃO E INSPEÇÃO DE AERONAVES",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico",
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Proteção contra gelo",
+        "Proteção contra chuva",
+        "Proteção contra fogo",
+        "Inspeção de aeronaves",
+        "Documentação da manutenção",
+        "Fatores humanos na manutenção"
+      ],
+      "pagina_plano_ensino": 127
+    },
+    {
+      "codigo": "REVA3",
+      "nome": "REVESTIMENTOS DE AERONAVES (ENTELAGEM E PINTURA)",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Entelagem e revestimento em tecido",
+        "Reparos na cobertura de tecido",
+        "Revestimento com fibra de vidro",
+        "Dopes e aplicação",
+        "Pintura de aeronaves",
+        "Métodos de aplicação de acabamentos",
+        "Marcas de identificação e decalques"
+      ],
+      "pagina_plano_ensino": 130
+    },
+    {
+      "codigo": "SPNA3",
+      "nome": "SISTEMAS PNEUMÁTICOS, AR CONDICIONADO E OXIGÊNIO",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 100,
+      "carga_horaria_ensino": 83.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 83.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Sistemas pneumáticos",
+        "Sistemas de pressurização",
+        "Sistemas de ar condicionado",
+        "Sistemas de oxigênio",
+        "Manutenção do sistema pneumático",
+        "Sistemas elétricos e eletrônicos de aeronaves"
+      ],
+      "pagina_plano_ensino": 132
+    },
+    {
+      "codigo": "PPMA3",
+      "nome": "PROCEDIMENTOS DE PISTA, MONTAGEM E ALINHAMENTO",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico"
+      ],
+      "topicos_principais": [
+        "Fatores humanos na manutenção",
+        "Manuseio de solo e equipamentos de apoio",
+        "Procedimentos de solo",
+        "Abastecimentos",
+        "Montagem e alinhamento",
+        "Manutenção de aviões e helicópteros"
+      ],
+      "pagina_plano_ensino": 136
+    },
+    {
+      "codigo": "SPOA3",
+      "nome": "SOLDAGEM E PRÁTICA DE OFICINA",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico",
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Soldagem em aeronaves",
+        "Brasagem e soldagem macia",
+        "Soldagem por arco voltaico",
+        "Soldagem MIG e com eletrodo revestido",
+        "Soldagem oxiacetilênica",
+        "Corte de metais",
+        "Segurança na oficina"
+      ],
+      "pagina_plano_ensino": 139
+    },
+    {
+      "codigo": "IGMA3",
+      "nome": "INGLÊS PARA MANUTENÇÃO DE AERONAVES 3",
+      "semestre": 3,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Básico",
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Inglês técnico – grupo motopropulsor",
+        "Estruturas gramaticais recorrentes",
+        "Uso de ferramentas de tradução",
+        "Vocabulário técnico",
+        "Gêneros textuais da área"
+      ],
+      "pagina_plano_ensino": 142
+    },
+    {
+      "codigo": "SHTA4",
+      "nome": "SISTEMAS HIDRÁULICOS E DE TREM DE POUSO",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 100,
+      "carga_horaria_ensino": 83.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 83.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Sistemas hidráulicos",
+        "Fluidos hidráulicos",
+        "Circuitos hidráulicos básicos",
+        "Manutenção de unidades hidráulicas",
+        "Sistemas de trem de pouso",
+        "Sistemas elétricos e eletrônicos de aeronaves"
+      ],
+      "pagina_plano_ensino": 145
+    },
+    {
+      "codigo": "INTA4",
+      "nome": "INSTRUMENTOS DE AERONAVES",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Características dos instrumentos",
+        "Indicadores de pressão e sistema pitot",
+        "Indicadores de temperatura, RPM e combustível",
+        "Instrumentos giroscópicos",
+        "Compasso magnético",
+        "Piloto automático",
+        "Sistemas de alarme e alerta"
+      ],
+      "pagina_plano_ensino": 148
+    },
+    {
+      "codigo": "REPA4",
+      "nome": "REPAROS ESTRUTURAIS",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 100,
+      "carga_horaria_ensino": 83.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 83.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Reparos de chapa de metal",
+        "Inspeção de danos",
+        "Processos de moldagem e dobra",
+        "Rebitagem e rebites especiais",
+        "Colmeia metálica colada",
+        "Reparos em plásticos e fibra de vidro",
+        "Radomes e estruturas de madeira"
+      ],
+      "pagina_plano_ensino": 150
+    },
+    {
+      "codigo": "GEQA4",
+      "nome": "GESTÃO DA QUALIDADE, AUDITORIA E CERTIFICAÇÃO",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Qualidade na área aeronáutica",
+        "Sistema de gerenciamento da qualidade",
+        "Auditorias",
+        "Certificação aeronáutica"
+      ],
+      "pagina_plano_ensino": 152
+    },
+    {
+      "codigo": "SEAA4",
+      "nome": "SISTEMAS ELÉTRICOS DE AERONAVES",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Fios e cabos condutores",
+        "Ligação à massa",
+        "Conectores e conduítes",
+        "Instalação de equipamento elétrico",
+        "Dispositivos de proteção de circuitos",
+        "Sistemas de iluminação de aeronaves"
+      ],
+      "pagina_plano_ensino": 154
+    },
+    {
+      "codigo": "SCNA4",
+      "nome": "SISTEMAS DE COMUNICAÇÃO E NAVEGAÇÃO",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Princípios básicos do rádio",
+        "Sistemas de comunicação",
+        "Equipamentos de navegação de bordo",
+        "Transmissor localizador (ELT)",
+        "Instalação e manutenção de equipamentos de rádio",
+        "Aviônica moderna"
+      ],
+      "pagina_plano_ensino": 156
+    },
+    {
+      "codigo": "IGMA4",
+      "nome": "INGLÊS PARA MANUTENÇÃO DE AERONAVES 4",
+      "semestre": 4,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Estruturas gramaticais recorrentes",
+        "Uso de ferramentas de tradução",
+        "Vocabulário de manutenção de aeronaves",
+        "Gêneros textuais da área"
+      ],
+      "pagina_plano_ensino": 158
+    },
+    {
+      "codigo": "MP1A5",
+      "nome": "METODOLOGIA DE PESQUISA CIENTÍFICA E TECNOLÓGICA 1",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Termos e conceitos de pesquisa",
+        "Plágio no meio acadêmico",
+        "Fontes confiáveis",
+        "Referências bibliográficas",
+        "Gêneros textuais",
+        "Metodologia de pesquisa",
+        "Normas ABNT e formatação",
+        "Órgãos de fomento"
+      ],
+      "pagina_plano_ensino": 161
+    },
+    {
+      "codigo": "SAEA5",
+      "nome": "SISTEMAS DE ADMISSÃO E DE ESCAPAMENTO",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Sistemas de admissão de motores convencionais",
+        "Sistemas turboalimentados",
+        "Admissão de motores a reação",
+        "Sistemas de escapamento",
+        "Reversores de empuxo",
+        "Supressores de ruído"
+      ],
+      "pagina_plano_ensino": 164
+    },
+    {
+      "codigo": "MOTA5",
+      "nome": "MOTORES AERONÁUTICOS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 100,
+      "carga_horaria_ensino": 83.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 83.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Teoria de funcionamento dos motores",
+        "Construção de motores alternativos",
+        "Componentes do motor alternativo",
+        "Potência e eficiência",
+        "Construção de motores a reação",
+        "Princípios de operação da turbina",
+        "Operação e manutenção de motores"
+      ],
+      "pagina_plano_ensino": 167
+    },
+    {
+      "codigo": "SCOA5",
+      "nome": "SISTEMAS DE COMBUSTÍVEL DO MOTOR",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Sistemas de combustível de motores alternativos",
+        "Princípios da carburação",
+        "Injeção direta de combustível",
+        "Sistemas de injeção de água",
+        "Sistema de combustível de motores a turbina",
+        "Manutenção do controle de combustível"
+      ],
+      "pagina_plano_ensino": 170
+    },
+    {
+      "codigo": "HELA5",
+      "nome": "HÉLICES",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 4,
+      "total_aulas": 80,
+      "carga_horaria_ensino": 66.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 66.7,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula",
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Tipos de hélice",
+        "Hélices de aeronaves leves",
+        "Inspeção e manutenção de hélices",
+        "Grupo motopropulsor turboélice",
+        "Inspeção de motores"
+      ],
+      "pagina_plano_ensino": 172
+    },
+    {
+      "codigo": "GMSA5",
+      "nome": "GERENCIAMENTO DA MANUTENÇÃO E SUPRIMENTOS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Gerenciamento de manutenção",
+        "Planejamento e controle da produção",
+        "Suprimentos aeronáuticos",
+        "Infraestrutura"
+      ],
+      "pagina_plano_ensino": 174
+    },
+    {
+      "codigo": "SIEA5",
+      "nome": "SISTEMAS DE IGNIÇÃO E ELÉTRICO DO MOTOR",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Sistema de ignição do motor alternativo",
+        "Sistema de magneto",
+        "Inspeção e manutenção da ignição",
+        "Analisador de motores",
+        "Ignição em motores a reação",
+        "Sistemas elétricos do motor"
+      ],
+      "pagina_plano_ensino": 176
+    },
+    {
+      "codigo": "NMAA5",
+      "nome": "NOVOS MATERIAIS AERONÁUTICOS",
+      "semestre": 5,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 1,
+      "total_aulas": 20,
+      "carga_horaria_ensino": 16.7,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 16.7,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo Célula"
+      ],
+      "topicos_principais": [
+        "Materiais compósitos e nanotecnologia",
+        "Novos materiais na indústria aeronáutica",
+        "Materiais inteligentes",
+        "Corrosão e proteção de materiais",
+        "Tratamentos térmicos superficiais"
+      ],
+      "pagina_plano_ensino": 179
+    },
+    {
+      "codigo": "MP2A6",
+      "nome": "METODOLOGIA DE PESQUISA CIENTÍFICA E TECNOLÓGICA 2",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Divulgação de pesquisa científica",
+        "Normas ABNT e formatação",
+        "Prevenção de plágio",
+        "Textos científicos (monografia, relatório, artigo)",
+        "Planejamento e realização da pesquisa",
+        "Apresentações orais e pôster",
+        "Submissão a congressos e revistas"
+      ],
+      "pagina_plano_ensino": 181
+    },
+    {
+      "codigo": "SPAA6",
+      "nome": "SISTEMAS DE PARTIDA DO MOTOR",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Sistemas de partida de motores convencionais",
+        "Manutenção dos sistemas de partida",
+        "Partida de motores de turbina a gás"
+      ],
+      "pagina_plano_ensino": 184
+    },
+    {
+      "codigo": "SPRA6",
+      "nome": "SISTEMAS DE PROTEÇÃO DO MOTOR",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Proteção contrafogo de motores convencionais",
+        "Agentes de extinção de fogo",
+        "Sistemas extintores",
+        "Proteção de motores a turbina",
+        "Manutenção dos sistemas de proteção"
+      ],
+      "pagina_plano_ensino": 186
+    },
+    {
+      "codigo": "OPMA6",
+      "nome": "OPERAÇÃO E MANUTENÇÃO DO MOTOR",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Revisão de motores alternativos",
+        "Testes de motores",
+        "Operação do motor convencional",
+        "Pesquisa de panes",
+        "Manutenção de motores a reação",
+        "Instrumentação e operação do motor a reação",
+        "Análise espectrométrica de óleo"
+      ],
+      "pagina_plano_ensino": 188
+    },
+    {
+      "codigo": "SLRA6",
+      "nome": "SISTEMAS DE LUBRIFICAÇÃO E REFRIGERAÇÃO DE MOTORES",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Lubrificantes",
+        "Lubrificação de motores convencionais",
+        "Lubrificação de motores a reação",
+        "Manutenção dos sistemas de lubrificação",
+        "Sistemas de refrigeração de motores"
+      ],
+      "pagina_plano_ensino": 190
+    },
+    {
+      "codigo": "INMA6",
+      "nome": "INSPEÇÃO DE MOTORES",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Procedimentos de inspeção",
+        "Inspeção do motor e da nacele",
+        "Inspeção da hélice",
+        "Documentação da aeronave",
+        "Partículas magnéticas e líquidos penetrantes",
+        "Radiografia, ultrassom e Eddy Current"
+      ],
+      "pagina_plano_ensino": 192
+    },
+    {
+      "codigo": "RIMA6",
+      "nome": "REMOÇÃO E INSTALAÇÃO DO MOTOR",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 3,
+      "total_aulas": 60,
+      "carga_horaria_ensino": 50.0,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 50.0,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Remoção e instalação de motores alternativos",
+        "Remoção e instalação de motores a reação",
+        "Motores de helicópteros",
+        "Berço e preservação do motor"
+      ],
+      "pagina_plano_ensino": 194
+    },
+    {
+      "codigo": "OMHA6",
+      "nome": "OFICINA DE MOTORES E HÉLICES",
+      "semestre": 6,
+      "tipo": "obrigatoria",
+      "aulas_semanais": 5,
+      "total_aulas": 100,
+      "carga_horaria_ensino": 83.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 83.3,
+      "abordagem": "pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [
+        "ANAC IS 141-007 – Módulo GMP"
+      ],
+      "topicos_principais": [
+        "Oficina de motores convencionais",
+        "Oficina de motores a reação",
+        "Oficina de hélices",
+        "Admissão e escapamento",
+        "Proteção contra fogo no motor",
+        "Remoção e instalação de motores",
+        "Depanagem (troubleshooting)"
+      ],
+      "pagina_plano_ensino": 196
+    },
+    {
+      "codigo": "LIB",
+      "nome": "LIBRAS",
+      "semestre": null,
+      "tipo": "optativa",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorica",
+      "usa_laboratorio": false,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Parâmetros da Língua de Sinais",
+        "Cultura e comunidade surda",
+        "Alfabeto manual",
+        "Números",
+        "Cumprimentos e identificação pessoal",
+        "Vocabulário do cotidiano",
+        "Pronomes",
+        "Verbos contextualizados"
+      ],
+      "pagina_plano_ensino": 199
+    },
+    {
+      "codigo": "INFA",
+      "nome": "INFORMÁTICA APLICADA",
+      "semestre": null,
+      "tipo": "optativa",
+      "aulas_semanais": 2,
+      "total_aulas": 40,
+      "carga_horaria_ensino": 33.3,
+      "carga_horaria_extensao": 0.0,
+      "carga_horaria_total": 33.3,
+      "abordagem": "teorico_pratica",
+      "usa_laboratorio": true,
+      "pre_requisitos": [],
+      "grupos_conhecimento": [],
+      "topicos_principais": [
+        "Ambiente SCILAB",
+        "Variáveis e operações",
+        "Vetores e matrizes",
+        "Gráficos",
+        "Estruturas de controle",
+        "Modularização de programas"
+      ],
+      "pagina_plano_ensino": 201
+    }
+  ],
+  "requisitos_gerais": [
+    {
+      "item": "Integralização",
+      "descricao": "Curso de 6 semestres (regime semestral, 20 semanas por semestre, hora-aula de 50 min). Tempo mínimo de integralização: 6 semestres; máximo: 12 semestres. Carga horária mínima obrigatória declarada: 2.480 h, toda presencial.",
+      "pagina": 8
+    },
+    {
+      "item": "Disciplinas optativas",
+      "descricao": "Libras (LIB) e Informática Aplicada (INFA) são optativas, com 33,3 h cada, acrescentadas à carga horária do curso (carga optativa declarada: 66,7 h). Libras é ofertada no mínimo uma vez para cada turma ingressante.",
+      "pagina": 22
+    },
+    {
+      "item": "Trabalho de Conclusão de Curso (TCC)",
+      "descricao": "Obrigatório. Pode ser iniciado a partir do 2º semestre letivo. Modalidades: estágio, iniciação científica ou monografia (até 3 membros); em todas é obrigatório relatório final escrito, apresentação a banca (orientador + membro convidado) e aprovação. Orientação por docente do IFSP. Resultado registrado como cumpriu/não cumpriu.",
+      "pagina": 33
+    },
+    {
+      "item": "Estágio Supervisionado",
+      "descricao": "Facultativo, mínimo de 360 horas, pode ser realizado a partir do primeiro semestre concluído (Lei 11.788/2008 e Portaria IFSP 1204/2011). Relatórios encaminhados à Coordenação de Extensão. Vale como TCC se o relatório final for apresentado a banca examinadora e aprovado.",
+      "pagina": 33
+    },
+    {
+      "item": "Atividades Complementares",
+      "descricao": "Atividades de enriquecimento (eventos, cursos de extensão, IC, visitas técnicas, bolsa discente etc.) aproveitadas conforme tabela com carga mínima/máxima por atividade e máximo total por tipo (ex.: componente de outro curso até 40 h; eventos científicos 4 a 6 h cada, até 30 h; visita técnica até 10 h), mediante documento comprobatório. O PPC não fixa carga horária mínima obrigatória de AC.",
+      "pagina": 35
+    },
+    {
+      "item": "Aprovação em componente curricular",
+      "descricao": "Aprovado com nota semestral >= 6,0 e frequência >= 75%. Com nota entre 4,0 e 6,0 e frequência >= 75%, faz Instrumento Final de Avaliação e precisa de nota >= 6,0 nele. Retido se frequência < 75% ou nota < 4,0. Disciplinas retidas podem ser recursadas respeitando os pré-requisitos e o prazo máximo de integralização.",
+      "pagina": 44
+    },
+    {
+      "item": "Certificações intermediárias",
+      "descricao": "Certificado das disciplinas de nível básico (IS 141-007) ao final do 2º semestre; certificação em Célula ao final do 4º semestre; certificação em Grupo Motopropulsor ao final do curso. Habilitam a prestar as provas de CCT da ANAC.",
+      "pagina": 27
+    },
+    {
+      "item": "Diploma",
+      "descricao": "Para obter o diploma de Tecnólogo em Manutenção de Aeronaves o aluno deve concluir todas as disciplinas obrigatórias do curso e desenvolver, apresentar e ser aprovado no TCC.",
+      "pagina": 28
+    },
+    {
+      "item": "Curricularização da extensão",
+      "descricao": "O PPC não atribui carga horária de extensão curricularizada aos componentes; a extensão ocorre por programas, projetos, cursos e eventos. Curso em extinção (Resolução IFSP/CONSUP nº 146/2021).",
+      "pagina": null
+    }
+  ]
+}
