@@ -1191,14 +1191,14 @@ body.sidebar-open .drawer { left: 268px; }
 }
 body.exploring .composer, body.no-course .composer,
 body.no-course .nav-btn[data-nav="flow"], body.no-course .nav-btn[data-nav="me"] { display: none; }
-.explore { max-width: 980px; margin: 5vh auto 40px; animation: rise .5s ease both; }
+.explore { max-width: 1200px; margin: 3vh auto 24px; animation: rise .5s ease both; }
 .explore h1 { margin: 0; font: 700 clamp(32px, 4.6vw, 52px)/1.02 var(--display); letter-spacing: -.035em; }
 .explore h1 em { font-style: normal; color: var(--accent); }
 .explore .lede { max-width: 58ch; }
-.explore-split { display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 18px; align-items: start; }
-.explore-list { display: flex; flex-direction: column; gap: 8px; }
+.explore-split { display: grid; grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); gap: 22px; align-items: stretch; margin-top: 6px; }
+.explore-list { display: flex; flex-direction: column; gap: 10px; }
 .explore-item {
-  display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 14px;
+  display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-radius: 14px;
   border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font: inherit; text-align: left;
   cursor: pointer; transition: border-color .15s, background .15s, transform .15s; animation: rise .4s ease both;
 }
@@ -1211,8 +1211,8 @@ body.no-course .nav-btn[data-nav="flow"], body.no-course .nav-btn[data-nav="me"]
 .explore-item.is-on .explore-item-arrow { stroke: var(--accent); transform: translateX(2px); }
 .explore-item.is-ending .explore-item-kind::after { content: " · em extinção"; }
 .course-preview {
-  display: flex; flex-direction: column; gap: 16px; padding: 24px; border-radius: 22px;
-  background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-lg); min-height: 360px;
+  display: flex; flex-direction: column; gap: 18px; padding: 28px; border-radius: 22px;
+  background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-lg);
 }
 .course-preview > * { animation: rise .3s ease both; }
 .preview-kind { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: var(--ink-2); }
@@ -1239,18 +1239,18 @@ body.no-course .nav-btn[data-nav="flow"], body.no-course .nav-btn[data-nav="me"]
 .preview-q b { flex: none; color: var(--accent); font-size: 16px; transition: transform .15s; }
 .preview-q:hover, .preview-q:focus-visible { border-color: var(--accent); background: color-mix(in oklab, var(--accent-soft) 60%, var(--surface-2)); outline: none; }
 .preview-q:hover b { transform: translateX(3px); }
-.preview-open { align-self: flex-start; margin-top: 2px; height: 44px; padding: 0 20px; font-size: 14.5px; }
+.preview-open { align-self: flex-start; margin-top: auto; height: 46px; padding: 0 22px; font-size: 15px; }
 /* Decide pela largura da própria tela Explorar (a barra lateral aberta também tira espaço), não da janela */
 .explore { container-type: inline-size; }
 @container (max-width: 700px) {
   .explore-split { grid-template-columns: 1fr; }
-  .course-preview { min-height: 0; padding: 18px; }
+  .course-preview { padding: 18px; }
   .preview-stats b { font-size: 16.5px; }
   .preview-stats div { padding: 9px 10px; }
 }
 @media (max-width: 760px) {
   .explore-split { grid-template-columns: 1fr; }
-  .course-preview { min-height: 0; padding: 18px; }
+  .course-preview { padding: 18px; }
   .preview-stats b { font-size: 16.5px; }
   .preview-stats div { padding: 9px 10px; }
 }

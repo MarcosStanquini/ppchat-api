@@ -239,7 +239,8 @@ function previewCourse(slug, { focus = false } = {}) {
   const panel = $("#course-preview");
   panel.innerHTML = coursePreviewHtml(c); // conteúdo novo: a animação de entrada roda sozinha
   panel.setAttribute("aria-labelledby", `tab-${slug}`);
-  if (focus) panel.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  // Só rola quando a prévia está embaixo da lista (tela estreita); ao lado dela, a tela fica parada
+  if (focus && panel.offsetTop > $(".explore-list").offsetTop) panel.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 function renderExplore() {
@@ -273,14 +274,6 @@ function renderExplore() {
   if (start) previewCourse(start);
 }
 
-let hoverTimer = null;
-$("#messages").addEventListener("mouseover", (event) => {
-  const item = event.target.closest("#explore [data-preview]");
-  clearTimeout(hoverTimer);
-  // No mouse a prévia acompanha o ponteiro (depois de uma pausa curta); no toque ela muda pelo clique
-  if (!item || item.dataset.preview === previewSlug || !matchMedia("(hover: hover)").matches) return;
-  hoverTimer = setTimeout(() => item.matches(":hover") && previewCourse(item.dataset.preview), 110);
-});
 $("#messages").addEventListener("keydown", (event) => {
   const item = event.target.closest("#explore [data-preview]");
   if (!item || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
@@ -290,14 +283,13 @@ $("#messages").addEventListener("keydown", (event) => {
   const next = { ArrowDown: items[(i + 1) % items.length], ArrowUp: items[(i - 1 + items.length) % items.length],
     Home: items[0], End: items[items.length - 1] }[event.key];
   next.focus();
-  previewCourse(next.dataset.preview);
+  if (next.dataset.preview !== previewSlug) previewCourse(next.dataset.preview);
 });
 $("#messages").addEventListener("click", (event) => {
   const pick = event.target.closest("#explore [data-preview]");
+  // A prévia muda só no clique; quando ela fica embaixo da lista (tela estreita), rola até ela
   if (pick) {
-    clearTimeout(hoverTimer);
-    const touch = !matchMedia("(hover: hover)").matches;
-    if (pick.dataset.preview !== previewSlug || touch) previewCourse(pick.dataset.preview, { focus: touch });
+    if (pick.dataset.preview !== previewSlug) previewCourse(pick.dataset.preview, { focus: true });
     return;
   }
   const card = event.target.closest("#explore [data-course]");
