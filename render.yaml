@@ -24,3 +24,10 @@ services:
         value: "30"
       - key: GLOBAL_RATE_LIMIT_PER_HOUR
         value: "400"
+      # Observabilidade: secretas, o Render pede o valor (ver README → Observabilidade)
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: LOG_SECRET
+        sync: false

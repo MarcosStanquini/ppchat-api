@@ -133,6 +133,23 @@ clica com o SUAP já aberto.
 O leitor é genérico (descobre as abas pelos links e extrai todas as tabelas), mas se o SUAP mudar muito, ajuste os
 padrões em `suap-export.js` (abas) e em `buildAluno` no `app.js` (situações).
 
+## Observabilidade (página `/admin`)
+
+Cada pergunta ao chat vira um registro num Postgres (Neon, plano grátis): curso, pergunta, resposta, modelo,
+tempo, desfecho (`ok`, `parada` ou `erro`) e os sinais do aluno: 👍/👎 embaixo da resposta, cópia e clique em
+[p. N]. Reformulou (nova pergunta na mesma conversa até 2 min depois) e saiu depois são calculados na consulta.
+
+- **Não é guardado:** os dados do SUAP (só "tinha SUAP: sim/não"), o histórico enviado pelo navegador e o IP. O
+  visitante vira um código que muda a cada dia (HMAC do IP com `LOG_SECRET`). Registros com mais de 180 dias são
+  apagados. O rodapé do chat avisa o aluno.
+- **Gravação fora do caminho da resposta:** em segundo plano, com limite de 3 s; banco fora do ar só gera aviso
+  no log e o chat segue igual. Sem `DATABASE_URL`, nada é gravado.
+- **Ver:** abra `/admin` e entre com o `ADMIN_TOKEN` (fica só na aba). Sem `ADMIN_TOKEN` configurado, `/admin`
+  responde 404. Mostra números do período (7/30/90 dias), perguntas mais feitas, 👎 recentes e todas as
+  perguntas com busca.
+- **Testes:** `pip install -r requirements-dev.txt` e `pytest`. Os testes de Postgres usam `TEST_DATABASE_URL`
+  (um branch separado do Neon) e são pulados sem ela; eles apagam as tabelas desse banco a cada teste.
+
 ## Deploy no Render (plano gratuito)
 
 O `render.yaml` já descreve o serviço. A base processada (`src/data/courses/`) está no repositório, então o
@@ -156,6 +173,10 @@ O plano gratuito dorme após 15 min sem uso; o primeiro acesso depois disso leva
 | `FALLBACK_MODEL` | `claude-opus-4-8` | usado só se o principal recusar |
 | `CHAT_EFFORT` / `EXTRACTION_EFFORT` | `medium` / `high` | profundidade de raciocínio (`low` a `max`) |
 | `RATE_LIMIT_PER_HOUR` / `GLOBAL_RATE_LIMIT_PER_HOUR` | `30` / `400` | perguntas por IP e teto do site inteiro por hora (`0` desliga) |
+| `DATABASE_URL` | — | Postgres das perguntas (string *pooled* do Neon); vazio = não grava |
+| `ADMIN_TOKEN` | — | senha da página `/admin`; vazio = `/admin` não existe |
+| `LOG_SECRET` | — | chave do código diário de visitante; obrigatória com `DATABASE_URL` |
+| `LOG_RETENTION_DAYS` | `180` | dias até os registros serem apagados |
 
 ## Estrutura
 
