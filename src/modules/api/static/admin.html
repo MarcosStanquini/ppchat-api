@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>PPChat · Admin</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231f8a4c'/%3E%3Cpath d='M9 11h14M9 16h9M9 21h11' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/admin.css">
+  <script>
+    try {
+      const theme = localStorage.getItem("ppchat-theme");
+      if (theme) document.documentElement.dataset.theme = theme;
+    } catch {}
+  </script>
+</head>
+<body class="admin">
+  <!-- Senha: guardada só nesta aba -->
+  <main class="admin-login" id="login" hidden>
+    <form class="admin-card login-card" id="login-form">
+      <h1>PPChat · Admin</h1>
+      <label for="token">Senha</label>
+      <input id="token" type="password" autocomplete="current-password" required>
+      <p class="admin-error" id="login-error" role="alert" hidden></p>
+      <button class="admin-btn" type="submit">Entrar</button>
+    </form>
+  </main>
+
+  <main class="admin-main" id="panel" hidden>
+    <header class="admin-head">
+      <h1><a href="/">PPChat</a> <span>/ Admin</span></h1>
+      <div class="admin-filters">
+        <div class="admin-seg" role="group" aria-label="Período">
+          <button data-dias="7" aria-pressed="true">7 dias</button>
+          <button data-dias="30" aria-pressed="false">30 dias</button>
+          <button data-dias="90" aria-pressed="false">90 dias</button>
+        </div>
+        <select id="curso" aria-label="Curso"><option value="">Todos os cursos</option></select>
+        <button class="admin-link" id="logout" type="button">Sair</button>
+      </div>
+    </header>
+
+    <p class="admin-error" id="panel-error" role="alert" hidden></p>
+
+    <section class="admin-stats" id="stats" aria-label="Números do período"></section>
+
+    <div class="admin-cols">
+      <section class="admin-card">
+        <h2>Mais feitas</h2>
+        <ol class="admin-top" id="top"></ol>
+      </section>
+      <section class="admin-card">
+        <h2>👎 recentes</h2>
+        <div id="negatives"></div>
+      </section>
+    </div>
+
+    <section class="admin-card">
+      <div class="admin-card-head">
+        <h2>Todas as perguntas</h2>
+        <input id="busca" type="search" placeholder="Buscar na pergunta…" maxlength="200" aria-label="Buscar na pergunta">
+      </div>
+      <div id="list"></div>
+      <nav class="admin-pager" aria-label="Páginas">
+        <button class="admin-link" id="prev" type="button">← Anteriores</button>
+        <span id="page-info"></span>
+        <button class="admin-link" id="next" type="button">Próximas →</button>
+      </nav>
+    </section>
+  </main>
+
+  <script src="/static/admin.js"></script>
+</body>
+</html>

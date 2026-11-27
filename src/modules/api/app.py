@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
+from src.modules.api import admin
 from src.modules.api.rate_limit import RateLimiter, client_ip
 from src.modules.api.suap_import import ImportStore, SuapImport
 from src.modules.knowledge.services.knowledge_base import (
@@ -74,6 +75,7 @@ async def _open_store() -> asyncio.Task | None:
 
 app = FastAPI(title="PPChat API", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.include_router(admin.router)  # antes do link direto de curso (/{slug}), que é a última rota
 
 settings = get_settings()
 # O bookmarklet roda dentro do SUAP e envia os dados do aluno para cá: só essa origem é liberada
