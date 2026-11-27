@@ -150,3 +150,23 @@ def test_cache_hit_is_recorded_as_saved_answer(client, fake_chain):
         assert store.questions[rid].resposta == "resposta"
     finally:
         recorder.set_store(NullStore())
+
+
+def test_owner_claude_failure_does_not_blame_student_key(client, monkeypatch, fake_provider):
+    from src.modules.response.services.fallback import USER_MESSAGES
+    from src.modules.response.services.providers import ProviderError
+
+    monkeypatch.setattr(app_module, "provider_chain",
+                        lambda option, key: [fake_provider(error=ProviderError("auth"), label="Claude (teste)")])
+    _, events = stream(client, modelo="claude-teste")
+    assert events[-1] == {"type": "error", "message": USER_MESSAGES["owner_unavailable"]}
+
+
+def test_missing_free_keys_warn_at_startup(monkeypatch, caplog):
+    from src.modules.shared.services.settings import get_settings
+
+    monkeypatch.setattr(get_settings(), "gemini_api_key", None)
+    monkeypatch.setattr(get_settings(), "openrouter_api_key", None)
+    caplog.set_level(logging.WARNING)
+    app_module.warn_missing_free_keys()
+    assert "GEMINI_API_KEY" in caplog.text

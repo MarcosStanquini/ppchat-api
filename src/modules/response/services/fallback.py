@@ -5,6 +5,7 @@ duplicaria a resposta na tela. As mensagens são fixas por tipo de falha e nunca
 provedor, que pode conter a chave do aluno.
 """
 import logging
+from typing import Literal
 from collections.abc import AsyncIterator
 
 from src.modules.response.services.providers import (
@@ -21,7 +22,10 @@ USER_MESSAGES = {
     "auth": "Sua chave do {provedor} foi recusada. Confira a chave e tente de novo.",
     "quota_own": "Sua chave do {provedor} está sem crédito ou atingiu o limite.",
     "unavailable": "A IA não respondeu agora. Tente de novo em instantes.",
+    "owner_unavailable": "O Claude (teste) não está disponível agora. Tente o Gratuito ou volte mais tarde.",
+    "not_configured": "O modelo gratuito ainda não foi configurado neste servidor. Use o Claude (teste) ou sua própria chave.",
 }
+Mode = Literal["gratis", "owner", "own"]  # gratuito do dono, Claude do dono, chave do aluno
 _FALL_BACK_ON = {"quota", "unavailable"}
 
 
@@ -34,25 +38,39 @@ class UserFacingError(Exception):
         self.kind = kind
 
 
-def _message(kind: str, provider: ChatProvider | None, free: bool) -> str:
+def _own_key_message(kind: str, provider: ChatProvider | None) -> str:
     name = provider.label.split(" · ")[-1] if provider else ""
     if kind == "quota":
-        return USER_MESSAGES["quota_gratis"] if free else USER_MESSAGES["quota_own"].format(provedor=name)
-    if kind == "auth" and not free:
+        return USER_MESSAGES["quota_own"].format(provedor=name)
+    if kind == "auth":
         return USER_MESSAGES["auth"].format(provedor=name)
     return USER_MESSAGES["unavailable"]
+
+
+def _infer_mode(chain: list[ChatProvider]) -> Mode:
+    if any(p.label.startswith("Minha chave") for p in chain):
+        return "own"
+    if chain and not all(p.label.startswith("Gratuito") for p in chain):
+        return "owner"
+    return "gratis"
 
 
 class FallbackProvider:
     """Uma opção de IA vista como um provedor só: `label` e `usage` são de quem de fato respondeu."""
 
-    def __init__(self, chain: list[ChatProvider]):
+    def __init__(self, chain: list[ChatProvider], mode: Mode | None = None):
         self.chain = chain
         self.answered_by: ChatProvider | None = None
         self.label = chain[0].label if chain else "Gratuito"
         self.usage: ProviderUsage | None = None
-        # Gratuito = chaves do dono: cota esgotada vira a mensagem do gratuito, nunca "sua chave"
-        self.free = not chain or all(p.label.startswith("Gratuito") for p in chain)
+        # Só a chave do aluno pode ouvir "sua chave foi recusada"; falhas das chaves do dono têm mensagens próprias
+        self.mode: Mode = mode or _infer_mode(chain)
+        self.free = self.mode == "gratis"
+
+    @property
+    def complete(self) -> bool:
+        """A resposta terminou normalmente (sem corte por limite ou filtro)? Só assim vale guardar."""
+        return bool(self.answered_by and getattr(self.answered_by, "complete", False) and self.usage)
 
     async def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
         kind, provider, started, quota_seen = "unavailable", None, False, False
@@ -80,10 +98,15 @@ class FallbackProvider:
                 break
         if started:
             message = USER_MESSAGES["unavailable"]
-        elif self.free:
-            message = USER_MESSAGES["quota_gratis"] if quota_seen else USER_MESSAGES["unavailable"]
+        elif self.mode == "gratis":
+            if not self.chain:
+                message = USER_MESSAGES["not_configured"]
+            else:
+                message = USER_MESSAGES["quota_gratis"] if quota_seen else USER_MESSAGES["unavailable"]
+        elif self.mode == "owner":
+            message = USER_MESSAGES["owner_unavailable"]
         else:
-            message = _message(kind, provider, free=False)
+            message = _own_key_message(kind, provider)
         # Fora de qualquer `except`: a exceção nova não carrega a original (que pode ter a chave)
         raise UserFacingError(message, kind)
 

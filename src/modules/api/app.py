@@ -56,11 +56,22 @@ async def lifespan(_: FastAPI):
     # Carrega a base de todos os cursos agora: um curso quebrado falha o deploy, não a visita de um aluno
     for course in get_registry().cursos:
         get_knowledge_base(course.slug)
+    warn_missing_free_keys()
     purge_task = await _open_store()
     yield
     if purge_task:
         purge_task.cancel()
     await recorder.get_store().close()
+
+
+def warn_missing_free_keys() -> None:
+    """O gratuito é o padrão do chat: sem chave do dono, toda pergunta nele recebe "não configurado"."""
+    current = get_settings()
+    if not current.gemini_api_key and not current.openrouter_api_key:
+        recorder.logger.warning(
+            "modelo gratuito sem chave: defina GEMINI_API_KEY (e, opcional, OPENROUTER_API_KEY); "
+            "até lá o gratuito responde que não está configurado"
+        )
 
 
 async def _open_store() -> asyncio.Task | None:
@@ -208,7 +219,9 @@ def _knowledge_base(slug: str) -> KnowledgeBase:
 
 
 def _session(request: ChatRequest) -> ChatSession:
-    provider = FallbackProvider(provider_chain(request.modelo, request.chave))
+    option = OPTIONS[request.modelo]
+    mode = "own" if option.own_key else ("gratis" if option.id == "gratis" else "owner")
+    provider = FallbackProvider(provider_chain(request.modelo, request.chave), mode=mode)
     return ChatSession(_knowledge_base(request.curso), provider,
                        history=[turn.model_dump() for turn in request.history])
 

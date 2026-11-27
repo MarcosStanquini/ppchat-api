@@ -47,10 +47,10 @@ async def test_gratis_exhausted_message(fake_provider):
     assert e.value.message == QUOTA_GRATIS == USER_MESSAGES["quota_gratis"]
 
 
-async def test_empty_gratis_chain_is_unavailable_not_a_crash():
+async def test_empty_gratis_chain_is_a_clear_message_not_a_crash():
     with pytest.raises(UserFacingError) as e:
         await collect([])
-    assert e.value.message == USER_MESSAGES["unavailable"]
+    assert e.value.message == USER_MESSAGES["not_configured"]
 
 
 async def test_own_key_quota_and_auth_messages(fake_provider):
@@ -93,3 +93,17 @@ async def test_gratis_falls_back_even_when_owner_key_is_refused(fake_provider):
     a = fake_provider(error=ProviderError("auth"), label="Gratuito · Gemini")
     b = fake_provider(["ok"], label="Gratuito · OpenRouter")
     assert await collect([a, b]) == "ok"
+
+
+async def test_owner_claude_errors_never_blame_the_student_key(fake_provider):
+    for kind in ("auth", "quota"):
+        chain = FallbackProvider([fake_provider(error=ProviderError(kind), label="Claude (teste)")], mode="owner")
+        with pytest.raises(UserFacingError) as e:
+            [_ async for _ in chain.stream("s", "c", [])]
+        assert "Sua chave" not in e.value.message and e.value.message == USER_MESSAGES["owner_unavailable"]
+
+
+async def test_free_option_without_owner_keys_says_not_configured():
+    with pytest.raises(UserFacingError) as e:
+        [_ async for _ in FallbackProvider([], mode="gratis").stream("s", "c", [])]
+    assert e.value.message == USER_MESSAGES["not_configured"]
