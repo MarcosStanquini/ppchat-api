@@ -5,8 +5,8 @@ duplicaria a resposta na tela. As mensagens são fixas por tipo de falha e nunca
 provedor, que pode conter a chave do aluno.
 """
 import logging
-from typing import Literal
 from collections.abc import AsyncIterator
+from typing import Literal
 
 from src.modules.response.services.providers import (
     ChatProvider,
