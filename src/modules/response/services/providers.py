@@ -1,0 +1,128 @@
+"""Provedores de IA do chat: o Claude (SDK da Anthropic) e um adaptador único para APIs compatíveis com a
+OpenAI (OpenAI, Gemini, Groq, OpenRouter).
+
+Todos recebem o mesmo pedido — instruções (`system`), o PPC inteiro (`context`) e as mensagens em texto
+puro — e devolvem eventos ("thinking", texto) e ("text", texto). Assim a conversa pode trocar de IA no meio.
+"""
+from collections.abc import AsyncIterator
+from dataclasses import dataclass
+from typing import Literal, Protocol
+
+StreamEvent = tuple[Literal["thinking", "text"], str]
+ErrorKind = Literal["quota", "auth", "unavailable", "refused", "other"]
+
+
+@dataclass
+class ProviderUsage:
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cache_read_input_tokens: int | None = None
+    cache_creation_input_tokens: int | None = None
+
+
+class ProviderError(Exception):
+    """Falha do provedor já classificada. Nunca carrega o texto do provedor (pode conter a chave)."""
+
+    def __init__(self, kind: ErrorKind, before_first_token: bool = True):
+        super().__init__(kind)
+        self.kind = kind
+        self.before_first_token = before_first_token
+
+
+class ChatProvider(Protocol):
+    label: str  # quem respondeu, como o aluno vê: "Gratuito · Gemini", "Claude (teste)"...
+    usage: ProviderUsage | None  # preenchido ao fim da resposta
+
+    def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]: ...
+
+
+class AnthropicProvider:
+    """O Claude, como antes: PPC em cache de 1 h, raciocínio resumido e reserva em caso de recusa."""
+
+    def __init__(self, client, model: str, effort: str, label: str, max_tokens: int = 64000):
+        self.client, self.model, self.effort, self.label, self.max_tokens = client, model, effort, label, max_tokens
+        self.usage: ProviderUsage | None = None
+
+    async def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
+        from anthropic import BetaFallbackState
+
+        self.usage = None
+        with BetaFallbackState():  # fixa a resposta no modelo de reserva se o principal recusar
+            async with self.client.beta.messages.stream(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                # "summarized" devolve um resumo legível do raciocínio, mostrado enquanto o modelo pensa
+                thinking={"type": "adaptive", "display": "summarized"},
+                output_config={"effort": self.effort},
+                # Segundo ponto de cache no fim do histórico; o PPC tem o seu, de 1 h
+                cache_control={"type": "ephemeral"},
+                system=[
+                    {"type": "text", "text": system},
+                    {"type": "text", "text": context, "cache_control": {"type": "ephemeral", "ttl": "1h"}},
+                ],
+                messages=messages,
+            ) as stream:
+                async for event in stream:
+                    if event.type != "content_block_delta":
+                        continue
+                    if event.delta.type == "thinking_delta":
+                        yield "thinking", event.delta.thinking
+                    elif event.delta.type == "text_delta":
+                        yield "text", event.delta.text
+                message = await stream.get_final_message()
+        self.usage = ProviderUsage(
+            model=message.model,
+            input_tokens=message.usage.input_tokens,
+            output_tokens=message.usage.output_tokens,
+            cache_read_input_tokens=message.usage.cache_read_input_tokens or 0,
+            cache_creation_input_tokens=message.usage.cache_creation_input_tokens or 0,
+        )
+        if message.stop_reason == "refusal":
+            yield "text", "\n\n[O modelo não pôde responder a esta pergunta.]"
+        elif message.stop_reason == "max_tokens":
+            yield "text", "\n\n[Resposta interrompida pelo limite de tokens.]"
+
+
+class OpenAICompatibleProvider:
+    """OpenAI, Gemini, Groq e OpenRouter pelo mesmo formato de API; muda só a URL, a chave e o modelo.
+
+    Instruções e PPC vão numa única mensagem de sistema (esses provedores reaproveitam sozinhos a entrada
+    repetida). Não há resumo de raciocínio: só eventos de texto.
+    """
+
+    def __init__(self, base_url: str, api_key: str, model: str, label: str, timeout: float = 60,
+                 http_client=None):
+        from openai import AsyncOpenAI
+
+        # Sem novas tentativas: a reserva entre provedores é decidida pela cadeia, não pelo SDK
+        self._client = AsyncOpenAI(base_url=base_url, api_key=api_key, timeout=timeout, max_retries=0,
+                                   http_client=http_client)
+        self.model, self.label = model, label
+        self.usage: ProviderUsage | None = None
+
+    async def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
+        self.usage = None
+        response = await self._client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "system", "content": f"{system}\n\n{context}"}, *messages],
+            stream=True,
+            stream_options={"include_usage": True},
+        )
+        async for chunk in response:
+            if chunk.usage:
+                self.usage = ProviderUsage(model=chunk.model or self.model, input_tokens=chunk.usage.prompt_tokens,
+                                           output_tokens=chunk.usage.completion_tokens)
+            for choice in chunk.choices:
+                if choice.delta and choice.delta.content:
+                    yield "text", choice.delta.content
+
+
+def claude_provider(label: str = "Claude (teste)", model: str | None = None) -> AnthropicProvider:
+    """O Claude com a chave do dono (a mesma de antes)."""
+    from src.modules.shared.services.llm_client import get_async_llm_client
+    from src.modules.shared.services.settings import get_settings
+
+    current = get_settings()
+    return AnthropicProvider(get_async_llm_client(), model or current.llm_model, current.chat_effort, label,
+                             current.max_output_tokens)

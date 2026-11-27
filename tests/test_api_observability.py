@@ -177,18 +177,19 @@ def test_answer_with_suap_data_is_not_stored(client, store, fake_answer):
 
 
 def test_records_model_that_actually_answered(client, store, monkeypatch):
-    from types import SimpleNamespace
+    from src.modules.response.services.providers import ProviderUsage
 
     async def stream_events(self, question, focus=(), perfil=None):
         yield "text", "ok"
-        usage = SimpleNamespace(input_tokens=1, output_tokens=7, cache_read_input_tokens=0, cache_creation_input_tokens=0)
-        self.last_message = SimpleNamespace(model="modelo-reserva", usage=usage)
+        # Quem respondeu é o provedor que terminou a resposta (pode ser a reserva), pelo rótulo que o aluno vê
+        self.provider.label = "Gratuito · OpenRouter"
+        self.provider.usage = ProviderUsage(model="modelo-reserva", input_tokens=1, output_tokens=7)
 
     monkeypatch.setattr(ChatSession, "stream_events", stream_events)
     rid = uuid4()
     ask(client, request_id=str(rid))
     record = wait_for_record(store, rid)
-    assert record.modelo == "modelo-reserva" and record.tokens_saida == 7
+    assert record.modelo == "Gratuito · OpenRouter" and record.tokens_saida == 7
 
 
 def test_slow_event_save_returns_503(client, fake_answer):

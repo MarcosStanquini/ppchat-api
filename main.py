@@ -15,8 +15,9 @@ def ingest(curso: str, force: bool, extract: bool) -> None:
 def _session(curso: str):
     from src.modules.knowledge.services.knowledge_base import get_knowledge_base
     from src.modules.response.services.chat_service import ChatSession
+    from src.modules.response.services.providers import claude_provider
 
-    return ChatSession(get_knowledge_base(curso))
+    return ChatSession(get_knowledge_base(curso), claude_provider())
 
 
 async def chat(curso: str) -> None:
@@ -35,7 +36,7 @@ async def chat(curso: str) -> None:
         print("\nPPChat: ", end="", flush=True)
         async for chunk in session.stream(question):
             print(chunk, end="", flush=True)
-        usage = session.last_message.usage if session.last_message else None
+        usage = session.provider.usage
         if usage:
             print(
                 f"\n\n  [tokens — cache lido: {usage.cache_read_input_tokens or 0:,} · "

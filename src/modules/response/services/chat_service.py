@@ -1,42 +1,37 @@
-from typing import AsyncIterator, List, Literal, Sequence, Tuple, TypedDict
-
-from anthropic import BetaFallbackState
-from anthropic.types.beta import BetaMessage, BetaMessageParam
+from collections.abc import AsyncIterator, Sequence
+from typing import Literal, TypedDict
 
 from src.modules.knowledge.services.knowledge_base import KnowledgeBase
 from src.modules.response.services.prompts import system_instructions
+from src.modules.response.services.providers import ChatProvider, StreamEvent
 from src.modules.shared.services.courses import get_registry
-from src.modules.shared.services.llm_client import get_async_llm_client
-from src.modules.shared.services.settings import get_settings
 
-StreamEvent = Tuple[Literal["thinking", "text"], str]
+__all__ = ["ChatSession", "HistoryTurn", "StreamEvent"]
 
 
 class HistoryTurn(TypedDict, total=False):
     role: Literal["user", "assistant"]
     text: str
-    disciplinas: List[str]  # só em turnos do usuário
+    disciplinas: list[str]  # só em turnos do usuário
 
 
 class ChatSession:
-    """Uma conversa multi-turno sobre o PPC.
+    """Uma conversa multi-turno sobre o PPC, respondida por qualquer provedor de IA.
 
-    Custo: o PPC inteiro (~140 mil tokens) vai no system prompt com cache de 1 h, então só a
-    primeira pergunta paga a leitura completa; as seguintes leem do cache (~10% do preço).
-    O `cache_control` de topo move um segundo ponto de cache para o fim do histórico a cada turno.
+    O PPC inteiro vai como contexto em toda pergunta (o Claude o guarda em cache de 1 h; os outros
+    provedores reaproveitam sozinhos a entrada repetida). O histórico é texto puro, então a conversa pode
+    trocar de IA no meio.
 
     A API é sem estado: cada requisição cria uma sessão com o `history` enviado pelo navegador.
-    O histórico é remontado sempre do mesmo jeito, então o prefixo continua batendo com o cache.
-
-    É assíncrona para que uma resposta possa ser interrompida a qualquer momento (inclusive
-    enquanto o modelo ainda pensa) cancelando a task que consome `stream_events`.
+    É assíncrona para que uma resposta possa ser interrompida a qualquer momento cancelando a task que
+    consome `stream_events`.
     """
 
-    def __init__(self, knowledge_base: KnowledgeBase, history: Sequence[HistoryTurn] = ()):
-        self.settings = get_settings()
-        self.client = get_async_llm_client()
+    def __init__(self, knowledge_base: KnowledgeBase, provider: ChatProvider,
+                 history: Sequence[HistoryTurn] = ()):
         self.knowledge_base = knowledge_base
-        self.messages: List[BetaMessageParam] = [
+        self.provider = provider
+        self.messages: list[dict] = [
             {
                 "role": turn["role"],
                 "content": self._user_content(turn["text"], turn.get("disciplinas") or ())
@@ -45,42 +40,25 @@ class ChatSession:
             }
             for turn in history
         ]
-        self.fallback_state = BetaFallbackState()  # fixa a conversa no modelo de fallback se houver recusa
-        self.last_message: BetaMessage | None = None
-        self.system = [
-            {
-                "type": "text",
-                "text": system_instructions(
-                    knowledge_base.course.nome, get_registry().campus, knowledge_base.notes
-                ),
-            },
-            {
-                "type": "text",
-                "text": self.knowledge_base.full_context,
-                "cache_control": {"type": "ephemeral", "ttl": "1h"},
-            },
-        ]
+        self.system = system_instructions(knowledge_base.course.nome, get_registry().campus, knowledge_base.notes)
+        self.context = knowledge_base.full_context
 
-    def _user_content(self, question: str, focus: Sequence[str], perfil: str | None = None) -> str | list:
+    def _user_content(self, question: str, focus: Sequence[str], perfil: str | None = None) -> str:
         # Contexto extra entra na própria mensagem (depois do prefixo em cache), nunca no system
         blocks = []
         if perfil:
-            blocks.append({
-                "type": "text",
-                "text": "Dados acadêmicos do estudante, importados por ele mesmo do SUAP. Use para personalizar "
+            blocks.append(
+                "Dados acadêmicos do estudante, importados por ele mesmo do SUAP. Use para personalizar "
                 "a resposta (o que já cursou, o que está cursando, o que falta):\n"
-                f"<perfil_aluno>\n{perfil}\n</perfil_aluno>",
-            })
+                f"<perfil_aluno>\n{perfil}\n</perfil_aluno>"
+            )
         focus_sheet = self.knowledge_base.render_disciplinas(list(focus)) if focus else ""
         if focus_sheet:
-            blocks.append({
-                "type": "text",
-                "text": "O estudante selecionou estas disciplinas como foco da pergunta:\n"
-                f"<disciplinas_selecionadas>\n{focus_sheet}\n</disciplinas_selecionadas>",
-            })
-        if not blocks:
-            return question
-        return [*blocks, {"type": "text", "text": question}]
+            blocks.append(
+                "O estudante selecionou estas disciplinas como foco da pergunta:\n"
+                f"<disciplinas_selecionadas>\n{focus_sheet}\n</disciplinas_selecionadas>"
+            )
+        return "\n\n".join([*blocks, question])
 
     async def stream_events(
         self, question: str, focus: Sequence[str] = (), perfil: str | None = None
@@ -91,47 +69,26 @@ class ChatSession:
         `perfil` é o resumo acadêmico do aluno importado do SUAP (só na pergunta atual).
         """
         self.messages.append({"role": "user", "content": self._user_content(question, focus, perfil)})
+        parts = []
         try:
-            with self.fallback_state:
-                async with self.client.beta.messages.stream(
-                    model=self.settings.llm_model,
-                    max_tokens=self.settings.max_output_tokens,
-                    # "summarized" devolve um resumo legível do raciocínio, mostrado enquanto o modelo pensa
-                    thinking={"type": "adaptive", "display": "summarized"},
-                    output_config={"effort": self.settings.chat_effort},
-                    cache_control={"type": "ephemeral"},
-                    system=self.system,
-                    messages=self.messages,
-                ) as stream:
-                    async for event in stream:
-                        if event.type != "content_block_delta":
-                            continue
-                        if event.delta.type == "thinking_delta":
-                            yield "thinking", event.delta.thinking
-                        elif event.delta.type == "text_delta":
-                            yield "text", event.delta.text
-                    message = await stream.get_final_message()
+            async for kind, text in self.provider.stream(self.system, self.context, self.messages):
+                if kind == "text":
+                    parts.append(text)
+                yield kind, text
         except BaseException:
             # Inclui o cancelamento: mantém o histórico válido (sempre user/assistant alternados)
             self.messages.pop()
             raise
-
-        # Devolve o conteúdo completo (inclui blocos de thinking) para preservar o raciocínio entre turnos
-        self.messages.append({"role": "assistant", "content": message.content})
-        self.last_message = message
-        if message.stop_reason == "refusal":
-            yield "text", "\n\n[O modelo não pôde responder a esta pergunta.]"
-        elif message.stop_reason == "max_tokens":
-            yield "text", "\n\n[Resposta interrompida pelo limite de tokens.]"
+        self.messages.append({"role": "assistant", "content": "".join(parts)})
 
     @property
     def answered_by(self) -> tuple[str, int | None]:
-        """(modelo que de fato respondeu, tokens gerados); o modelo pode ser o de reserva em caso de recusa."""
-        if self.last_message is None:
-            return self.settings.llm_model, None
-        return self.last_message.model, self.last_message.usage.output_tokens
+        """(quem de fato respondeu, como o aluno vê; tokens gerados)."""
+        usage = self.provider.usage
+        return self.provider.label, usage.output_tokens if usage else None
 
-    async def stream(self, question: str, focus: Sequence[str] = (), perfil: str | None = None) -> AsyncIterator[str]:
+    async def stream(self, question: str, focus: Sequence[str] = (), perfil: str | None = None
+                     ) -> AsyncIterator[str]:
         """Só o texto da resposta, em pedaços."""
         async for kind, text in self.stream_events(question, focus, perfil):
             if kind == "text":

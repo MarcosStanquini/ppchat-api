@@ -21,6 +21,7 @@ from src.modules.knowledge.services.knowledge_base import (
 from src.modules.observability import recorder
 from src.modules.observability.records import valid_event
 from src.modules.response.services.chat_service import ChatSession
+from src.modules.response.services.providers import claude_provider
 from src.modules.shared.services.courses import (
     LEGACY_COURSE,
     Course,
@@ -155,19 +156,20 @@ def _knowledge_base(slug: str) -> KnowledgeBase:
 
 
 def _session(request: ChatRequest) -> ChatSession:
-    return ChatSession(_knowledge_base(request.curso), history=[turn.model_dump() for turn in request.history])
+    return ChatSession(_knowledge_base(request.curso), claude_provider(),
+                       history=[turn.model_dump() for turn in request.history])
 
 
 def _usage(session: ChatSession) -> Optional[Usage]:
-    message = session.last_message
-    if message is None:
+    usage = session.provider.usage
+    if usage is None:
         return None
     return Usage(
-        model=message.model,
-        input_tokens=message.usage.input_tokens,
-        cache_read_input_tokens=message.usage.cache_read_input_tokens or 0,
-        cache_creation_input_tokens=message.usage.cache_creation_input_tokens or 0,
-        output_tokens=message.usage.output_tokens,
+        model=usage.model,
+        input_tokens=usage.input_tokens,
+        cache_read_input_tokens=usage.cache_read_input_tokens or 0,
+        cache_creation_input_tokens=usage.cache_creation_input_tokens or 0,
+        output_tokens=usage.output_tokens,
     )
 
 
