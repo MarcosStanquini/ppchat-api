@@ -1197,6 +1197,7 @@ body.no-course .nav-btn[data-nav="flow"], body.no-course .nav-btn[data-nav="me"]
 .explore .lede { max-width: 58ch; }
 .explore-split { display: grid; grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); gap: 22px; align-items: stretch; margin-top: 6px; }
 .explore-list { display: flex; flex-direction: column; gap: 10px; }
+.explore-list .explore-item { flex: 1; } /* estica até a altura travada da prévia */
 .explore-item {
   display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-radius: 14px;
   border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font: inherit; text-align: left;

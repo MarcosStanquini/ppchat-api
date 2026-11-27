@@ -272,7 +272,37 @@ function renderExplore() {
       </div>
     </div>`;
   if (start) previewCourse(start);
+  lockPreviewHeight();
+  // A fonte do título pode chegar depois do primeiro desenho e mudar a quebra de linha: mede de novo
+  document.fonts?.ready.then(() => { if ($("#explore")) lockPreviewHeight(); });
 }
+
+// Lista e prévia lado a lado fecham na mesma altura: a prévia fica na altura da maior prévia
+// (medida na largura atual) e a lista estica até ela, então nada pula ao trocar de curso
+function lockPreviewHeight() {
+  const panel = $("#course-preview");
+  const list = $(".explore-list");
+  if (!panel || !list) return;
+  panel.style.minHeight = "";
+  if (panel.offsetTop > list.offsetTop) return; // prévia embaixo da lista (tela estreita): altura natural
+  const probe = panel.cloneNode(false);
+  probe.removeAttribute("id");
+  probe.setAttribute("aria-hidden", "true");
+  Object.assign(probe.style, { position: "absolute", visibility: "hidden", left: "-9999px", width: `${panel.offsetWidth}px` });
+  panel.parentElement.append(probe);
+  let tallest = 0;
+  for (const c of state.courses) {
+    probe.innerHTML = coursePreviewHtml(c);
+    tallest = Math.max(tallest, probe.offsetHeight);
+  }
+  probe.remove();
+  panel.style.minHeight = `${Math.max(tallest, list.scrollHeight)}px`;
+}
+let lockTimer = null;
+addEventListener("resize", () => {
+  clearTimeout(lockTimer);
+  lockTimer = setTimeout(lockPreviewHeight, 120);
+});
 
 $("#messages").addEventListener("keydown", (event) => {
   const item = event.target.closest("#explore [data-preview]");
