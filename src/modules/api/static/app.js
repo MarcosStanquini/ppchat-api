@@ -243,8 +243,17 @@ function previewCourse(slug, { focus = false } = {}) {
   const panel = $("#course-preview");
   panel.innerHTML = coursePreviewHtml(c); // conteúdo novo: a animação de entrada roda sozinha
   panel.setAttribute("aria-labelledby", `tab-${slug}`);
-  // Só rola quando a prévia está embaixo da lista (tela estreita); ao lado dela, a tela fica parada
-  if (focus && panel.offsetTop > $(".explore-list").offsetTop) panel.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  if (focus) scrollToPreview();
+}
+
+// Só rola quando a prévia está embaixo da lista (celular); ao lado dela, a tela fica parada.
+// Rola o próprio #messages (scrollIntoView dentro de um container com rolagem falha no Safari do iPhone)
+function scrollToPreview() {
+  const panel = $("#course-preview");
+  const box = $("#messages");
+  if (!panel || !box || panel.offsetTop <= $(".explore-list").offsetTop) return;
+  const top = box.scrollTop + panel.getBoundingClientRect().top - box.getBoundingClientRect().top - 12;
+  box.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
 }
 
 function renderExplore() {
@@ -321,9 +330,11 @@ $("#messages").addEventListener("keydown", (event) => {
 });
 $("#messages").addEventListener("click", (event) => {
   const pick = event.target.closest("#explore [data-preview]");
-  // A prévia muda só no clique; quando ela fica embaixo da lista (tela estreita), rola até ela
+  // A prévia muda só no clique; quando ela fica embaixo da lista (celular), rola até ela
   if (pick) {
+    // Tocar no curso que já está na prévia também desce até ela
     if (pick.dataset.preview !== previewSlug) previewCourse(pick.dataset.preview, { focus: true });
+    else scrollToPreview();
     return;
   }
   const card = event.target.closest("#explore [data-course]");
