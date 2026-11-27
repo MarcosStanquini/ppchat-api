@@ -5,7 +5,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import date
-from typing import Literal, Optional
+from typing import Literal
 from uuid import UUID
 
 Status = Literal["ok", "parada", "erro"]
@@ -40,16 +40,16 @@ def valid_event(tipo: str, valor: str) -> bool:
 class QuestionRecord:
     id: UUID
     curso: str
-    conversa: Optional[UUID]
+    conversa: UUID | None
     turno: int
     pergunta: str
     resposta: str
     modelo: str
     status: Status
-    erro: Optional[str]
+    erro: str | None
     duracao_ms: int
-    primeiro_texto_ms: Optional[int]
-    tokens_saida: Optional[int]
+    primeiro_texto_ms: int | None
+    tokens_saida: int | None
     tinha_suap: bool
     disciplinas: int
     visitante: str

@@ -1,6 +1,10 @@
 from datetime import date
 
-from src.modules.observability.records import normalize_question, valid_event, visitor_hash
+from src.modules.observability.records import (
+    normalize_question,
+    valid_event,
+    visitor_hash,
+)
 from src.modules.observability.store import MemoryStore, NullStore
 
 

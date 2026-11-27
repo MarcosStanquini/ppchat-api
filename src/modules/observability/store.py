@@ -1,5 +1,5 @@
 """Onde as perguntas são guardadas: Postgres em produção, memória nos testes, nada sem banco."""
-from typing import Dict, List, Protocol, Tuple
+from typing import Protocol
 from uuid import UUID
 
 from src.modules.observability.records import EventType, QuestionRecord
@@ -21,8 +21,8 @@ class MemoryStore:
     """Usada nos testes da API."""
 
     def __init__(self) -> None:
-        self.questions: Dict[UUID, QuestionRecord] = {}
-        self.events: List[Tuple[UUID, str, str]] = []
+        self.questions: dict[UUID, QuestionRecord] = {}
+        self.events: list[tuple[UUID, str, str]] = []
 
     async def save_question(self, record: QuestionRecord) -> None:
         self.questions.setdefault(record.id, record)  # id repetido não sobrescreve
