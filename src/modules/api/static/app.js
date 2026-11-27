@@ -1317,7 +1317,7 @@ function renderFooter(footer, entry) {
     ${entry.provedor ? `<span class="ia-tag" title="Quem respondeu">${escapeHtml(entry.provedor)}${entry.cache ? " · resposta guardada" : ""}</span>` : ""}
     ${usage ? `<span class="usage" title="Tokens desta resposta">
       ${usage.cache_read_input_tokens ? `<span class="bolt">⚡ ${compact(usage.cache_read_input_tokens)}</span> do cache ·` : ""}
-      ${compact(usage.output_tokens)} gerados · ${usage.model}</span>` : ""}`;
+      ${compact(usage.output_tokens)} gerados · ${escapeHtml(usage.model || "")}</span>` : ""}`;
   $("[data-copy]", footer).addEventListener("click", async (event) => {
     const btn = event.currentTarget;
     try {
@@ -1514,7 +1514,7 @@ async function ask(question) {
     ui.answer.innerHTML = `${partial}<div class="error-box">${
       error.status === 429 ? escapeHtml(error.message) : `Não consegui responder: ${escapeHtml(error.message)}`}</div>`;
     // Gratuito esgotado ou chave recusada: atalho para usar (ou corrigir) a própria chave
-    if (/própria chave|Sua chave/.test(error.message)) {
+    if (/própria chave|sua chave/i.test(error.message)) {
       const box = $(".error-box", ui.answer);
       const btn = document.createElement("button");
       btn.className = "btn ia-error-btn";
@@ -1555,6 +1555,11 @@ const ia = {
   keys: storage.get(KEYS_KEY) || {},
   remembered: !!storage.get(KEYS_KEY),
   current: storage.get(IA_KEY) || "gratis",
+
+  // Opção "Minha chave" sem a chave nesta aba (não foi lembrada): volta ao gratuito em vez de falhar toda pergunta
+  ensureUsable() {
+    if (this.option().own_key && !this.keys[this.current]) this.current = "gratis";
+  },
   consent: storage.get(CONSENT_KEY), // "sim" | "nao" | null
 
   option(id = this.current) { return this.options.find((o) => o.id === id) || this.options[0]; },
@@ -1679,8 +1684,10 @@ consentModal.addEventListener("cancel", (event) => event.preventDefault()); // p
 fetch("/models").then((r) => (r.ok ? r.json() : null)).then((data) => {
   if (Array.isArray(data?.opcoes) && data.opcoes.length) ia.options = data.opcoes;
   if (!ia.options.some((o) => o.id === ia.current)) ia.current = "gratis";
+  ia.ensureUsable();
   ia.render();
-}).catch(() => ia.render());
+}).catch(() => { ia.ensureUsable(); ia.render(); });
+ia.ensureUsable();
 ia.render();
 
 /* ───────────── Conversas salvas (só no navegador) ───────────── */
