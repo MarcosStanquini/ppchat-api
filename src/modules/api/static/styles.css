@@ -1353,3 +1353,48 @@ body.no-course .nav-btn[data-nav="flow"], body.no-course .nav-btn[data-nav="me"]
   .course-switch-sigla:not(:empty) { display: inline; }
 }
 @media (max-width: 360px) { #new-chat-mini { display: none; } } /* "Novo chat" continua na barra lateral */
+
+/* Qual IA responde: seletor no campo de pergunta, janelinhas da chave e do aceite, rótulo da resposta */
+.ia-pick { position: relative; flex: none; align-self: flex-end; }
+.ia-btn {
+  height: 40px; display: inline-flex; align-items: center; gap: 2px; padding: 0 6px 0 10px; border-radius: 12px;
+  border: 1px solid transparent; background: var(--surface-2); color: var(--ink-2); font: 500 12.5px var(--font);
+  white-space: nowrap; max-width: 130px;
+}
+.ia-btn span { overflow: hidden; text-overflow: ellipsis; }
+.ia-btn svg { width: 16px; height: 16px; flex: none; }
+.ia-btn:hover, .ia-btn[aria-expanded="true"] { border-color: var(--line-2); color: var(--ink); }
+.ia-menu {
+  position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 30; min-width: 220px; padding: 6px;
+  display: grid; gap: 2px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+.ia-menu button {
+  text-align: left; padding: 8px 10px 8px 28px; border: 0; border-radius: 8px; background: none; color: var(--ink);
+  font: 500 13.5px var(--font); position: relative;
+}
+.ia-menu button:hover { background: var(--surface-2); }
+.ia-menu button[aria-checked="true"]::before {
+  content: "✓"; position: absolute; left: 10px; color: var(--accent); font-weight: 700;
+}
+.ia-menu .ia-menu-key { border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; margin-top: 4px; color: var(--ink-2); }
+.ia-modal { width: min(440px, calc(100vw - 32px)); }
+.ia-form { display: grid; gap: 12px; }
+.ia-form p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.ia-form .ia-muted { color: var(--muted); font-size: 13px; }
+.ia-providers { display: flex; gap: 8px; flex-wrap: wrap; }
+.ia-providers label {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--line-2);
+  border-radius: 10px; font-size: 14px; cursor: pointer;
+}
+.ia-providers label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.ia-field { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.ia-field input {
+  font: 500 14px var(--font); color: var(--ink); background: var(--surface-2); border: 1px solid var(--line-2);
+  border-radius: 10px; padding: 9px 11px;
+}
+.ia-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
+.ia-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.ia-tag { font-size: 11.5px; color: var(--muted); }
+.ia-error-btn { margin-top: 8px; display: flex; }
+@media (max-width: 720px) { .ia-btn { max-width: 96px; padding: 0 4px 0 8px; } }

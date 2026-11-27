@@ -1314,6 +1314,7 @@ function renderFooter(footer, entry) {
       <button class="tool vote vote-down" data-vote="down" title="Resposta ruim" aria-label="Resposta ruim" aria-pressed="${entry.voto === "down"}">${ICON.thumb}</button>
     </span>` : ""}
     ${entry.stopped ? '<span class="tag-stopped">Resposta interrompida</span>' : ""}
+    ${entry.provedor ? `<span class="ia-tag" title="Quem respondeu">${escapeHtml(entry.provedor)}${entry.cache ? " · resposta guardada" : ""}</span>` : ""}
     ${usage ? `<span class="usage" title="Tokens desta resposta">
       ${usage.cache_read_input_tokens ? `<span class="bolt">⚡ ${compact(usage.cache_read_input_tokens)}</span> do cache ·` : ""}
       ${compact(usage.output_tokens)} gerados · ${usage.model}</span>` : ""}`;
@@ -1404,8 +1405,10 @@ async function streamAnswer(question, disciplinas, ui) {
     body: JSON.stringify({
       question, disciplinas, history: historyPayload(), request_id: state.requestId,
       curso: state.course,
-      perfil: perfilPayload(), // dados do SUAP, guardados só neste navegador
+      // dados do SUAP, guardados só neste navegador; no gratuito, só com o aceite do aluno
+      perfil: ia.consent === "sim" || ia.current !== "gratis" ? perfilPayload() : null,
       conversa: currentConvUuid(), // liga as perguntas desta conversa nos registros (sem identificar o aluno)
+      ...ia.payload(),
     }),
     signal: state.controller.signal,
   });
@@ -1458,6 +1461,8 @@ async function streamAnswer(question, disciplinas, ui) {
           frame ||= requestAnimationFrame(paint);
         } else if (event.type === "done") {
           entry.usage = event.usage;
+          entry.provedor = event.provedor; // quem respondeu, para o rótulo sob a resposta
+          entry.cache = event.cache || undefined;
         } else if (event.type === "error") {
           throw new Error(event.message);
         }
@@ -1485,6 +1490,9 @@ async function ask(question) {
   input.value = "";
   autosize();
 
+  // Primeira pergunta ao gratuito com o SUAP importado: o aluno decide se os dados vão junto
+  if (ia.current === "gratis" && state.aluno?.contexto && !ia.consent) await ia.askConsent();
+
   addUserMessage(question, disciplinas);
   const ui = addBotMessage();
   ui.thinkingTimer = startThinking(ui.answer);
@@ -1505,6 +1513,16 @@ async function ask(question) {
     const partial = error.partial?.text ? DOMPurify.sanitize(marked.parse(error.partial.text)) : "";
     ui.answer.innerHTML = `${partial}<div class="error-box">${
       error.status === 429 ? escapeHtml(error.message) : `Não consegui responder: ${escapeHtml(error.message)}`}</div>`;
+    // Gratuito esgotado ou chave recusada: atalho para usar (ou corrigir) a própria chave
+    if (/própria chave|Sua chave/.test(error.message)) {
+      const box = $(".error-box", ui.answer);
+      const btn = document.createElement("button");
+      btn.className = "btn ia-error-btn";
+      btn.type = "button";
+      btn.textContent = "Usar minha chave…";
+      btn.addEventListener("click", () => ia.openKeyModal());
+      box.append(btn);
+    }
   } finally {
     state.controller = null;
     state.requestId = null;
@@ -1513,6 +1531,157 @@ async function ask(question) {
     if (matchMedia("(pointer: fine)").matches) input.focus();
   }
 }
+
+/* ───────────── Qual IA responde ───────────── */
+// Gratuito (padrão), Claude (teste) ou a chave do próprio aluno. Chaves só ficam no navegador: na memória
+// da aba, ou no localStorage se o aluno marcar "lembrar neste navegador".
+const IA_KEY = "ppchat-ia";
+const KEYS_KEY = "ppchat-chaves";
+const CONSENT_KEY = "ppchat-consentimento-gratis";
+const IA_DEFAULT_OPTIONS = [
+  { id: "gratis", label: "Gratuito", own_key: false },
+  { id: "claude-teste", label: "Claude (teste)", own_key: false },
+  { id: "openai", label: "Minha chave · GPT", own_key: true },
+  { id: "gemini", label: "Minha chave · Gemini", own_key: true },
+  { id: "groq", label: "Minha chave · Groq", own_key: true },
+];
+const iaBtn = $("#ia-btn");
+const iaMenu = $("#ia-menu");
+const keyModal = $("#key-modal");
+const consentModal = $("#consent-modal");
+
+const ia = {
+  options: IA_DEFAULT_OPTIONS,
+  keys: storage.get(KEYS_KEY) || {},
+  remembered: !!storage.get(KEYS_KEY),
+  current: storage.get(IA_KEY) || "gratis",
+  consent: storage.get(CONSENT_KEY), // "sim" | "nao" | null
+
+  option(id = this.current) { return this.options.find((o) => o.id === id) || this.options[0]; },
+
+  payload() {
+    const option = this.option();
+    return {
+      modelo: option.id,
+      ...(option.own_key ? { chave: this.keys[option.id] } : {}),
+      ...(option.id === "gratis" && this.consent === "sim" ? { consentimento_gratis: true } : {}),
+    };
+  },
+
+  choose(id) {
+    const option = this.option(id);
+    if (option.own_key && !this.keys[id]) return this.openKeyModal(id);
+    this.current = option.id;
+    storage.set(IA_KEY, option.id);
+    this.render();
+  },
+
+  render() {
+    const option = this.option();
+    $("#ia-label").textContent = option.label.replace("Minha chave · ", "");
+    iaBtn.title = `Quem responde: ${option.label}`;
+    const items = this.options.filter((o) => !o.own_key || this.keys[o.id]);
+    iaMenu.replaceChildren(...items.map((o) => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.setAttribute("role", "menuitemradio");
+      item.setAttribute("aria-checked", String(o.id === option.id));
+      item.dataset.ia = o.id;
+      item.textContent = o.label;
+      return item;
+    }));
+    const own = document.createElement("button");
+    own.type = "button";
+    own.setAttribute("role", "menuitem");
+    own.dataset.ia = "__key";
+    own.className = "ia-menu-key";
+    own.textContent = "Usar minha chave…";
+    iaMenu.append(own);
+  },
+
+  toggleMenu(open = iaMenu.hidden) {
+    iaMenu.hidden = !open;
+    iaBtn.setAttribute("aria-expanded", String(open));
+  },
+
+  openKeyModal(provider) {
+    this.toggleMenu(false);
+    const chosen = provider || (this.option().own_key ? this.current : "openai");
+    for (const radio of keyModal.querySelectorAll("[name=provedor]")) radio.checked = radio.value === chosen;
+    $("#key-input").value = "";
+    $("#key-remember").checked = this.remembered;
+    $("#key-forget").hidden = !Object.keys(this.keys).length;
+    keyModal.showModal();
+    $("#key-input").focus();
+  },
+
+  saveKeys() {
+    if (this.remembered && Object.keys(this.keys).length) storage.set(KEYS_KEY, this.keys);
+    else storage.remove(KEYS_KEY);
+  },
+
+  askConsent() {
+    return new Promise((resolve) => {
+      consentModal.showModal();
+      consentModal.addEventListener("close", () => {
+        this.consent = consentModal.returnValue === "sim" ? "sim" : "nao";
+        storage.set(CONSENT_KEY, this.consent);
+        resolve();
+      }, { once: true });
+    });
+  },
+};
+
+iaBtn.addEventListener("click", () => ia.toggleMenu());
+iaMenu.addEventListener("click", (event) => {
+  const id = event.target.closest("[data-ia]")?.dataset.ia;
+  if (!id) return;
+  ia.toggleMenu(false);
+  if (id === "__key") ia.openKeyModal();
+  else ia.choose(id);
+});
+document.addEventListener("click", (event) => {
+  if (!iaMenu.hidden && !event.target.closest(".ia-pick")) ia.toggleMenu(false);
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !iaMenu.hidden) ia.toggleMenu(false);
+});
+$("#key-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const provider = keyModal.querySelector("[name=provedor]:checked").value;
+  const key = $("#key-input").value.trim();
+  if (!key) return;
+  ia.keys[provider] = key;
+  ia.remembered = $("#key-remember").checked;
+  ia.saveKeys();
+  $("#key-input").value = "";
+  keyModal.close();
+  ia.choose(provider);
+  toast("Chave salva. As próximas perguntas usam a sua conta.");
+});
+$("#key-forget").addEventListener("click", () => {
+  ia.keys = {};
+  ia.saveKeys();
+  if (ia.option().own_key) ia.choose("gratis");
+  ia.render();
+  keyModal.close();
+  toast("Chaves apagadas deste navegador.");
+});
+keyModal.addEventListener("click", (event) => {
+  if (event.target === keyModal || event.target.closest("[data-close]")) keyModal.close();
+});
+consentModal.addEventListener("click", (event) => {
+  const answer = event.target.closest("[data-consent]")?.dataset.consent;
+  if (answer) consentModal.close(answer);
+});
+consentModal.addEventListener("cancel", (event) => event.preventDefault()); // precisa escolher uma das duas
+
+fetch("/models").then((r) => (r.ok ? r.json() : null)).then((data) => {
+  if (Array.isArray(data?.opcoes) && data.opcoes.length) ia.options = data.opcoes;
+  if (!ia.options.some((o) => o.id === ia.current)) ia.current = "gratis";
+  ia.render();
+}).catch(() => ia.render());
+ia.render();
 
 /* ───────────── Conversas salvas (só no navegador) ───────────── */
 const CONVS_KEY = "ppchat-conversations-v1";

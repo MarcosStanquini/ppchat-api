@@ -149,6 +149,13 @@
             <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M12 7v6M9 10h6"/></svg>
           </button>
           <textarea id="input" rows="1" placeholder="Pergunte sobre o curso, ou digite @ para citar uma disciplina…" aria-label="Sua pergunta"></textarea>
+          <div class="ia-pick">
+            <button type="button" class="ia-btn" id="ia-btn" aria-haspopup="menu" aria-expanded="false" title="Qual IA responde">
+              <span id="ia-label">Gratuito</span>
+              <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
+            </button>
+            <div class="ia-menu" id="ia-menu" role="menu" hidden></div>
+          </div>
           <button type="submit" class="send" id="send" aria-label="Enviar">
             <svg class="i-send" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
             <svg class="i-stop" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
@@ -209,6 +216,45 @@
       <div class="me" id="me"></div>
     </section>
   </aside>
+
+  <dialog class="modal ia-modal" id="key-modal" aria-labelledby="key-title">
+    <div class="modal-head">
+      <h3 id="key-title">Usar minha chave</h3>
+      <button class="icon-btn" type="button" data-close aria-label="Fechar">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <form class="modal-body ia-form" id="key-form">
+      <p>As perguntas passam a ser pagas na sua conta. A chave passa pelo servidor do PPChat só para chegar ao provedor e não é guardada.</p>
+      <div class="ia-providers" role="radiogroup" aria-label="Provedor">
+        <label><input type="radio" name="provedor" value="openai" checked> GPT</label>
+        <label><input type="radio" name="provedor" value="gemini"> Gemini</label>
+        <label><input type="radio" name="provedor" value="groq"> Groq</label>
+      </div>
+      <label class="ia-field">Chave
+        <input id="key-input" type="password" autocomplete="off" spellcheck="false" maxlength="300" required placeholder="Cole sua chave aqui">
+      </label>
+      <label class="ia-check"><input type="checkbox" id="key-remember"> Lembrar neste navegador</label>
+      <div class="ia-actions">
+        <button class="btn" type="button" id="key-forget" hidden>Esquecer chave</button>
+        <button class="btn btn-primary" type="submit">Usar esta chave</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal ia-modal" id="consent-modal" aria-labelledby="consent-title">
+    <div class="modal-head">
+      <h3 id="consent-title">Seus dados do SUAP no modelo gratuito</h3>
+    </div>
+    <div class="modal-body ia-form">
+      <p>O modelo gratuito usa o nível grátis do Google, que pode usar os dados enviados para melhorar os produtos dele. Quer mandar seus dados do SUAP junto das perguntas?</p>
+      <p class="ia-muted">Sem eles a resposta não é personalizada. Você pode trocar de ideia apagando seus dados do SUAP ou usando o Claude (teste).</p>
+      <div class="ia-actions">
+        <button class="btn" type="button" data-consent="nao">Perguntar sem meus dados</button>
+        <button class="btn btn-primary" type="button" data-consent="sim">Entendi, usar meus dados</button>
+      </div>
+    </div>
+  </dialog>
 
   <dialog class="modal suap-modal" id="suap-modal">
     <div class="modal-head">
