@@ -226,6 +226,11 @@ kbd {
 }
 .msg-footer .tool:hover { border-color: var(--line); background: var(--surface); color: var(--ink); }
 .msg-footer .tool svg { width: 14px; height: 14px; }
+.votes { display: inline-flex; gap: 2px; }
+.msg-footer .vote { padding: 4px 6px; }
+.vote-down svg { transform: scaleY(-1); }
+.msg-footer .vote[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+.msg-footer .vote-down[aria-pressed="true"] { color: var(--desc); background: var(--desc-soft); }
 .usage .bolt { color: var(--accent); font-weight: 600; }
 .tag-stopped { color: var(--desc); font-weight: 500; }
 .error-box {
@@ -304,6 +309,7 @@ kbd {
 .composer.is-busy .send .i-send { display: none; }
 .composer.is-busy .send .i-stop { display: block; }
 .hint { max-width: 780px; margin: 8px auto 0; text-align: center; font-size: 11.5px; color: var(--muted); }
+.privacy-note { max-width: 780px; margin: 4px auto 0; text-align: center; font-size: 11px; line-height: 1.4; color: var(--muted); }
 
 /* Seletor de disciplinas */
 .picker {

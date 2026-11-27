@@ -9,6 +9,7 @@ const LOGO = '<svg viewBox="0 0 24 24"><path d="M6 8h12M6 12h7M6 16h9"/></svg>';
 const ICON = {
   copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>',
   check: '<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>',
+  thumb: '<svg viewBox="0 0 24 24"><path d="M7 10v11M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.6l-2.3 8a2 2 0 0 1-1.9 1.4H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9z"/></svg>',
   page: '<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
   chain: '<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
   route: '<svg viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7"/></svg>',
@@ -1246,6 +1247,11 @@ $("#messages").addEventListener("click", (event) => {
 
 /* ───────────── Chat ───────────── */
 const messagesEl = $("#messages");
+messagesEl.addEventListener("click", (event) => {
+  const link = event.target.closest(".msg-bot .page-ref");
+  const page = link?.getAttribute("href").match(/#page=(\d+)/)?.[1];
+  if (page) sendEvent(link.closest(".msg").dataset.qid, "abriu_pagina", page);
+});
 const composer = $("#composer");
 
 function scrollToBottom(force = false) {
@@ -1303,6 +1309,10 @@ function renderFooter(footer, entry) {
   const usage = entry.usage;
   footer.innerHTML = `
     <button class="tool" data-copy>${ICON.copy}<span>Copiar</span></button>
+    ${entry.id ? `<span class="votes" role="group" aria-label="Avaliar resposta">
+      <button class="tool vote" data-vote="up" title="Boa resposta" aria-label="Boa resposta" aria-pressed="${entry.voto === "up"}">${ICON.thumb}</button>
+      <button class="tool vote vote-down" data-vote="down" title="Resposta ruim" aria-label="Resposta ruim" aria-pressed="${entry.voto === "down"}">${ICON.thumb}</button>
+    </span>` : ""}
     ${entry.stopped ? '<span class="tag-stopped">Resposta interrompida</span>' : ""}
     ${usage ? `<span class="usage" title="Tokens desta resposta">
       ${usage.cache_read_input_tokens ? `<span class="bolt">⚡ ${compact(usage.cache_read_input_tokens)}</span> do cache ·` : ""}
@@ -1311,10 +1321,30 @@ function renderFooter(footer, entry) {
     const btn = event.currentTarget;
     try {
       await navigator.clipboard.writeText(entry.text);
+      sendEvent(entry.id, "copiou");
       btn.innerHTML = `${ICON.check}<span>Copiado</span>`;
       setTimeout(() => (btn.innerHTML = `${ICON.copy}<span>Copiar</span>`), 1600);
     } catch { toast("Não foi possível copiar"); }
   });
+  footer.closest(".msg").dataset.qid = entry.id || "";
+  for (const btn of footer.querySelectorAll("[data-vote]")) {
+    btn.addEventListener("click", () => {
+      // Clicar marca; clicar de novo desmarca; o outro botão troca o voto
+      entry.voto = entry.voto === btn.dataset.vote ? undefined : btn.dataset.vote;
+      for (const b of footer.querySelectorAll("[data-vote]")) b.setAttribute("aria-pressed", String(b.dataset.vote === entry.voto));
+      sendEvent(entry.id, "voto", entry.voto || "nenhum");
+      saveConversations(); // guarda o voto na conversa, sem mudar a ordem da lista
+    });
+  }
+}
+
+// Sinais de uso para o /admin (👍/👎, cópia, página aberta); falhas são ignoradas
+function sendEvent(id, tipo, valor = "") {
+  if (!id) return;
+  fetch("/eventos", {
+    method: "POST", keepalive: true, headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pergunta_id: id, tipo, valor: String(valor) }),
+  }).catch(() => {});
 }
 
 function startThinking(answer) {
@@ -1375,6 +1405,7 @@ async function streamAnswer(question, disciplinas, ui) {
       question, disciplinas, history: historyPayload(), request_id: state.requestId,
       curso: state.course,
       perfil: perfilPayload(), // dados do SUAP, guardados só neste navegador
+      conversa: currentConvUuid(), // liga as perguntas desta conversa nos registros (sem identificar o aluno)
     }),
     signal: state.controller.signal,
   });
@@ -1384,7 +1415,7 @@ async function streamAnswer(question, disciplinas, ui) {
     throw error;
   }
 
-  const entry = { role: "assistant", text: "", thinking: "" };
+  const entry = { role: "assistant", text: "", thinking: "", id: state.requestId };
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   const startedAt = performance.now();
@@ -1490,6 +1521,14 @@ const conversations = { list: [] }; // {id, title, updated, history}, da mais re
 state.convId = null;
 
 const newConvId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+const newUuid = () => crypto.randomUUID?.() ?? null; // só em https/localhost; sem ele a conversa vai sem id
+
+// UUID da conversa atual nos registros; a conversa ainda não salva usa um provisório até a primeira resposta
+function currentConvUuid() {
+  const conv = conversations.list.find((c) => c.id === state.convId);
+  if (conv) return (conv.uuid ||= newUuid());
+  return (state.newConvUuid ||= newUuid());
+}
 const titleFrom = (text) => {
   const t = text.replace(/\s+/g, " ").trim();
   return t.length > 60 ? `${t.slice(0, 57).trimEnd()}…` : t;
@@ -1526,7 +1565,8 @@ function saveConversations() {
 function persist() {
   let conv = conversations.list.find((c) => c.id === state.convId);
   if (!conv) {
-    conv = { id: newConvId(), title: titleFrom(state.history[0].text), curso: state.course, history: [] };
+    conv = { id: newConvId(), uuid: state.newConvUuid || newUuid(), title: titleFrom(state.history[0].text), curso: state.course, history: [] };
+    state.newConvUuid = null;
     state.convId = conv.id;
   }
   conv.history = state.history;
@@ -1573,6 +1613,7 @@ function openConversation(id) {
 function startNewConversation() {
   stopAnswer();
   state.convId = null;
+  state.newConvUuid = null;
   state.history = [];
   state.context = [];
   saveConversations();
