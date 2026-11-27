@@ -17,6 +17,7 @@ class Course(BaseModel):
     slug: str
     nome: str
     sigla: str
+    nome_curto: str  # rótulo da aba na tela Explorar
     tipo: Literal["bacharelado", "tecnologia"]
     status: Literal["ativo", "em_extincao"]
     fonte: str

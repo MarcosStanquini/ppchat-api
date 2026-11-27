@@ -201,46 +201,48 @@ async function setCourse(slug, { conversation = null, push = true } = {}) {
   return true;
 }
 
-// Tela Explorar: lista dos cursos à esquerda e, à direita, a prévia do curso escolhido
-// (números, perguntas prontas e o botão para conversar)
+// Tela Explorar: os cursos em abas no topo e, embaixo, o curso escolhido na largura toda
+// (informações e botão para conversar à esquerda, perguntas prontas à direita)
 let previewSlug = null;
 
 function coursePreviewHtml(c) {
   const ending = c.status === "em_extincao";
   return `
-    <p class="preview-kind"><span class="course-sigla">${escapeHtml(c.sigla)}</span>
-      ${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnologia"}${c.slug === alunoCourse() ? ' <span class="course-tag is-mine">Meu curso</span>' : ""}</p>
-    <h2 class="preview-name">${escapeHtml(shortName(c))}</h2>
-    ${ending ? '<p class="preview-note">Curso em extinção: segue atendendo quem já está matriculado.</p>' : ""}
-    <div class="preview-stats">
-      <div><b>${c.duracao_semestres}</b><span>semestres</span></div>
-      <div><b>${hours(c.carga_horaria_total_curso)}</b><span>carga total</span></div>
-      <div><b>${c.disciplinas}</b><span>disciplinas</span></div>
+    <div class="preview-info">
+      <p class="preview-kind"><span class="course-sigla">${escapeHtml(c.sigla)}</span>
+        ${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnologia"}${c.slug === alunoCourse() ? ' <span class="course-tag is-mine">Meu curso</span>' : ""}</p>
+      <h2 class="preview-name">${escapeHtml(shortName(c))}</h2>
+      ${ending ? '<p class="preview-note">Curso em extinção: segue atendendo quem já está matriculado.</p>' : ""}
+      <div class="preview-stats">
+        <div><b>${c.duracao_semestres}</b><span>semestres</span></div>
+        <div><b>${hours(c.carga_horaria_total_curso)}</b><span>carga total</span></div>
+        <div><b>${c.disciplinas}</b><span>disciplinas</span></div>
+      </div>
+      <button class="btn btn-primary preview-open" data-course="${escapeHtml(c.slug)}">Conversar sobre ${escapeHtml(shortName(c))}</button>
     </div>
-    <p class="preview-label">Comece por uma pergunta</p>
-    <div class="preview-questions">${c.perguntas.map((q) => `
-      <button class="preview-q" data-course="${escapeHtml(c.slug)}" data-ask="${escapeHtml(q)}">
-        <span class="preview-q-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>
-        <span class="preview-q-text">${escapeHtml(q)}</span><b aria-hidden="true">→</b></button>`).join("")}
-    </div>
-    <button class="btn btn-primary preview-open" data-course="${escapeHtml(c.slug)}">Conversar sobre ${escapeHtml(shortName(c))}</button>`;
+    <div class="preview-ask">
+      <p class="preview-label">Comece por uma pergunta</p>
+      <div class="preview-questions">${c.perguntas.map((q) => `
+        <button class="preview-q" data-course="${escapeHtml(c.slug)}" data-ask="${escapeHtml(q)}">
+          <span class="preview-q-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>
+          <span class="preview-q-text">${escapeHtml(q)}</span><b aria-hidden="true">→</b></button>`).join("")}
+      </div>
+    </div>`;
 }
 
-function previewCourse(slug, { focus = false } = {}) {
+function previewCourse(slug) {
   const c = courseInfo(slug);
   if (!c || !$("#explore")) return;
   previewSlug = slug;
-  $$(".explore-item").forEach((item) => {
-    const on = item.dataset.preview === slug;
-    item.classList.toggle("is-on", on);
-    item.setAttribute("aria-selected", on);
-    item.tabIndex = on ? 0 : -1; // só o curso escolhido fica no Tab; as setas andam entre os outros
+  $$(".explore-tab").forEach((tab) => {
+    const on = tab.dataset.preview === slug;
+    tab.classList.toggle("is-on", on);
+    tab.setAttribute("aria-selected", on);
+    tab.tabIndex = on ? 0 : -1; // só a aba escolhida fica no Tab; as setas andam entre as outras
   });
   const panel = $("#course-preview");
   panel.innerHTML = coursePreviewHtml(c); // conteúdo novo: a animação de entrada roda sozinha
   panel.setAttribute("aria-labelledby", `tab-${slug}`);
-  // Só rola quando a prévia está embaixo da lista (tela estreita); ao lado dela, a tela fica parada
-  if (focus && panel.offsetTop > $(".explore-list").offsetTop) panel.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 function renderExplore() {
@@ -249,16 +251,12 @@ function renderExplore() {
   document.body.classList.add("exploring");
   const mineSlug = alunoCourse();
   const start = [mineSlug, state.course, previewSlug].find((s) => s && courseInfo(s)) || state.courses[0]?.slug;
-  const item = (c, i) => `
-    <button class="explore-item${c.status === "em_extincao" ? " is-ending" : ""}" role="tab" id="tab-${escapeHtml(c.slug)}"
-      data-preview="${escapeHtml(c.slug)}"
-      aria-controls="course-preview" style="animation-delay:${60 + i * 50}ms">
-      <span class="explore-item-text">
-        <span class="explore-item-name">${escapeHtml(shortName(c))}</span>
-        <span class="explore-item-kind">${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnologia"} · ${c.duracao_semestres} semestres</span>
-      </span>
-      ${c.slug === mineSlug ? '<span class="course-tag is-mine">Meu curso</span>' : ""}
-      <svg class="explore-item-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+  const tab = (c, i) => `
+    <button class="explore-tab${c.status === "em_extincao" ? " is-ending" : ""}" role="tab" id="tab-${escapeHtml(c.slug)}"
+      data-preview="${escapeHtml(c.slug)}" aria-controls="course-preview" title="${escapeHtml(c.nome)}"
+      style="animation-delay:${60 + i * 40}ms">
+      <span class="explore-tab-name">${escapeHtml(c.nome_curto)}${c.slug === mineSlug ? ' <span class="explore-tab-mine" aria-hidden="true" title="Meu curso">●</span><span class="sr-only"> (meu curso)</span>' : ""}</span>
+      <span class="explore-tab-kind">${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnologia"}</span>
     </button>`;
   $("#messages").innerHTML = `
     <div class="explore" id="explore">
@@ -266,60 +264,31 @@ function renderExplore() {
       <h1>Escolha um <em>curso.</em></h1>
       <p class="lede">O PPC inteiro de cada graduação, com a página de cada resposta.
         ${state.aluno ? "" : "Importando seu histórico do SUAP, o PPChat abre direto no seu curso."}</p>
-      <div class="explore-split">
-        <div class="explore-list" role="tablist" aria-label="Cursos" aria-orientation="vertical">${state.courses.map(item).join("")}</div>
-        <section class="course-preview" id="course-preview" role="tabpanel"></section>
-      </div>
+      <div class="explore-tabs" role="tablist" aria-label="Cursos">${state.courses.map(tab).join("")}</div>
+      <section class="course-preview" id="course-preview" role="tabpanel"></section>
     </div>`;
   if (start) previewCourse(start);
-  lockPreviewHeight();
-  // A fonte do título pode chegar depois do primeiro desenho e mudar a quebra de linha: mede de novo
-  document.fonts?.ready.then(() => { if ($("#explore")) lockPreviewHeight(); });
 }
-
-// Lista e prévia lado a lado fecham na mesma altura: a prévia fica na altura da maior prévia
-// (medida na largura atual) e a lista estica até ela, então nada pula ao trocar de curso
-function lockPreviewHeight() {
-  const panel = $("#course-preview");
-  const list = $(".explore-list");
-  if (!panel || !list) return;
-  panel.style.minHeight = "";
-  if (panel.offsetTop > list.offsetTop) return; // prévia embaixo da lista (tela estreita): altura natural
-  const probe = panel.cloneNode(false);
-  probe.removeAttribute("id");
-  probe.setAttribute("aria-hidden", "true");
-  Object.assign(probe.style, { position: "absolute", visibility: "hidden", left: "-9999px", width: `${panel.offsetWidth}px` });
-  panel.parentElement.append(probe);
-  let tallest = 0;
-  for (const c of state.courses) {
-    probe.innerHTML = coursePreviewHtml(c);
-    tallest = Math.max(tallest, probe.offsetHeight);
-  }
-  probe.remove();
-  panel.style.minHeight = `${Math.max(tallest, list.scrollHeight)}px`;
-}
-let lockTimer = null;
-addEventListener("resize", () => {
-  clearTimeout(lockTimer);
-  lockTimer = setTimeout(lockPreviewHeight, 120);
-});
 
 $("#messages").addEventListener("keydown", (event) => {
-  const item = event.target.closest("#explore [data-preview]");
-  if (!item || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+  const tab = event.target.closest("#explore [data-preview]");
+  const keys = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp", "Home", "End"];
+  if (!tab || !keys.includes(event.key)) return;
   event.preventDefault();
-  const items = $$(".explore-item");
-  const i = items.indexOf(item);
-  const next = { ArrowDown: items[(i + 1) % items.length], ArrowUp: items[(i - 1 + items.length) % items.length],
-    Home: items[0], End: items[items.length - 1] }[event.key];
+  const tabs = $$(".explore-tab");
+  const i = tabs.indexOf(tab);
+  const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
+  const back = event.key === "ArrowLeft" || event.key === "ArrowUp";
+  const next = forward ? tabs[(i + 1) % tabs.length] : back ? tabs[(i - 1 + tabs.length) % tabs.length]
+    : event.key === "Home" ? tabs[0] : tabs[tabs.length - 1];
   next.focus();
   if (next.dataset.preview !== previewSlug) previewCourse(next.dataset.preview);
 });
 $("#messages").addEventListener("click", (event) => {
   const pick = event.target.closest("#explore [data-preview]");
-  // A prévia muda só no clique; quando ela fica embaixo da lista (tela estreita), rola até ela
+  // O curso do painel muda só no clique (ou pelas setas)
   if (pick) {
-    if (pick.dataset.preview !== previewSlug) previewCourse(pick.dataset.preview, { focus: true });
+    if (pick.dataset.preview !== previewSlug) previewCourse(pick.dataset.preview);
     return;
   }
   const card = event.target.closest("#explore [data-course]");
