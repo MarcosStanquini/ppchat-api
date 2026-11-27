@@ -45,34 +45,34 @@ PDF ──► texto limpo com [Página N] ────────────�
 
 O aluno escolhe quem responde num seletor discreto no campo de pergunta ("Gratuito ▾"):
 
-| Opção | Quem paga | Limite por hora |
+| Opção | Quem responde e quem paga | Limite por hora |
 |---|---|---|
-| **Gratuito** (padrão) | chaves do dono no nível grátis: Gemini Flash → Gemini Flash-Lite → OpenRouter grátis | 30 por IP, 400 no total |
-| **Claude (teste)** | o dono, pela `ANTHROPIC_API_KEY` | 10 por IP, 100 no total |
-| **Minha chave** (GPT, Gemini ou Groq) | o aluno, com a própria chave | 60 por IP |
+| **Gratuito** (padrão) | as **2 primeiras perguntas do dia** de cada pessoa saem do Claude do dono; depois, Gemini Flash-Lite no nível grátis (chave do dono) | 30 por IP, 400 no total; Claude do dono: no máximo 100 por hora no site inteiro |
+| **Minha chave** (GPT, Gemini, Groq ou Claude) | o aluno, com a própria chave | 60 por IP |
 
-- **Gratuito:** se a cota de um modelo acabar antes de sair texto, a pergunta vai para o próximo. Se todos
-  esgotarem, o aluno vê "O modelo gratuito atingiu o limite de uso agora. Tente mais tarde ou use sua própria
-  chave." Nunca cai no Claude do dono. Perguntas sem SUAP, sem histórico e sem disciplinas em foco (como as da
-  tela Explorar) são respondidas uma vez e guardadas em memória por 7 dias; as repetidas não chamam a IA nem
-  contam no limite.
-- **SUAP no gratuito:** o nível grátis do Google pode usar os dados enviados. Na primeira pergunta ao gratuito
-  com o SUAP importado o aluno escolhe se manda os dados; sem o aceite (`consentimento_gratis`), o servidor
-  descarta o `perfil`.
+- **Gratuito:** a cota do Claude é por IP e por dia (horário de Brasília), em memória (zera num deploy). Se o
+  Claude falhar ou a cota acabar, a pergunta vai ao Gemini antes de sair qualquer texto. Se o Gemini também
+  esgotar, o aluno vê "O modelo gratuito atingiu o limite de uso agora. Tente mais tarde ou use sua própria
+  chave." Perguntas sem SUAP, sem histórico e sem disciplinas em foco (como as da tela Explorar) são respondidas
+  uma vez e guardadas em memória por 7 dias; as repetidas não chamam a IA nem gastam cota.
+- **SUAP:** vai normalmente ao Claude do dono e à chave do aluno. Para o Gemini grátis (que pode usar os dados),
+  só com o aceite do aluno (`consentimento_gratis`), pedido uma vez no navegador; sem aceite, o servidor tira os
+  dados do SUAP da pergunta que vai ao Gemini.
 - **Chave do aluno:** passa pelo servidor só naquela pergunta; não vai para log, banco nem mensagem de erro. No
   navegador fica só na aba, ou no `localStorage` se o aluno marcar "lembrar neste navegador".
-- **Contexto:** o PPC inteiro (~140 mil tokens) vai em todas as opções. Os modelos estáveis do Groq aceitam no
-  máximo 131 mil tokens, por isso o padrão do Groq é o `minimaxai/minimax-m2.7` (prévia, 196 mil); troque com
-  `GROQ_MODEL` se ele sair do ar.
-- **Chaves do dono para o gratuito:** `GEMINI_API_KEY` em <https://aistudio.google.com> (Get API key; sem cartão)
-  e, opcional, `OPENROUTER_API_KEY` em <https://openrouter.ai/keys>. Sem `GEMINI_API_KEY` nem
-  `OPENROUTER_API_KEY`, o gratuito responde com o aviso de indisponível.
-- As cotas grátis do Gemini por modelo aparecem em <https://aistudio.google.com/rate-limit>. Como cada pergunta
-  manda o PPC inteiro, o limite de tokens por minuto costuma ser o primeiro a acabar.
+- **Contexto:** o PPC inteiro (72 a 141 mil tokens, conforme o curso) vai em todas as opções. Os modelos estáveis
+  do Groq aceitam no máximo 131 mil tokens, por isso o padrão do Groq é o `minimaxai/minimax-m2.7` (prévia, 196
+  mil); troque com `GROQ_MODEL` se ele sair do ar.
+- **Chave do dono para o Gemini:** `GEMINI_API_KEY` em <https://aistudio.google.com> (Get API key; sem cartão).
+  As cotas grátis por modelo aparecem em <https://aistudio.google.com/rate-limit>; como cada pergunta manda o PPC
+  inteiro, o limite de tokens por minuto costuma ser o primeiro a acabar. `OPENROUTER_API_KEY` (opcional) acrescenta
+  o roteador grátis do OpenRouter como última reserva.
+- Num teste com 8 perguntas reais, o Gemini Flash-Lite respondeu todas em 2 a 3 s até a primeira palavra, com
+  qualidade parecida com a do Claude Haiku; o Gemini Flash demorou de 5 a 55 s e falhou 3 vezes, por isso ficou de fora.
 
 ### Claude: modelo e custo
 
-- Padrão do Claude (teste): **Claude Opus 5.5** (`claude-opus-5-5`) pela API da Anthropic, com esforço `medium` no chat e `high` na extração.
+- Padrão do Claude (2 perguntas por dia no gratuito): **Claude Opus 5.5** (`claude-opus-5-5`) pela API da Anthropic, com esforço `medium` no chat e `high` na extração.
 - Se o modelo recusar uma pergunta, o middleware do SDK repete a requisição no `FALLBACK_MODEL` (Opus 4.8).
 - Custo aproximado (Opus 5.5: US$ 4 / 1M tokens de entrada, US$ 20 / 1M de saída, US$ 0,20 / 1M lidos do cache):
   cada pergunta lê ~140 mil tokens do cache (~US$ 0,03) mais a resposta. A primeira pergunta de cada hora grava o
@@ -192,7 +192,7 @@ deploy não roda a ingestão nem gasta API.
 
 1. Faça push do repositório para o GitHub.
 2. No Render: **New → Blueprint**, escolha o repositório e confirme.
-3. Quando ele pedir, cole a `ANTHROPIC_API_KEY` e a `GEMINI_API_KEY` (e, se quiser, a `OPENROUTER_API_KEY`).
+3. Quando ele pedir, cole a `ANTHROPIC_API_KEY` e a `GEMINI_API_KEY`.
 4. Defina um **limite de gastos** no console da Anthropic: o site é público e não tem login.
 
 O plano gratuito dorme após 15 min sem uso; o primeiro acesso depois disso leva até 1 minuto, e o front mostra
@@ -209,10 +209,10 @@ O plano gratuito dorme após 15 min sem uso; o primeiro acesso depois disso leva
 | `CHAT_EFFORT` / `EXTRACTION_EFFORT` | `medium` / `high` | profundidade de raciocínio (`low` a `max`) |
 | `RATE_LIMIT_PER_HOUR` / `GLOBAL_RATE_LIMIT_PER_HOUR` | `30` / `400` | limite do gratuito: perguntas por IP e teto do site inteiro por hora (`0` desliga) |
 | `GEMINI_API_KEY` | — | chave do dono no Google AI Studio, para o gratuito |
-| `GEMINI_MODELS` | `["gemini-flash-latest","gemini-3.5-flash-lite"]` | modelos do gratuito, tentados em ordem |
+| `GEMINI_MODELS` | `["gemini-3.5-flash-lite"]` | modelos do Gemini no gratuito, tentados em ordem |
+| `CLAUDE_FREE_PER_DAY` / `CLAUDE_FREE_GLOBAL_PER_HOUR` | `2` / `100` | perguntas do Claude do dono no gratuito, por pessoa por dia e no site por hora (`0` desliga) |
 | `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | — / `openrouter/free` | reserva do gratuito (opcional) |
-| `CLAUDE_TESTE_MODEL` | igual ao `LLM_MODEL` | modelo do Claude (teste) |
-| `OPENAI_MODEL` / `GEMINI_BYOK_MODEL` / `GROQ_MODEL` | `gpt-6-luna` / `gemini-flash-latest` / `minimaxai/minimax-m2.7` | modelos usados com a chave do aluno |
+| `OPENAI_MODEL` / `GEMINI_BYOK_MODEL` / `GROQ_MODEL` / `CLAUDE_BYOK_MODEL` | `gpt-6-luna` / `gemini-3.5-flash-lite` / `minimaxai/minimax-m2.7` / igual ao `LLM_MODEL` | modelos usados com a chave do aluno |
 | `DATABASE_URL` | — | Postgres das perguntas (string *pooled* do Neon); vazio = não grava |
 | `ADMIN_TOKEN` | — | senha da página `/admin`; vazio = `/admin` não existe |
 | `LOG_SECRET` | — | chave do código diário de visitante; obrigatória com `DATABASE_URL` |

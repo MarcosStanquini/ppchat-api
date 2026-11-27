@@ -8,6 +8,7 @@ import logging
 from collections.abc import AsyncIterator
 from typing import Literal
 
+from src.modules.response.services.chat_service import strip_perfil
 from src.modules.response.services.providers import (
     ChatProvider,
     ProviderError,
@@ -22,10 +23,9 @@ USER_MESSAGES = {
     "auth": "Sua chave do {provedor} foi recusada. Confira a chave e tente de novo.",
     "quota_own": "Sua chave do {provedor} está sem crédito ou atingiu o limite.",
     "unavailable": "A IA não respondeu agora. Tente de novo em instantes.",
-    "owner_unavailable": "O Claude (teste) não está disponível agora. Tente o Gratuito ou volte mais tarde.",
-    "not_configured": "O modelo gratuito ainda não foi configurado neste servidor. Use o Claude (teste) ou sua própria chave.",
+    "not_configured": "O modelo gratuito ainda não foi configurado neste servidor. Use sua própria chave.",
 }
-Mode = Literal["gratis", "owner", "own"]  # gratuito do dono, Claude do dono, chave do aluno
+Mode = Literal["gratis", "own"]  # chaves do dono (Claude e grátis) ou chave do aluno
 _FALL_BACK_ON = {"quota", "unavailable"}
 
 
@@ -48,17 +48,13 @@ def _own_key_message(kind: str, provider: ChatProvider | None) -> str:
 
 
 def _infer_mode(chain: list[ChatProvider]) -> Mode:
-    if any(p.label.startswith("Minha chave") for p in chain):
-        return "own"
-    if chain and not all(p.label.startswith("Gratuito") for p in chain):
-        return "owner"
-    return "gratis"
+    return "own" if any(p.label.startswith("Minha chave") for p in chain) else "gratis"
 
 
 class FallbackProvider:
     """Uma opção de IA vista como um provedor só: `label` e `usage` são de quem de fato respondeu."""
 
-    def __init__(self, chain: list[ChatProvider], mode: Mode | None = None):
+    def __init__(self, chain: list[ChatProvider], mode: Mode | None = None, consent: bool = True):
         self.chain = chain
         self.answered_by: ChatProvider | None = None
         self.label = chain[0].label if chain else "Gratuito"
@@ -66,6 +62,8 @@ class FallbackProvider:
         # Só a chave do aluno pode ouvir "sua chave foi recusada"; falhas das chaves do dono têm mensagens próprias
         self.mode: Mode = mode or _infer_mode(chain)
         self.free = self.mode == "gratis"
+        # Sem aceite, os dados do SUAP só vão aos provedores que podem recebê-los (Claude do dono, chave do aluno)
+        self.consent = consent
 
     @property
     def complete(self) -> bool:
@@ -78,7 +76,8 @@ class FallbackProvider:
             self.label, self.answered_by, self.usage = provider.label, provider, None
             failed = False
             try:
-                async for event in provider.stream(system, context, messages):
+                sent = messages if self.consent or getattr(provider, "private_ok", False) else strip_perfil(messages)
+                async for event in provider.stream(system, context, sent):
                     started = True
                     yield event
             except ProviderError as error:
@@ -103,8 +102,6 @@ class FallbackProvider:
                 message = USER_MESSAGES["not_configured"]
             else:
                 message = USER_MESSAGES["quota_gratis"] if quota_seen else USER_MESSAGES["unavailable"]
-        elif self.mode == "owner":
-            message = USER_MESSAGES["owner_unavailable"]
         else:
             message = _own_key_message(kind, provider)
         # Fora de qualquer `except`: a exceção nova não carrega a original (que pode ter a chave)

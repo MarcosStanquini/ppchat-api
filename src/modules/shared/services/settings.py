@@ -26,19 +26,23 @@ class Settings(BaseSettings):
     extraction_effort: Effort = "high"
     max_output_tokens: int = 64000
 
-    # Limite do modelo gratuito (0 desliga); o Claude (teste) e a chave do aluno têm limites próprios
+    # Limite do modelo gratuito (0 desliga); a chave do aluno tem limite próprio
     rate_limit_per_hour: int = 30  # perguntas por IP
     global_rate_limit_per_hour: int = 400  # teto para o site inteiro, vale mesmo se alguém forjar o IP
 
     # Multi-IA. Gratuito: chaves do dono no nível grátis, tentadas em ordem (cada modelo do Gemini tem cota própria)
     gemini_api_key: str | None = None
-    gemini_models: list[str] = ["gemini-flash-latest", "gemini-3.5-flash-lite"]
+    # Flash-Lite: no teste com perguntas reais respondeu tudo em 2-3 s; o Flash demorou até 55 s e falhou 3 de 8
+    gemini_models: list[str] = ["gemini-3.5-flash-lite"]
     openrouter_api_key: str | None = None
     openrouter_model: str = "openrouter/free"  # roteador que escolhe um modelo grátis
-    claude_teste_model: str | None = None  # vazio = llm_model
+    # Primeiras perguntas do gratuito saem do Claude do dono: por pessoa (IP) por dia, com teto do site por hora
+    claude_free_per_day: int = 2
+    claude_free_global_per_hour: int = 100
     # Modelos usados com a chave do aluno (precisam aceitar o PPC inteiro, ~140 mil tokens)
     openai_model: str = "gpt-6-luna"
-    gemini_byok_model: str = "gemini-flash-latest"
+    gemini_byok_model: str = "gemini-3.5-flash-lite"
+    claude_byok_model: str | None = None  # vazio = llm_model
     groq_model: str = "minimaxai/minimax-m2.7"  # os modelos estáveis do Groq param em 131 mil tokens
 
     # Origens do SUAP de onde o bookmarklet pode enviar os dados do aluno (CORS)

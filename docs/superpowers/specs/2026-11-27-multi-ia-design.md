@@ -96,3 +96,13 @@ automaticamente; a Anthropic mantém o cache explícito.
 ## Para quem implementar decidir
 Nomes exatos dos modelos padrão (verificar a lista atual de cada provedor na hora), visual do seletor e do
 diálogo, texto final dos avisos, valor do limite do Claude (teste).
+
+## Mudanças decididas depois da implementação (2026-11-27)
+- **Gratuito começa pelo Claude do dono:** as 2 primeiras perguntas do dia de cada pessoa (por IP, horário de
+  Brasília, teto de 100 por hora no site) saem do Claude; depois, Gemini Flash-Lite. Substitui a opção
+  separada "Claude (teste)", que deixa de existir.
+- **Sem Gemini Flash:** num teste com 8 perguntas reais ele demorou de 5 a 55 s e falhou 3 vezes; o Flash-Lite
+  respondeu todas em 2 a 3 s. **Sem OpenRouter** por decisão do dono (o código aceita, mas sem chave fica de fora).
+- **Chave do aluno também para o Claude:** 4 opções (GPT, Gemini, Groq, Claude).
+- **SUAP:** vai ao Claude do dono e à chave do aluno sem pedir; ao Gemini grátis só com aceite (o servidor tira
+  os dados da pergunta que vai ao Gemini).

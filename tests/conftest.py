@@ -73,7 +73,8 @@ async def pg():
 class FakeProvider:
     """Provedor de IA falso: devolve `chunks` e grava o que recebeu."""
 
-    def __init__(self, chunks=(), error=None, error_after_first=None, label="Falso", complete=True):
+    def __init__(self, chunks=(), error=None, error_after_first=None, label="Falso", complete=True, private_ok=True):
+        self.private_ok = private_ok
         self.chunks, self.error, self.error_after_first, self.label = list(chunks), error, error_after_first, label
         self.complete_when_done, self.complete = complete, False
         self.calls, self.usage, self.last_system, self.last_context, self.last_messages = 0, None, None, None, None
@@ -152,3 +153,6 @@ def fresh_chat_state(monkeypatch):
     monkeypatch.setattr(cache_module, "answer_cache", fresh)
     monkeypatch.setattr(app_module, "answer_cache", fresh)
     monkeypatch.setattr(app_module, "limiters", app_module.build_limiters())
+    from src.modules.response.services.claude_quota import ClaudeQuota
+
+    monkeypatch.setattr(app_module, "claude_quota", ClaudeQuota(2, 100))

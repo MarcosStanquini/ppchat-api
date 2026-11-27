@@ -1533,17 +1533,17 @@ async function ask(question) {
 }
 
 /* ───────────── Qual IA responde ───────────── */
-// Gratuito (padrão), Claude (teste) ou a chave do próprio aluno. Chaves só ficam no navegador: na memória
+// Gratuito (padrão: 2 perguntas por dia do Claude do dono, depois Gemini) ou a chave do próprio aluno. Chaves só ficam no navegador: na memória
 // da aba, ou no localStorage se o aluno marcar "lembrar neste navegador".
 const IA_KEY = "ppchat-ia";
 const KEYS_KEY = "ppchat-chaves";
 const CONSENT_KEY = "ppchat-consentimento-gratis";
 const IA_DEFAULT_OPTIONS = [
   { id: "gratis", label: "Gratuito", own_key: false },
-  { id: "claude-teste", label: "Claude (teste)", own_key: false },
   { id: "openai", label: "Minha chave · GPT", own_key: true },
   { id: "gemini", label: "Minha chave · Gemini", own_key: true },
   { id: "groq", label: "Minha chave · Groq", own_key: true },
+  { id: "claude", label: "Minha chave · Claude", own_key: true },
 ];
 const iaBtn = $("#ia-btn");
 const iaMenu = $("#ia-menu");

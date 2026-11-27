@@ -6,7 +6,23 @@ from src.modules.response.services.prompts import system_instructions
 from src.modules.response.services.providers import ChatProvider, StreamEvent
 from src.modules.shared.services.courses import get_registry
 
-__all__ = ["ChatSession", "HistoryTurn", "StreamEvent"]
+__all__ = ["ChatSession", "HistoryTurn", "StreamEvent", "strip_perfil"]
+
+PERFIL_START = "Dados acadêmicos do estudante, importados por ele mesmo do SUAP."
+PERFIL_END = "</perfil_aluno>"
+
+
+def strip_perfil(messages: list[dict]) -> list[dict]:
+    """Cópia das mensagens sem os dados do SUAP (que só vão na pergunta atual, a última)."""
+    if not messages:
+        return messages
+    last = dict(messages[-1])
+    content = last.get("content")
+    if isinstance(content, str) and PERFIL_START in content:
+        start = content.index(PERFIL_START)
+        end = content.index(PERFIL_END, start) + len(PERFIL_END)
+        last["content"] = (content[:start] + content[end:]).lstrip()
+    return [*messages[:-1], last]
 
 
 class HistoryTurn(TypedDict, total=False):
@@ -48,7 +64,7 @@ class ChatSession:
         blocks = []
         if perfil:
             blocks.append(
-                "Dados acadêmicos do estudante, importados por ele mesmo do SUAP. Use para personalizar "
+                f"{PERFIL_START} Use para personalizar "
                 "a resposta (o que já cursou, o que está cursando, o que falta):\n"
                 f"<perfil_aluno>\n{perfil}\n</perfil_aluno>"
             )

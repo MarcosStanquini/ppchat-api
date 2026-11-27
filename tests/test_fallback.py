@@ -97,13 +97,34 @@ async def test_gratis_falls_back_even_when_owner_key_is_refused(fake_provider):
 
 async def test_owner_claude_errors_never_blame_the_student_key(fake_provider):
     for kind in ("auth", "quota"):
-        chain = FallbackProvider([fake_provider(error=ProviderError(kind), label="Claude (teste)")], mode="owner")
+        chain = FallbackProvider([fake_provider(error=ProviderError(kind), label="Gratuito · Claude")], mode="gratis")
         with pytest.raises(UserFacingError) as e:
             [_ async for _ in chain.stream("s", "c", [])]
-        assert "Sua chave" not in e.value.message and e.value.message == USER_MESSAGES["owner_unavailable"]
+        assert "Sua chave" not in e.value.message
 
 
 async def test_free_option_without_owner_keys_says_not_configured():
     with pytest.raises(UserFacingError) as e:
         [_ async for _ in FallbackProvider([], mode="gratis").stream("s", "c", [])]
     assert e.value.message == USER_MESSAGES["not_configured"]
+
+
+async def test_suap_data_reaches_claude_but_not_free_third_parties_without_consent(fake_provider, kb):
+    from src.modules.response.services.chat_service import ChatSession
+
+    claude = fake_provider(error=ProviderError("unavailable"), label="Gratuito · Claude", private_ok=True)
+    gemini = fake_provider(["ok"], label="Gratuito · Gemini", private_ok=False)
+    session = ChatSession(kb, FallbackProvider([claude, gemini], mode="gratis", consent=False))
+    [_ async for _ in session.stream_events("O que falta?", perfil="MATRICULA-123")]
+    assert "MATRICULA-123" in claude.last_messages[-1]["content"]
+    assert "MATRICULA-123" not in gemini.last_messages[-1]["content"]
+    assert "O que falta?" in gemini.last_messages[-1]["content"]
+
+
+async def test_suap_data_reaches_free_models_with_consent(fake_provider, kb):
+    from src.modules.response.services.chat_service import ChatSession
+
+    gemini = fake_provider(["ok"], label="Gratuito · Gemini", private_ok=False)
+    session = ChatSession(kb, FallbackProvider([gemini], mode="gratis", consent=True))
+    [_ async for _ in session.stream_events("O que falta?", perfil="MATRICULA-123")]
+    assert "MATRICULA-123" in gemini.last_messages[-1]["content"]

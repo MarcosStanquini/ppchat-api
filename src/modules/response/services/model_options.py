@@ -1,9 +1,8 @@
 """Opções de IA que o aluno escolhe no chat e a cadeia de provedores de cada uma.
 
-- `gratis` (padrão): chaves do dono no nível grátis — Gemini (um modelo por vez, cada um com cota própria) e,
-  por último, o roteador grátis do OpenRouter. Nunca cai no Claude do dono.
-- `claude-teste`: o Claude do dono, com limite mais apertado (é a única opção que custa dinheiro ao dono).
-- `openai` / `gemini` / `groq`: a chave do próprio aluno, usada só naquela pergunta.
+- `gratis` (padrão): as primeiras perguntas do dia de cada pessoa saem do Claude do dono (cota em
+  `claude_quota`); depois, chaves do dono no nível grátis — Gemini Flash-Lite e o roteador grátis do OpenRouter.
+- `openai` / `gemini` / `groq` / `claude`: a chave do próprio aluno, usada só naquela pergunta.
 """
 from dataclasses import dataclass
 
@@ -36,10 +35,10 @@ def _options() -> dict[str, ModelOption]:
         for option in (
             # O gratuito usa os limites que o site já tinha (configuráveis no Render)
             ModelOption("gratis", "Gratuito", False, current.rate_limit_per_hour, current.global_rate_limit_per_hour),
-            ModelOption("claude-teste", "Claude (teste)", False, 10, 100),
             ModelOption("openai", "Minha chave · GPT", True, 60, None),
             ModelOption("gemini", "Minha chave · Gemini", True, 60, None),
             ModelOption("groq", "Minha chave · Groq", True, 60, None),
+            ModelOption("claude", "Minha chave · Claude", True, 60, None),
         )
     }
 
@@ -54,11 +53,16 @@ _OWN_KEY = {
 }
 
 
-def provider_chain(option_id: str, api_key: str | None) -> list[ChatProvider]:
-    """Provedores a tentar, em ordem. A chave do aluno só vale para as opções `own_key`."""
+def provider_chain(option_id: str, api_key: str | None, claude_allowed: bool = False) -> list[ChatProvider]:
+    """Provedores a tentar, em ordem. A chave do aluno só vale para as opções `own_key`.
+
+    `claude_allowed`: no gratuito, esta pessoa ainda tem perguntas do Claude do dono hoje.
+    """
     current = get_settings()
     if option_id == "gratis":
         chain: list[ChatProvider] = []
+        if claude_allowed:
+            chain.append(claude_provider("Gratuito · Claude"))
         if current.gemini_api_key:
             chain += [OpenAICompatibleProvider(GEMINI_URL, current.gemini_api_key, model, "Gratuito · Gemini")
                       for model in current.gemini_models]
@@ -66,11 +70,12 @@ def provider_chain(option_id: str, api_key: str | None) -> list[ChatProvider]:
             chain.append(OpenAICompatibleProvider(OPENROUTER_URL, current.openrouter_api_key,
                                                   current.openrouter_model, "Gratuito · OpenRouter"))
         return chain
-    if option_id == "claude-teste":
-        return [claude_provider("Claude (teste)", current.claude_teste_model or current.llm_model)]
+    if option_id == "claude" and api_key:
+        return [claude_provider("Minha chave · Claude", current.claude_byok_model or current.llm_model, api_key)]
     if option_id in _OWN_KEY and api_key:
         url, model_setting, label = _OWN_KEY[option_id]
-        return [OpenAICompatibleProvider(url, api_key, getattr(current, model_setting), label)]
+        # A chave é do aluno: os dados do SUAP vão para a conta dele, por escolha dele
+        return [OpenAICompatibleProvider(url, api_key, getattr(current, model_setting), label, private_ok=True)]
     return []
 
 

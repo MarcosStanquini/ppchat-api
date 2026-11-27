@@ -27,6 +27,7 @@ from src.modules.response.services.answer_cache import (
     cacheable,
 )
 from src.modules.response.services.chat_service import ChatSession
+from src.modules.response.services.claude_quota import ClaudeQuota
 from src.modules.response.services.fallback import (
     USER_MESSAGES,
     FallbackProvider,
@@ -67,7 +68,7 @@ async def lifespan(_: FastAPI):
 def warn_missing_free_keys() -> None:
     """O gratuito é o padrão do chat: sem chave do dono, toda pergunta nele recebe "não configurado"."""
     current = get_settings()
-    if not current.gemini_api_key and not current.openrouter_api_key:
+    if not current.gemini_api_key and not current.openrouter_api_key:  # o Claude do dono só cobre 2 por pessoa
         recorder.logger.warning(
             "modelo gratuito sem chave: defina GEMINI_API_KEY (e, opcional, OPENROUTER_API_KEY); "
             "até lá o gratuito responde que não está configurado"
@@ -121,6 +122,7 @@ def build_limiters() -> dict[str, RateLimiter]:
 
 
 limiters = build_limiters()
+claude_quota = ClaudeQuota(settings.claude_free_per_day, settings.claude_free_global_per_hour)
 import_limiter = RateLimiter(per_ip=20, global_limit=300)
 event_limiter = RateLimiter(per_ip=120, global_limit=5000)
 suap_imports = ImportStore()
@@ -177,7 +179,7 @@ class ChatResponse(BaseModel):
     answer: str
     usage: Usage | None = None
     modelo: str = "gratis"
-    provedor: str | None = None  # quem de fato respondeu: "Gratuito · Gemini", "Claude (teste)"...
+    provedor: str | None = None  # quem de fato respondeu: "Gratuito · Claude", "Gratuito · Gemini", "Minha chave · GPT"...
     cache: bool = False
 
 
@@ -190,8 +192,6 @@ def _option(request: ChatRequest) -> ModelOption:
         raise HTTPException(status_code=400, detail="Informe sua chave para usar esta opção.")
     if not option.own_key:
         request.chave = None  # a chave do aluno nunca vai para as opções com chave do dono
-    if option.id == "gratis" and not request.consentimento_gratis:
-        request.perfil = None  # sem aceite, os dados do SUAP não vão para o serviço gratuito
     return option
 
 
@@ -218,10 +218,14 @@ def _knowledge_base(slug: str) -> KnowledgeBase:
     return get_knowledge_base(_course(slug).slug)
 
 
-def _session(request: ChatRequest) -> ChatSession:
+def _session(request: ChatRequest, http_request: Request) -> ChatSession:
     option = OPTIONS[request.modelo]
-    mode = "own" if option.own_key else ("gratis" if option.id == "gratis" else "owner")
-    provider = FallbackProvider(provider_chain(request.modelo, request.chave), mode=mode)
+    # No gratuito, as primeiras perguntas do dia de cada pessoa saem do Claude do dono
+    claude_allowed = option.id == "gratis" and claude_quota.take(client_ip(http_request))
+    chain = provider_chain(request.modelo, request.chave, claude_allowed=claude_allowed)
+    # Sem aceite, os dados do SUAP vão ao Claude do dono mas não ao Gemini (que pode usar os dados)
+    provider = FallbackProvider(chain, mode="own" if option.own_key else "gratis",
+                                consent=option.own_key or request.consentimento_gratis)
     return ChatSession(_knowledge_base(request.curso), provider,
                        history=[turn.model_dump() for turn in request.history])
 
@@ -278,7 +282,7 @@ async def _stream_answer(request: ChatRequest, http_request: Request,
                 events.put_nowait({"type": "done", "usage": None, "modelo": request.modelo,
                                    "provedor": cached.label, "cache": True})
                 return
-            session = _session(request)
+            session = _session(request, http_request)
             parts = []
             async with tracker.track(lambda: session.answered_by):
                 async for kind, text in session.stream_events(request.question, request.disciplinas, request.perfil):
@@ -400,7 +404,7 @@ async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
             tracker.add_text(cached.text)
         return ChatResponse(answer=cached.text, modelo=option.id, provedor=cached.label, cache=True)
     _check_rate_limit(option, http_request)
-    session = _session(request)
+    session = _session(request, http_request)
     parts = []
     try:
         async with tracker.track(lambda: session.answered_by):

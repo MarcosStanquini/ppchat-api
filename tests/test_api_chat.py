@@ -17,15 +17,22 @@ def client():
 class FakeChain:
     def __init__(self, fake_provider):
         self.fake_provider, self.calls, self.options, self.keys, self.providers = fake_provider, 0, [], [], []
+        self.claude_allowed = []
 
-    def __call__(self, option_id, api_key):
+    def __call__(self, option_id, api_key, claude_allowed=False):
+        """Como a cadeia real: no gratuito, Claude do dono (se a pessoa ainda tem cota) e depois o Gemini."""
         self.calls += 1
         self.options.append(option_id)
         self.keys.append(api_key)
-        label = {"gratis": "Gratuito · Gemini", "claude-teste": "Claude (teste)"}.get(option_id, "Minha chave · GPT")
-        provider = self.fake_provider(["resposta"], label=label)
-        self.providers.append(provider)
-        return [provider]
+        self.claude_allowed.append(claude_allowed)
+        if option_id == "gratis":
+            chain = [self.fake_provider(["resposta"], label="Gratuito · Gemini", private_ok=False)]
+            if claude_allowed:
+                chain.insert(0, self.fake_provider(["resposta"], label="Gratuito · Claude"))
+        else:
+            chain = [self.fake_provider(["resposta"], label="Minha chave · GPT")]
+        self.providers.append(chain[0])
+        return chain
 
     @property
     def last_user_content(self):
@@ -47,13 +54,13 @@ def stream(client, **body):
 
 def test_models_lists_options(client):
     ids = [o["id"] for o in client.get("/models").json()["opcoes"]]
-    assert ids == ["gratis", "claude-teste", "openai", "gemini", "groq"]
+    assert ids == ["gratis", "openai", "gemini", "groq", "claude"]
 
 
 def test_old_client_without_modelo_uses_gratis(client, fake_chain):
     _, events = stream(client)
     done = events[-1]
-    assert done["type"] == "done" and done["modelo"] == "gratis" and done["provedor"] == "Gratuito · Gemini"
+    assert done["type"] == "done" and done["modelo"] == "gratis" and done["provedor"] == "Gratuito · Claude"
     assert done["cache"] is False and fake_chain.options == ["gratis"]
 
 
@@ -74,12 +81,18 @@ def test_student_key_reaches_provider_only_for_own_key_options(client, fake_chai
     assert fake_chain.keys == ["sk-aluno", None]
 
 
-def test_perfil_dropped_for_gratis_without_consent(client, fake_chain):
-    stream(client, perfil="MEUS DADOS")
-    assert "MEUS DADOS" not in fake_chain.last_user_content
+def test_perfil_goes_to_owner_claude_but_not_to_gemini_without_consent(client, fake_chain, monkeypatch):
+    from src.modules.response.services.claude_quota import ClaudeQuota
+
+    stream(client, perfil="MEUS DADOS")  # primeira do dia: Claude do dono recebe os dados
+    assert fake_chain.claude_allowed[-1] and "MEUS DADOS" in fake_chain.last_user_content
+    monkeypatch.setattr(app_module, "claude_quota", ClaudeQuota(0, 100))  # cota do Claude acabou: vai ao Gemini
+    stream(client, question="q1", perfil="MEUS DADOS")
+    gemini = fake_chain.providers[-1]
+    assert gemini.label == "Gratuito · Gemini" and "MEUS DADOS" not in gemini.last_messages[-1]["content"]
     stream(client, question="q2", perfil="MEUS DADOS", consentimento_gratis=True)
-    assert "MEUS DADOS" in fake_chain.last_user_content
-    stream(client, question="q3", perfil="MEUS DADOS", modelo="claude-teste")
+    assert "MEUS DADOS" in fake_chain.providers[-1].last_messages[-1]["content"]
+    stream(client, question="q3", perfil="MEUS DADOS", modelo="openai", chave="sk-x")
     assert "MEUS DADOS" in fake_chain.last_user_content
 
 
@@ -94,17 +107,23 @@ def test_cache_hit_skips_provider_and_rate_limit(client, fake_chain, monkeypatch
     assert len(app_module.limiters["gratis"].global_hits) == 1
 
 
-def test_claude_teste_has_own_limit(client, fake_chain):
-    codes = [stream(client, question=f"q{i}", modelo="claude-teste")[0].status_code for i in range(11)]
-    assert codes[:10] == [200] * 10 and codes[10] == 429
-    assert stream(client, question="livre", modelo="gratis")[0].status_code == 200
+def test_two_claude_questions_per_person_then_gemini(client, fake_chain):
+    labels = [stream(client, question=f"q{i}")[1][-1]["provedor"] for i in range(3)]
+    assert labels == ["Gratuito · Claude", "Gratuito · Claude", "Gratuito · Gemini"]
+    assert fake_chain.claude_allowed == [True, True, False]
+
+
+def test_own_key_does_not_spend_claude_quota(client, fake_chain):
+    stream(client, question="a", modelo="openai", chave="sk-x")
+    assert fake_chain.claude_allowed == [False]
+    assert stream(client, question="b")[1][-1]["provedor"] == "Gratuito · Claude"
 
 
 def test_user_facing_error_goes_to_stream(client, monkeypatch, fake_provider):
     from src.modules.response.services.providers import ProviderError
 
     monkeypatch.setattr(app_module, "provider_chain",
-                        lambda option, key: [fake_provider(error=ProviderError("quota"), label="Gratuito · Gemini")])
+                        lambda option, key, **_: [fake_provider(error=ProviderError("quota"), label="Gratuito · Gemini")])
     _, events = stream(client)
     assert events[-1] == {"type": "error", "message":
                           "O modelo gratuito atingiu o limite de uso agora. Tente mais tarde ou use sua própria chave."}
@@ -146,20 +165,19 @@ def test_cache_hit_is_recorded_as_saved_answer(client, fake_chain):
             if rid in store.questions:
                 break
             time.sleep(0.02)
-        assert store.questions[rid].modelo == "Gratuito · Gemini · guardada"
+        assert store.questions[rid].modelo == "Gratuito · Claude · guardada"
         assert store.questions[rid].resposta == "resposta"
     finally:
         recorder.set_store(NullStore())
 
 
 def test_owner_claude_failure_does_not_blame_student_key(client, monkeypatch, fake_provider):
-    from src.modules.response.services.fallback import USER_MESSAGES
     from src.modules.response.services.providers import ProviderError
 
-    monkeypatch.setattr(app_module, "provider_chain",
-                        lambda option, key: [fake_provider(error=ProviderError("auth"), label="Claude (teste)")])
-    _, events = stream(client, modelo="claude-teste")
-    assert events[-1] == {"type": "error", "message": USER_MESSAGES["owner_unavailable"]}
+    monkeypatch.setattr(app_module, "provider_chain", lambda option, key, **_: [
+        fake_provider(error=ProviderError("auth"), label="Gratuito · Claude")])
+    _, events = stream(client)
+    assert events[-1]["type"] == "error" and "Sua chave" not in events[-1]["message"]
 
 
 def test_missing_free_keys_warn_at_startup(monkeypatch, caplog):
@@ -175,7 +193,7 @@ def test_missing_free_keys_warn_at_startup(monkeypatch, caplog):
 def test_cut_off_answer_is_not_cached(client, monkeypatch, fake_provider):
     calls = []
 
-    def chain(option, key):
+    def chain(option, key, **_):
         provider = fake_provider(["meia resposta"], label="Gratuito · Gemini", complete=False)
         calls.append(provider)
         return [provider]

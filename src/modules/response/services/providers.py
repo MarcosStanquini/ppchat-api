@@ -63,15 +63,20 @@ async def _guarded(events: AsyncIterator[StreamEvent]) -> AsyncIterator[StreamEv
 
 
 class ChatProvider(Protocol):
-    label: str  # quem respondeu, como o aluno vê: "Gratuito · Gemini", "Claude (teste)"...
+    label: str  # quem respondeu, como o aluno vê: "Gratuito · Claude", "Gratuito · Gemini", "Minha chave · GPT"...
     usage: ProviderUsage | None  # preenchido ao fim da resposta
     complete: bool  # terminou normalmente (não cortada por limite de tokens ou filtro)
+    # Pode receber os dados do SUAP sem aceite? Sim para o Claude do dono e para a chave do próprio aluno;
+    # não para os serviços gratuitos de terceiros (Gemini, OpenRouter), que podem usar os dados
+    private_ok: bool
 
     def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]: ...
 
 
 class AnthropicProvider:
     """O Claude, como antes: PPC em cache de 1 h, raciocínio resumido e reserva em caso de recusa."""
+
+    private_ok = True
 
     def __init__(self, client, model: str, effort: str, label: str, max_tokens: int = 64000):
         self.client, self.model, self.effort, self.label, self.max_tokens = client, model, effort, label, max_tokens
@@ -130,13 +135,13 @@ class OpenAICompatibleProvider:
     """
 
     def __init__(self, base_url: str, api_key: str, model: str, label: str, timeout: float = 60,
-                 http_client=None):
+                 http_client=None, private_ok: bool = False):
         from openai import AsyncOpenAI
 
         # Sem novas tentativas: a reserva entre provedores é decidida pela cadeia, não pelo SDK
         self._client = AsyncOpenAI(base_url=base_url, api_key=api_key, timeout=timeout, max_retries=0,
                                    http_client=http_client)
-        self.model, self.label = model, label
+        self.model, self.label, self.private_ok = model, label, private_ok
         self.usage: ProviderUsage | None = None
         self.complete = False
 
@@ -163,11 +168,18 @@ class OpenAICompatibleProvider:
         self.complete = finish == "stop"
 
 
-def claude_provider(label: str = "Claude (teste)", model: str | None = None) -> AnthropicProvider:
-    """O Claude com a chave do dono (a mesma de antes)."""
+def claude_provider(label: str = "Gratuito · Claude", model: str | None = None,
+                    api_key: str | None = None) -> AnthropicProvider:
+    """O Claude: com a chave do dono (padrão) ou com a chave do aluno, usada só nesta pergunta."""
     from src.modules.shared.services.llm_client import get_async_llm_client
     from src.modules.shared.services.settings import get_settings
 
     current = get_settings()
-    return AnthropicProvider(get_async_llm_client(), model or current.llm_model, current.chat_effort, label,
+    if api_key:
+        from anthropic import AsyncAnthropic
+
+        client = AsyncAnthropic(api_key=api_key, max_retries=0)
+    else:
+        client = get_async_llm_client()
+    return AnthropicProvider(client, model or current.llm_model, current.chat_effort, label,
                              current.max_output_tokens)
