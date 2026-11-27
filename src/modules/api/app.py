@@ -3,8 +3,9 @@ import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator, Dict, List, Literal, Optional
+from uuid import UUID
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -16,6 +17,8 @@ from src.modules.knowledge.services.knowledge_base import (
     KnowledgeBase,
     get_knowledge_base,
 )
+from src.modules.observability import recorder
+from src.modules.observability.records import valid_event
 from src.modules.response.services.chat_service import ChatSession
 from src.modules.shared.services.courses import (
     LEGACY_COURSE,
@@ -35,7 +38,38 @@ async def lifespan(_: FastAPI):
     # Carrega a base de todos os cursos agora: um curso quebrado falha o deploy, não a visita de um aluno
     for course in get_registry().cursos:
         get_knowledge_base(course.slug)
+    purge_task = await _open_store()
     yield
+    if purge_task:
+        purge_task.cancel()
+    await recorder.get_store().close()
+
+
+async def _open_store() -> asyncio.Task | None:
+    """Abre o banco das perguntas, se configurado. Se o banco não responder, o site sobe sem gravar."""
+    current = get_settings()
+    if not current.database_url:
+        return None
+    if not current.log_secret:
+        raise RuntimeError("LOG_SECRET é obrigatória quando DATABASE_URL está definida.")
+    from src.modules.observability.postgres_store import PostgresStore
+
+    try:
+        store = await PostgresStore.open(current.database_url)
+    except Exception as error:  # noqa: BLE001
+        recorder.logger.warning("banco das perguntas indisponível, seguindo sem gravar: %s", type(error).__name__)
+        return None
+    recorder.set_store(store)
+
+    async def purge_daily():
+        while True:
+            try:
+                await store.purge(current.log_retention_days)
+            except Exception as error:  # noqa: BLE001
+                recorder.logger.warning("limpeza dos registros antigos falhou: %s", type(error).__name__)
+            await asyncio.sleep(24 * 3600)
+
+    return asyncio.create_task(purge_daily())
 
 
 app = FastAPI(title="PPChat API", lifespan=lifespan)
@@ -51,6 +85,7 @@ app.add_middleware(
 )
 rate_limiter = RateLimiter(settings.rate_limit_per_hour, settings.global_rate_limit_per_hour)
 import_limiter = RateLimiter(per_ip=20, global_limit=300)
+event_limiter = RateLimiter(per_ip=120, global_limit=5000)
 suap_imports = ImportStore()
 # Respostas em andamento, para o botão "parar"; só vivem durante a requisição
 running: Dict[str, asyncio.Task] = {}
@@ -74,6 +109,8 @@ class ChatRequest(BaseModel):
     request_id: Optional[str] = Field(default=None, max_length=64)
     # Resumo acadêmico do aluno (importado do SUAP e guardado só no navegador dele)
     perfil: Optional[str] = Field(default=None, max_length=30_000)
+    # Id aleatório da conversa no navegador: liga as perguntas de uma conversa nos registros
+    conversa: UUID | None = None
 
     @field_validator("history")
     @classmethod
@@ -132,6 +169,21 @@ def _usage(session: ChatSession) -> Optional[Usage]:
     )
 
 
+def _tracker(request: ChatRequest, http_request: Request) -> recorder.AnswerTracker:
+    current = get_settings()
+    return recorder.AnswerTracker(
+        request_id=request.request_id, curso=request.curso, conversa=request.conversa,
+        turno=len(request.history) // 2, pergunta=request.question, modelo=current.llm_model,
+        tinha_suap=bool(request.perfil), disciplinas=len(request.disciplinas),
+        ip=client_ip(http_request), secret=current.log_secret or "",
+    )
+
+
+def _tokens(session: ChatSession) -> int | None:
+    usage = _usage(session)
+    return usage.output_tokens if usage else None
+
+
 async def _stream_answer(request: ChatRequest, http_request: Request) -> AsyncIterator[str]:
     """Emite NDJSON: {"type": "thinking"} com o resumo do raciocínio, {"type": "text"} com a
     resposta, e por fim {"type": "done"} com o uso de tokens ou {"type": "error"}.
@@ -140,19 +192,27 @@ async def _stream_answer(request: ChatRequest, http_request: Request) -> AsyncIt
     fecha a conexão com a API na hora, mesmo enquanto o modelo ainda está pensando.
     """
     session = _session(request)
+    tracker = _tracker(request, http_request)
     events: asyncio.Queue = asyncio.Queue()
 
     async def produce():
+        # O registro é montado no finally: parada e cliente desconectado também ficam gravados
+        status, erro = "parada", None
         try:
             async for kind, text in session.stream_events(request.question, request.disciplinas, request.perfil):
+                if kind == "text":
+                    tracker.add_text(text)
                 events.put_nowait({"type": kind, "text": text})
             usage = _usage(session)
             events.put_nowait({"type": "done", "usage": usage.model_dump() if usage else None})
+            status = "ok"
         except asyncio.CancelledError:
             pass
         except Exception as error:
+            status, erro = "erro", type(error).__name__
             events.put_nowait({"type": "error", "message": str(error)})
         finally:
+            tracker.finish(status, erro, _tokens(session))
             events.put_nowait(None)
 
     task = asyncio.create_task(produce())
@@ -244,8 +304,20 @@ def curriculum(curso: str = LEGACY_COURSE) -> dict:
 async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
     _check_rate_limit(http_request)
     session = _session(request)
-    answer = await session.ask(request.question, request.disciplinas, request.perfil)
-    return ChatResponse(answer=answer, usage=_usage(session))
+    tracker = _tracker(request, http_request)
+    status, erro = "parada", None
+    try:
+        async for text in session.stream(request.question, request.disciplinas, request.perfil):
+            tracker.add_text(text)
+        status = "ok"
+    except asyncio.CancelledError:
+        raise
+    except Exception as error:
+        status, erro = "erro", type(error).__name__
+        raise
+    finally:
+        tracker.finish(status, erro, _tokens(session))
+    return ChatResponse(answer="".join(tracker.parts), usage=_usage(session))
 
 
 @app.post("/chat/stream")
@@ -264,6 +336,24 @@ async def chat_cancel(request_id: str) -> None:
     """Interrompe a resposta em andamento (abortar o fetch nem sempre derruba a conexão)."""
     if task := running.get(request_id):
         task.cancel()
+
+
+class EventRequest(BaseModel):
+    pergunta_id: UUID
+    tipo: str = Field(max_length=20)
+    valor: str = Field(default="", max_length=10)
+
+
+@app.post("/eventos", status_code=204)
+async def eventos(event: EventRequest, http_request: Request) -> Response:
+    """Sinais de uma resposta: 👍/👎, cópia, página do PPC aberta."""
+    if error := event_limiter.check(client_ip(http_request)):
+        raise HTTPException(status_code=429, detail=error)
+    if not valid_event(event.tipo, event.valor):
+        raise HTTPException(status_code=400, detail="Evento inválido.")
+    if not await recorder.get_store().save_event(event.pergunta_id, event.tipo, event.valor):
+        raise HTTPException(status_code=404, detail="Pergunta não encontrada.")
+    return Response(status_code=204)
 
 
 @app.post("/aluno/importar")

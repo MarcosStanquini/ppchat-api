@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     # Origens do SUAP de onde o bookmarklet pode enviar os dados do aluno (CORS)
     suap_origins: List[str] = ["https://suap.ifsp.edu.br"]
 
+    # Observabilidade: sem DATABASE_URL nada é gravado; sem ADMIN_TOKEN o /admin não existe
+    database_url: str | None = None
+    admin_token: str | None = None
+    log_secret: str | None = None  # chave do código diário de visitante (obrigatória com DATABASE_URL)
+    log_retention_days: int = 180
+
     # Uma pasta por curso (ppc.pdf, ppc.md, curriculo.json...) e o registro courses.json
     courses_dir: Path = ROOT_DIR / "src" / "data" / "courses"
 
