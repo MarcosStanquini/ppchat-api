@@ -1,17 +1,24 @@
 """Página /admin: o que estão perguntando e o que estão achando. Só com ADMIN_TOKEN configurado."""
+import asyncio
 import hmac
+import logging
+from decimal import Decimal
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
+from pydantic import BaseModel, Field
 
 from src.modules.api.rate_limit import RateLimiter, client_ip
-from src.modules.observability import recorder
+from src.modules.observability import costs, recorder
 from src.modules.observability.store import AdminQueries
 from src.modules.shared.services.courses import get_registry
 from src.modules.shared.services.settings import get_settings
 
 STATIC_DIR = Path(__file__).parent / "static"
+logger = logging.getLogger(__name__)
+# 90 dias são três consultas à Anthropic (cada uma com até 10 s); acima disso o cartão desiste
+COSTS_TIMEOUT = 15.0
 router = APIRouter(include_in_schema=False)
 # Senhas erradas por hora: 10 por IP e 50 no total (o IP pode ser forjado; o teto total não)
 FAILED_LOGIN_LIMITS = (10, 50)
@@ -96,6 +103,40 @@ async def negativas(dias: int = Depends(_dias), curso: str | None = None) -> lis
 async def perguntas(dias: int = Depends(_dias), curso: str | None = None, pagina: int = Query(1, ge=1, le=10_000),
                     busca: str | None = Query(None, max_length=200)) -> dict:
     return await _store().questions(dias, _curso(curso), busca or None, pagina)
+
+
+class SaldoRequest(BaseModel):
+    valor_usd: Decimal = Field(ge=0, le=100_000, max_digits=8, decimal_places=2)
+
+
+async def _balance(service: costs.CostService) -> dict | None:
+    store = recorder.get_store()
+    ref = await store.get_balance() if isinstance(store, AdminQueries) else None
+    if not ref:
+        return None
+    spent, _ = await service.spent_since(ref["em"])
+    return {"informado_usd": float(ref["valor_usd"]), "em": ref["em"].isoformat(),
+            "gasto_desde_usd": float(spent), "estimado_usd": float(ref["valor_usd"] - spent)}
+
+
+@api.get("/custos")
+async def custos(dias: int = Depends(_dias)) -> dict:
+    service = costs.get_service()
+    if service is None:
+        return {"configurado": False}
+    try:
+        report, saldo = await asyncio.wait_for(
+            asyncio.gather(service.report(dias), _balance(service)), COSTS_TIMEOUT)
+    except Exception as exc:  # só o tipo vai ao log: a mensagem pode trazer dados da conta
+        logger.warning("custos da Anthropic indisponíveis: %s", type(exc).__name__)
+        raise HTTPException(status_code=502, detail="Não foi possível carregar os custos agora.") from None
+    return {"configurado": True, **report, "saldo": saldo}
+
+
+@api.post("/saldo", status_code=204)
+async def saldo(body: SaldoRequest) -> Response:
+    await _store().set_balance(body.valor_usd)
+    return Response(status_code=204)
 
 
 router.include_router(api)

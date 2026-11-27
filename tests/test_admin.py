@@ -1,10 +1,13 @@
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
+
 import pytest
 from fastapi.testclient import TestClient
 
 from src.modules.api import admin
 from src.modules.api import app as app_module
 from src.modules.api.rate_limit import RateLimiter
-from src.modules.observability import recorder
+from src.modules.observability import costs, recorder
 from src.modules.observability.store import NullStore
 from src.modules.shared.services.settings import get_settings
 
@@ -29,6 +32,14 @@ class FakeAdminStore(NullStore):
     async def questions(self, dias, curso, busca, pagina, por_pagina=30):
         self.calls.append(("questions", dias, curso, busca, pagina))
         return {"itens": [], "total": 0}
+
+    balance = None
+
+    async def set_balance(self, valor_usd):
+        self.balance = {"valor_usd": valor_usd, "em": datetime.now(UTC) - timedelta(hours=3)}
+
+    async def get_balance(self):
+        return self.balance
 
 
 @pytest.fixture
@@ -119,3 +130,59 @@ def test_store_missing_admin_queries_is_503(client):
         assert client.get("/admin/api/perguntas", headers=AUTH).status_code == 503
     finally:
         recorder.set_store(NullStore())
+
+
+class FakeCosts:
+    def __init__(self, error=None):
+        self.error, self.since = error, []
+
+    async def report(self, dias):
+        if self.error:
+            raise self.error
+        return {"total_usd": 12.5, "por_dia": [], "por_modelo": [], "dados_ate": "2026-11-27T06:00:00+00:00"}
+
+    async def spent_since(self, when):
+        self.since.append(when)
+        return Decimal("2.25"), None
+
+
+@pytest.fixture
+def fake_costs(monkeypatch):
+    service = FakeCosts()
+    monkeypatch.setattr(get_settings(), "anthropic_admin_key", "sk-ant-admin-teste")
+    costs.set_service(service)
+    yield service
+    costs.set_service(None)
+
+
+def test_costs_not_configured_without_admin_key(client, fake_store, monkeypatch):
+    monkeypatch.setattr(get_settings(), "anthropic_admin_key", None)
+    assert client.get("/admin/api/custos", headers=AUTH).json() == {"configurado": False}
+
+
+def test_costs_require_password(client, fake_store, fake_costs):
+    assert client.get("/admin/api/custos").status_code == 401
+    assert client.post("/admin/api/saldo", json={"valor_usd": 10}).status_code == 401
+
+
+def test_costs_without_balance_reference(client, fake_store, fake_costs):
+    body = client.get("/admin/api/custos?dias=30", headers=AUTH).json()
+    assert body["configurado"] and body["total_usd"] == 12.5 and body["saldo"] is None
+
+
+def test_costs_with_balance_reference(client, fake_store, fake_costs):
+    assert client.post("/admin/api/saldo", json={"valor_usd": "40.00"}, headers=AUTH).status_code == 204
+    saldo = client.get("/admin/api/custos", headers=AUTH).json()["saldo"]
+    assert saldo["informado_usd"] == 40.0 and saldo["gasto_desde_usd"] == 2.25 and saldo["estimado_usd"] == 37.75
+    assert fake_costs.since == [fake_store.balance["em"]]
+
+
+def test_costs_error_is_502_and_hides_details(client, fake_store, fake_costs):
+    fake_costs.error = RuntimeError("sk-ant-admin-segredo")
+    response = client.get("/admin/api/custos", headers=AUTH)
+    assert response.status_code == 502 and "sk-ant" not in response.text
+
+
+def test_balance_value_is_validated(client, fake_store, fake_costs):
+    for bad in (-1, 100_001, "abc"):
+        assert client.post("/admin/api/saldo", json={"valor_usd": bad}, headers=AUTH).status_code == 422
