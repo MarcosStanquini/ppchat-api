@@ -157,8 +157,8 @@ function applyCurriculum(slug, data) {
 
   const c = courseInfo(slug);
   $("#course-name-text").textContent = shortName(c);
-  $("#course-name-sigla").textContent = c.sigla;
   $("#course-switch-label").textContent = shortName(c);
+  $("#course-switch-sigla").textContent = c.sigla; // no celular estreito o nome completo não cabe
   $("#course-switch-mine").hidden = alunoCourse() !== slug;
   document.title = `PPChat · ${shortName(c)}`;
   document.body.classList.remove("no-course");
@@ -209,7 +209,7 @@ function coursePreviewHtml(c) {
   const ending = c.status === "em_extincao";
   return `
     <p class="preview-kind"><span class="course-sigla">${escapeHtml(c.sigla)}</span>
-      ${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnologia"}${c.slug === alunoCourse() ? ' <span class="course-tag is-mine">Meu curso</span>' : ""}</p>
+      ${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnólogo"}${c.slug === alunoCourse() ? ' <span class="course-tag is-mine">Meu curso</span>' : ""}</p>
     <h2 class="preview-name">${escapeHtml(shortName(c))}</h2>
     ${ending ? '<p class="preview-note">Curso em extinção: segue atendendo quem já está matriculado.</p>' : ""}
     <div class="preview-stats">
@@ -255,7 +255,7 @@ function renderExplore() {
       aria-controls="course-preview" style="animation-delay:${60 + i * 50}ms">
       <span class="explore-item-text">
         <span class="explore-item-name">${escapeHtml(shortName(c))}</span>
-        <span class="explore-item-kind">${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnologia"} · ${c.duracao_semestres} semestres</span>
+        <span class="explore-item-kind">${c.tipo === "bacharelado" ? "Bacharelado" : "Tecnólogo"} · ${c.duracao_semestres} semestres</span>
       </span>
       ${c.slug === mineSlug ? '<span class="course-tag is-mine">Meu curso</span>' : ""}
       <svg class="explore-item-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
@@ -357,7 +357,7 @@ function renderCourseMenu() {
   courseMenu.innerHTML = `
     ${mineCourse ? `<p class="course-menu-group">Meu curso</p>${item(mineCourse)}` : ""}
     ${group("bacharelado", "Bacharelados")}
-    ${group("tecnologia", "Tecnologias")}
+    ${group("tecnologia", "Tecnólogos")}
     <button class="course-menu-all" role="menuitem" data-menu-all>Ver todos os cursos</button>`;
 }
 
@@ -827,9 +827,16 @@ function setInfoVisible(visible) {
   toggle.setAttribute("aria-pressed", visible);
   toggle.innerHTML = `${PANEL_ICON}${visible ? "Ocultar painel" : "Mostrar painel"}`;
   storage.set(INFO_KEY, visible);
-  // Redesenha já na largura nova, sem esperar o ResizeObserver (que só roda quando a página pinta)
-  if (state.view === "tree" && $(".node", $("#tree-inner"))) renderTree({ animate: false });
+  // Fechado, o painel some só na largura (para animar): inert tira os botões dele do Tab e do leitor de tela.
+  // O fluxograma se redesenha sozinho na largura final, pelo ResizeObserver do canvas.
+  syncInfoInert();
 }
+// No celular o painel é uma folha que abre pelo botão flutuante, então só fica inerte no computador
+const DESKTOP_INFO = matchMedia("(min-width: 901px)");
+function syncInfoInert() {
+  $("#tree-info").inert = DESKTOP_INFO.matches && $("#view-tree").classList.contains("info-hidden");
+}
+DESKTOP_INFO.addEventListener("change", syncInfoInert);
 setInfoVisible(storage.get(INFO_KEY) ?? true);
 $("#toggle-info").addEventListener("click", () => setInfoVisible($("#view-tree").classList.contains("info-hidden")));
 $("#open-info").addEventListener("click", () => setInfoVisible(true));
@@ -843,7 +850,7 @@ function renderTree({ animate = true } = {}) {
   TREE = canvas.clientWidth < 640 ? TREE_NARROW : state.focus ? TREE_WIDE : TREE_COURSE;
   if (!state.focus && canvas.clientWidth >= 640) {
     // Curso inteiro: as colunas dividem a largura disponível, sem rolagem lateral em telas comuns
-    const reserved = $("#view-tree").classList.contains("info-hidden") ? 40 : 0; // aba "Painel" na borda
+    const reserved = DESKTOP_INFO.matches && $("#view-tree").classList.contains("info-hidden") ? 40 : 0; // aba "Painel" na borda
     const available = canvas.clientWidth - 2 * TREE.padX - reserved - (levels.length - 1) * TREE.gapX;
     const nodeW = Math.max(124, Math.min(210, Math.floor(available / levels.length)));
     TREE = { ...TREE, nodeW, focusW: nodeW };
