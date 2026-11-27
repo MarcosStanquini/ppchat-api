@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     admin_token: str | None = None
     log_secret: str | None = None  # chave do código diário de visitante (obrigatória com DATABASE_URL)
     log_retention_days: int = 180
+    # Chave de administração da Anthropic (sk-ant-admin...): só para ler os custos no /admin
+    anthropic_admin_key: str | None = None
 
     # Uma pasta por curso (ppc.pdf, ppc.md, curriculo.json...) e o registro courses.json
     courses_dir: Path = ROOT_DIR / "src" / "data" / "courses"
