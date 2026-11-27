@@ -309,7 +309,7 @@ kbd {
 .composer.is-busy .send .i-send { display: none; }
 .composer.is-busy .send .i-stop { display: block; }
 .hint { max-width: 780px; margin: 8px auto 0; text-align: center; font-size: 11.5px; color: var(--muted); }
-.privacy-note { max-width: 780px; margin: 4px auto 0; text-align: center; font-size: 11px; line-height: 1.4; color: var(--muted); }
+.privacy-note { max-width: 780px; margin: 3px auto 0; text-align: center; font-size: 11px; line-height: 1.4; color: var(--muted); opacity: .8; }
 
 /* Seletor de disciplinas */
 .picker {
@@ -577,13 +577,14 @@ button.crumb svg { width: 14px; height: 14px; }
 /* Grade */
 .view-grid { flex-direction: column; }
 .grid-hint { margin: 0; padding: 12px 22px 0; font-size: 13px; }
-.board { flex: 1; min-height: 0; overflow: auto; padding: 8px 22px 22px; contain: strict; }
+.board { flex: 1; min-height: 0; overflow: auto; padding: 0 22px 22px; contain: strict; }
 /* Em tela cheia, as colunas se esticam para ocupar a largura disponível */
 .board-inner { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(130px, 1fr); gap: 10px; width: 100%; }
 .column { min-width: 0; display: flex; flex-direction: column; gap: 9px; }
 .col-head {
-  position: sticky; top: 0; z-index: 2; padding: 8px 2px 6px; display: flex; justify-content: space-between; align-items: baseline;
-  background: linear-gradient(var(--bg) 70%, transparent);
+  /* Fundo sólido e colado no topo da área de rolagem: os cartões passam por baixo sem aparecer */
+  position: sticky; top: 0; z-index: 2; padding: 14px 2px 8px; display: flex; justify-content: space-between; align-items: baseline;
+  background: var(--bg); box-shadow: 0 6px 6px -6px rgb(0 0 0 / .25);
 }
 .col-head b { font: 700 14px var(--display); letter-spacing: -.01em; }
 .col-head span { font-size: 11.5px; color: var(--muted); }
