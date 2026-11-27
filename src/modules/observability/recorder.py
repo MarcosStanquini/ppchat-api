@@ -2,6 +2,8 @@
 import asyncio
 import logging
 import time
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -56,17 +58,41 @@ class AnswerTracker:
         self.visitante = visitor_hash(ip, secret, datetime.now(UTC).date())
         self.started = time.monotonic()
         self.first_text_ms: int | None = None
-        self.parts: list[str] = []
+        self._parts: list[str] = []
 
     def add_text(self, text: str) -> None:
         if self.first_text_ms is None:
             self.first_text_ms = int((time.monotonic() - self.started) * 1000)
-        self.parts.append(text)
+        self._parts.append(text)
 
-    def finish(self, status: Status, erro: str | None = None, tokens_saida: int | None = None) -> None:
+    @asynccontextmanager
+    async def track(self, meta: Callable[[], tuple[str | None, int | None]]) -> AsyncIterator["AnswerTracker"]:
+        """Grava a resposta ao sair do bloco: ok, parada (cancelada) ou erro (só o tipo, nunca a mensagem).
+
+        `meta` devolve (modelo que respondeu, tokens gerados), lido só no fim.
+        """
+        status: Status = "parada"
+        erro = None
+        try:
+            yield self
+            status = "ok"
+        except asyncio.CancelledError:
+            raise
+        except Exception as error:
+            status, erro = "erro", type(error).__name__
+            raise
+        finally:
+            modelo, tokens = meta()
+            self.finish(status, erro, modelo, tokens)
+
+    def finish(self, status: Status, erro: str | None = None, modelo: str | None = None,
+               tokens_saida: int | None = None) -> None:
+        # Resposta a quem importou o SUAP costuma repetir notas, reprovações, matrícula: não é guardada
+        resposta = "" if self.fields["tinha_suap"] else "".join(self._parts)[:MAX_RESPOSTA]
+        fields = {**self.fields, "modelo": modelo or self.fields["modelo"]}
         record = QuestionRecord(
-            id=self.id, resposta="".join(self.parts)[:MAX_RESPOSTA], status=status, erro=erro,
+            id=self.id, resposta=resposta, status=status, erro=erro,
             duracao_ms=int((time.monotonic() - self.started) * 1000), primeiro_texto_ms=self.first_text_ms,
-            tokens_saida=tokens_saida, visitante=self.visitante, **self.fields,
+            tokens_saida=tokens_saida, visitante=self.visitante, **fields,
         )
         record_in_background(record)

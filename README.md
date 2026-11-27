@@ -139,7 +139,8 @@ Cada pergunta ao chat vira um registro num Postgres (Neon, plano grátis): curso
 tempo, desfecho (`ok`, `parada` ou `erro`) e os sinais do aluno: 👍/👎 embaixo da resposta, cópia e clique em
 [p. N]. Reformulou (nova pergunta na mesma conversa até 2 min depois) e saiu depois são calculados na consulta.
 
-- **Não é guardado:** os dados do SUAP (só "tinha SUAP: sim/não"), o histórico enviado pelo navegador e o IP. O
+- **Não é guardado:** os dados do SUAP (só "tinha SUAP: sim/não"; a resposta de quem importou o SUAP também
+  não é guardada, porque costuma repetir notas e matrícula), o histórico enviado pelo navegador e o IP. O
   visitante vira um código que muda a cada dia (HMAC do IP com `LOG_SECRET`). Registros com mais de 180 dias são
   apagados. O rodapé do chat avisa o aluno.
 - **Gravação fora do caminho da resposta:** em segundo plano, com limite de 3 s; banco fora do ar só gera aviso

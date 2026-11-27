@@ -63,7 +63,8 @@ def test_stream_records_ok_without_suap_data(client, store, fake_answer):
                     disciplinas=["X1", "X2"])
     assert status == 200
     record = wait_for_record(store, rid)
-    assert (record.status, record.resposta, record.curso, record.conversa) == ("ok", "Olá mundo", CURSO, conv)
+    # com SUAP a resposta não é guardada (pode repetir notas e matrícula)
+    assert (record.status, record.resposta, record.curso, record.conversa) == ("ok", "", CURSO, conv)
     assert record.tinha_suap and record.turno == 1 and record.disciplinas == 2
     assert record.primeiro_texto_ms is not None and record.duracao_ms >= 0
     assert "DADOS-SUAP" not in repr(record) and "HIST-SECRETO" not in repr(record)
@@ -132,6 +133,13 @@ def test_non_uuid_request_id_still_recorded(client, store, fake_answer):
     assert len(store.questions) == 1 and isinstance(next(iter(store.questions)), UUID)
 
 
+def test_answer_without_suap_is_stored(client, store, fake_answer):
+    fake_answer(["Olá", " mundo"])
+    rid = uuid4()
+    ask(client, request_id=str(rid))
+    assert wait_for_record(store, rid).resposta == "Olá mundo"
+
+
 def test_plain_chat_endpoint_records(client, store, fake_answer):
     fake_answer(["resposta"])
     response = client.post("/chat", json={"question": "q", "curso": CURSO, "request_id": str(uuid4())})
@@ -158,3 +166,40 @@ def test_no_database_means_events_204(client):
     recorder.set_store(NullStore())
     response = client.post("/eventos", json={"pergunta_id": str(uuid4()), "tipo": "copiou"})
     assert response.status_code == 204
+
+
+def test_answer_with_suap_data_is_not_stored(client, store, fake_answer):
+    fake_answer(["Você já concluiu", " Banco de Dados com nota 8,5"])
+    rid = uuid4()
+    ask(client, request_id=str(rid), perfil="Matrícula 123")
+    record = wait_for_record(store, rid)
+    assert record.tinha_suap and record.resposta == ""
+
+
+def test_records_model_that_actually_answered(client, store, monkeypatch):
+    from types import SimpleNamespace
+
+    async def stream_events(self, question, focus=(), perfil=None):
+        yield "text", "ok"
+        usage = SimpleNamespace(input_tokens=1, output_tokens=7, cache_read_input_tokens=0, cache_creation_input_tokens=0)
+        self.last_message = SimpleNamespace(model="modelo-reserva", usage=usage)
+
+    monkeypatch.setattr(ChatSession, "stream_events", stream_events)
+    rid = uuid4()
+    ask(client, request_id=str(rid))
+    record = wait_for_record(store, rid)
+    assert record.modelo == "modelo-reserva" and record.tokens_saida == 7
+
+
+def test_slow_event_save_returns_503(client, fake_answer):
+    class SlowEvents(MemoryStore):
+        async def save_event(self, pergunta_id, tipo, valor):
+            await asyncio.sleep(10)
+
+    recorder.set_store(SlowEvents())
+    try:
+        started = time.monotonic()
+        response = client.post("/eventos", json={"pergunta_id": str(uuid4()), "tipo": "copiou"})
+        assert response.status_code == 503 and time.monotonic() - started < 6
+    finally:
+        recorder.set_store(NullStore())

@@ -1,5 +1,5 @@
 """Onde as perguntas são guardadas: Postgres em produção, memória nos testes, nada sem banco."""
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 from uuid import UUID
 
 from src.modules.observability.records import EventType, QuestionRecord
@@ -15,6 +15,20 @@ class Store(Protocol):
     async def purge(self, days: int = 180) -> None: ...
 
     async def close(self) -> None: ...
+
+
+@runtime_checkable
+class AdminQueries(Protocol):
+    """Consultas da página /admin (só o Postgres tem)."""
+
+    async def summary(self, dias: int, curso: str | None) -> dict: ...
+
+    async def top_questions(self, dias: int, curso: str | None, limit: int = 20) -> list: ...
+
+    async def negatives(self, dias: int, curso: str | None, limit: int = 50) -> list: ...
+
+    async def questions(self, dias: int, curso: str | None, busca: str | None, pagina: int,
+                        por_pagina: int = 30) -> dict: ...
 
 
 class MemoryStore:

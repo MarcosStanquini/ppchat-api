@@ -45,6 +45,17 @@ def _env_value(name: str):
 TEST_DATABASE_URL = _env_value("TEST_DATABASE_URL")
 
 
+MARKER_TABLE = "ppchat_test_marker"
+
+
+async def require_test_database(store) -> None:
+    """Os testes apagam as tabelas: só rodam num banco marcado como de teste (nunca no de produção)."""
+    if not await store.fetch_value("select to_regclass(%s) is not null", (MARKER_TABLE,)):
+        await store.close()
+        pytest.exit(f"TEST_DATABASE_URL sem a tabela {MARKER_TABLE}: não parece um banco de testes. "
+                    f"Crie com `create table {MARKER_TABLE} ()` só no banco de testes.", returncode=2)
+
+
 @pytest.fixture
 async def pg():
     if not TEST_DATABASE_URL:
@@ -52,6 +63,7 @@ async def pg():
     from src.modules.observability.postgres_store import PostgresStore
 
     store = await PostgresStore.open(TEST_DATABASE_URL)
+    await require_test_database(store)
     await store.execute("truncate perguntas cascade")
     yield store
     await store.close()

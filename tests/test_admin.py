@@ -34,7 +34,7 @@ class FakeAdminStore(NullStore):
 @pytest.fixture
 def client(monkeypatch):
     monkeypatch.setattr(get_settings(), "admin_token", TOKEN)
-    monkeypatch.setattr(admin, "failed_logins", RateLimiter(per_ip=10, global_limit=0))
+    monkeypatch.setattr(admin, "failed_logins", RateLimiter(*admin.FAILED_LOGIN_LIMITS))
     return TestClient(app_module.app)
 
 
@@ -95,3 +95,27 @@ def test_admin_api_without_database_is_503(client):
 def test_courses_list_for_filter(client, fake_store):
     cursos = client.get("/admin/api/cursos", headers=AUTH).json()
     assert any(c["slug"] == "analise-e-desenvolvimento-de-sistemas" for c in cursos)
+
+
+def test_locked_out_ip_cannot_use_correct_token(client, fake_store):
+    for _ in range(10):
+        client.get("/admin/api/resumo", headers={"Authorization": "Bearer x"})
+    assert client.get("/admin/api/resumo", headers=AUTH).status_code == 429
+
+
+def test_spoofed_ips_hit_global_limit(client, fake_store):
+    codes = [client.get("/admin/api/resumo", headers={"Authorization": "Bearer x", "X-Forwarded-For": f"10.0.0.{i}"}).status_code
+             for i in range(51)]
+    assert codes[-1] == 429
+
+
+def test_store_missing_admin_queries_is_503(client):
+    class Partial(NullStore):
+        async def summary(self, dias, curso):
+            return {}
+
+    recorder.set_store(Partial())
+    try:
+        assert client.get("/admin/api/perguntas", headers=AUTH).status_code == 503
+    finally:
+        recorder.set_store(NullStore())

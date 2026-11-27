@@ -26,6 +26,14 @@ class RateLimiter:
         while hits and now - hits[0] > WINDOW_SECONDS:
             hits.popleft()
 
+    def blocked(self, ip: str) -> bool:
+        """Já estourou algum limite? Só consulta, não conta uma nova tentativa."""
+        now = time.monotonic()
+        self._prune(self.hits[ip], now)
+        self._prune(self.global_hits, now)
+        return bool((self.global_limit and len(self.global_hits) >= self.global_limit)
+                    or (self.per_ip and len(self.hits[ip]) >= self.per_ip))
+
     def check(self, ip: str) -> Optional[str]:
         """Registra a pergunta e devolve uma mensagem de erro se algum limite estourou."""
         now = time.monotonic()

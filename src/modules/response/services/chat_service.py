@@ -124,6 +124,13 @@ class ChatSession:
         elif message.stop_reason == "max_tokens":
             yield "text", "\n\n[Resposta interrompida pelo limite de tokens.]"
 
+    @property
+    def answered_by(self) -> tuple[str, int | None]:
+        """(modelo que de fato respondeu, tokens gerados); o modelo pode ser o de reserva em caso de recusa."""
+        if self.last_message is None:
+            return self.settings.llm_model, None
+        return self.last_message.model, self.last_message.usage.output_tokens
+
     async def stream(self, question: str, focus: Sequence[str] = (), perfil: str | None = None) -> AsyncIterator[str]:
         """Só o texto da resposta, em pedaços."""
         async for kind, text in self.stream_events(question, focus, perfil):

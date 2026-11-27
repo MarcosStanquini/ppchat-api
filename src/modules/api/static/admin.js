@@ -79,7 +79,7 @@ function questionItem(q) {
   const meta = el("div", { class: "q-meta" }, el("span", {}, facts.join(" · ")), ...signalTags(q));
   return el("details", { class: "admin-q" },
     el("summary", {}, el("div", { class: "q-text" }, q.pergunta), meta),
-    el("div", { class: "q-answer" }, q.resposta || "(sem resposta)"));
+    el("div", { class: "q-answer" }, q.resposta || (q.tinha_suap ? "(resposta não guardada: o aluno usou os dados do SUAP)" : "(sem resposta)")));
 }
 
 function renderQuestions(container, rows, empty) {

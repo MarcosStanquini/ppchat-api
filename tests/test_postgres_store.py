@@ -100,3 +100,29 @@ async def test_search_is_parameterized(pg, make_record):
     assert (await pg.questions(7, None, "' drop table", 1))["total"] == 1
     assert (await pg.questions(7, None, "_", 1))["total"] == 0
     assert await pg.fetch_value("select count(*) from perguntas") == 2
+
+
+
+async def test_survives_dropped_connection(record):
+    # Neon derruba as conexões quando suspende; a próxima gravação não pode se perder.
+    # Usa o endereço direto (sem o pooler, que esconderia a queda).
+    import psycopg
+    import pytest
+
+    from src.modules.observability.postgres_store import PostgresStore
+    from tests.conftest import TEST_DATABASE_URL, require_test_database
+
+    if not TEST_DATABASE_URL or "-pooler" not in TEST_DATABASE_URL:
+        pytest.skip("precisa do TEST_DATABASE_URL pooled do Neon")
+    direct = TEST_DATABASE_URL.replace("-pooler", "")
+    store = await PostgresStore.open(direct)
+    try:
+        await require_test_database(store)
+        await store.execute("truncate perguntas cascade")
+        with psycopg.connect(direct, autocommit=True) as killer:
+            killer.execute("select pg_terminate_backend(pid) from pg_stat_activity "
+                           "where usename = current_user and pid <> pg_backend_pid() and datname = current_database()")
+        await store.save_question(record)
+        assert await store.fetch_value("select count(*) from perguntas") == 1
+    finally:
+        await store.close()

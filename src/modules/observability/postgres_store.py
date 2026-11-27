@@ -1,10 +1,11 @@
 """Perguntas e sinais no Postgres (Neon).
 
-Usa o driver síncrono numa thread: o modo assíncrono do psycopg não roda no loop padrão do
+Usa o driver síncrono em threads próprias: o modo assíncrono do psycopg não roda no loop padrão do
 Windows (onde o dono desenvolve), e o volume aqui é pequeno. Valores sempre vão como parâmetros.
 """
 import asyncio
 from collections.abc import Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -75,21 +76,27 @@ def _like(text: str) -> str:
 
 
 class PostgresStore:
-    def __init__(self, pool: ConnectionPool):
+    def __init__(self, pool: ConnectionPool, executor: ThreadPoolExecutor):
         self.pool = pool
+        # Threads só do banco: um banco lento não ocupa as threads que o resto do servidor usa (DNS da API etc.)
+        self.executor = executor
 
     @classmethod
     async def open(cls, url: str) -> "PostgresStore":
         def connect() -> ConnectionPool:
             pool = ConnectionPool(
-                url, min_size=1, max_size=4, open=True, timeout=15,
-                kwargs={"autocommit": True, "connect_timeout": 15, "row_factory": dict_row},
+                url, min_size=1, max_size=4, open=True, timeout=5,
+                # O Neon derruba as conexões quando suspende: confere cada uma antes de usar e troca as mortas
+                check=ConnectionPool.check_connection,
+                kwargs={"autocommit": True, "connect_timeout": 10, "row_factory": dict_row},
             )
             with pool.connection() as conn:
                 conn.execute(SCHEMA)
             return pool
 
-        return cls(await asyncio.to_thread(connect))
+        executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="ppchat-db")
+        pool = await asyncio.get_running_loop().run_in_executor(executor, connect)
+        return cls(pool, executor)
 
     async def _run(self, sql: str, params: Any = None, fetch: str = "none"):
         def work():
@@ -101,7 +108,7 @@ class PostgresStore:
                     return cur.fetchone()
                 return cur.rowcount
 
-        return await asyncio.to_thread(work)
+        return await asyncio.get_running_loop().run_in_executor(self.executor, work)
 
     async def execute(self, sql: str, params: Sequence | None = None) -> int:
         return await self._run(sql, params)
@@ -129,7 +136,8 @@ class PostgresStore:
         await self._run("delete from perguntas where criado_em < now() - make_interval(days => %s)", (days,))
 
     async def close(self) -> None:
-        await asyncio.to_thread(self.pool.close)
+        await asyncio.get_running_loop().run_in_executor(self.executor, self.pool.close)
+        self.executor.shutdown(wait=False)
 
     # ── Consultas do /admin ──
     async def summary(self, dias: int, curso: str | None) -> dict:

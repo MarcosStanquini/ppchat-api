@@ -7,13 +7,15 @@ from fastapi.responses import HTMLResponse
 
 from src.modules.api.rate_limit import RateLimiter, client_ip
 from src.modules.observability import recorder
+from src.modules.observability.store import AdminQueries
 from src.modules.shared.services.courses import get_registry
 from src.modules.shared.services.settings import get_settings
 
 STATIC_DIR = Path(__file__).parent / "static"
 router = APIRouter(include_in_schema=False)
-# Tentativas de senha erradas por IP e por hora (só as erradas contam)
-failed_logins = RateLimiter(per_ip=10, global_limit=0)
+# Senhas erradas por hora: 10 por IP e 50 no total (o IP pode ser forjado; o teto total não)
+FAILED_LOGIN_LIMITS = (10, 50)
+failed_logins = RateLimiter(*FAILED_LOGIN_LIMITS)
 
 PERIODOS = {7, 30, 90}
 
@@ -33,17 +35,20 @@ def _enabled() -> str:
 
 def require_admin(request: Request) -> None:
     token = _enabled()
+    ip = client_ip(request)
+    # Bloqueado continua bloqueado mesmo com a senha certa: senão o limite não impede adivinhar
+    if failed_logins.blocked(ip):
+        raise HTTPException(status_code=429, detail="Muitas tentativas. Tente de novo mais tarde.")
     scheme, _, given = request.headers.get("authorization", "").partition(" ")
     if scheme.lower() == "bearer" and hmac.compare_digest(given.encode(), token.encode()):
         return
-    if failed_logins.check(client_ip(request)):
-        raise HTTPException(status_code=429, detail="Muitas tentativas. Tente de novo mais tarde.")
+    failed_logins.check(ip)  # registra a tentativa errada
     raise HTTPException(status_code=401, detail="Senha incorreta.")
 
 
-def _store():
+def _store() -> AdminQueries:
     store = recorder.get_store()
-    if not hasattr(store, "summary"):
+    if not isinstance(store, AdminQueries):
         raise HTTPException(status_code=503, detail="Banco não configurado.")
     return store
 

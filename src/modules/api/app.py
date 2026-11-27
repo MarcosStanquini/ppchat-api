@@ -181,11 +181,6 @@ def _tracker(request: ChatRequest, http_request: Request) -> recorder.AnswerTrac
     )
 
 
-def _tokens(session: ChatSession) -> int | None:
-    usage = _usage(session)
-    return usage.output_tokens if usage else None
-
-
 async def _stream_answer(request: ChatRequest, http_request: Request) -> AsyncIterator[str]:
     """Emite NDJSON: {"type": "thinking"} com o resumo do raciocínio, {"type": "text"} com a
     resposta, e por fim {"type": "done"} com o uso de tokens ou {"type": "error"}.
@@ -198,23 +193,20 @@ async def _stream_answer(request: ChatRequest, http_request: Request) -> AsyncIt
     events: asyncio.Queue = asyncio.Queue()
 
     async def produce():
-        # O registro é montado no finally: parada e cliente desconectado também ficam gravados
-        status, erro = "parada", None
+        # O tracker grava ao sair do bloco: parada e cliente desconectado também ficam registrados
         try:
-            async for kind, text in session.stream_events(request.question, request.disciplinas, request.perfil):
-                if kind == "text":
-                    tracker.add_text(text)
-                events.put_nowait({"type": kind, "text": text})
+            async with tracker.track(lambda: session.answered_by):
+                async for kind, text in session.stream_events(request.question, request.disciplinas, request.perfil):
+                    if kind == "text":
+                        tracker.add_text(text)
+                    events.put_nowait({"type": kind, "text": text})
             usage = _usage(session)
             events.put_nowait({"type": "done", "usage": usage.model_dump() if usage else None})
-            status = "ok"
         except asyncio.CancelledError:
             pass
         except Exception as error:
-            status, erro = "erro", type(error).__name__
             events.put_nowait({"type": "error", "message": str(error)})
         finally:
-            tracker.finish(status, erro, _tokens(session))
             events.put_nowait(None)
 
     task = asyncio.create_task(produce())
@@ -307,19 +299,12 @@ async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
     _check_rate_limit(http_request)
     session = _session(request)
     tracker = _tracker(request, http_request)
-    status, erro = "parada", None
-    try:
+    parts = []
+    async with tracker.track(lambda: session.answered_by):
         async for text in session.stream(request.question, request.disciplinas, request.perfil):
+            parts.append(text)
             tracker.add_text(text)
-        status = "ok"
-    except asyncio.CancelledError:
-        raise
-    except Exception as error:
-        status, erro = "erro", type(error).__name__
-        raise
-    finally:
-        tracker.finish(status, erro, _tokens(session))
-    return ChatResponse(answer="".join(tracker.parts), usage=_usage(session))
+    return ChatResponse(answer="".join(parts), usage=_usage(session))
 
 
 @app.post("/chat/stream")
@@ -353,7 +338,13 @@ async def eventos(event: EventRequest, http_request: Request) -> Response:
         raise HTTPException(status_code=429, detail=error)
     if not valid_event(event.tipo, event.valor):
         raise HTTPException(status_code=400, detail="Evento inválido.")
-    if not await recorder.get_store().save_event(event.pergunta_id, event.tipo, event.valor):
+    try:
+        saved = await asyncio.wait_for(
+            recorder.get_store().save_event(event.pergunta_id, event.tipo, event.valor), recorder.SAVE_TIMEOUT
+        )
+    except Exception:  # noqa: BLE001 - banco lento ou fora do ar: o sinal se perde, o site não
+        raise HTTPException(status_code=503, detail="Não foi possível registrar agora.") from None
+    if not saved:
         raise HTTPException(status_code=404, detail="Pergunta não encontrada.")
     return Response(status_code=204)
 
