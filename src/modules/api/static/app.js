@@ -187,7 +187,11 @@ async function setCourse(slug, { conversation = null, push = true } = {}) {
   state.focusHistory = [];
   $("#tree-inner").innerHTML = "";
   // Curso sem pré-requisitos não tem Conexões para mostrar: abre na Grade; os outros, em Conexões
-  state.flowMode = state.curriculum.disciplinas.some(isConnected) ? "tree" : "grid";
+  const hasGraph = state.curriculum.disciplinas.some(isConnected);
+  state.flowMode = hasGraph ? "tree" : "grid";
+  // Sem pré-requisitos no PPC o fluxograma abre na Grade; Conexões continua disponível, com um aviso
+  $(".grid-hint").textContent = hasGraph ? "Toque numa disciplina para ver as conexões dela."
+    : "Toque numa disciplina para ver os detalhes dela.";
   document.body.classList.remove("exploring");
   if (mine()) state.aluno.contexto = alunoContext(state.aluno);
   state.context = [];
@@ -675,7 +679,10 @@ function setView(view) {
   syncNav();
   $("#drawer-head").hidden = view === "me"; // Conexões | Grade é só do fluxograma
   if (view === "me") renderMe();
-  if (view === "tree" && !$(".node", $("#tree-inner"))) showTree(state.focus); // primeiro desenho
+  if (view === "tree") {
+    if (!$(".node", $("#tree-inner"))) showTree(state.focus); // primeiro desenho
+    else if (treeLayoutKey() !== lastTreeSize || $("#tree-canvas").clientWidth !== lastCanvasW) renderTree({ animate: false });
+  }
 }
 
 $("#open-structure").addEventListener("click", () => openDrawer("flow"));
@@ -812,13 +819,20 @@ function renderCrumbs() {
     ? `<button class="crumb" data-crumb="course">${ICON.back}Curso inteiro</button>
        <span class="crumb-sep">›</span><span class="crumb is-current">${escapeHtml(nameOf(state.focus))}</span>`
     : `<span class="crumb is-current">Curso inteiro</span>
-       <span class="crumb-hint">Passe o mouse para ver a cadeia de uma disciplina · clique para focar nela</span>`;
+       <span class="crumb-hint">${state.curriculum.disciplinas.some(isConnected)
+         ? "Passe o mouse para ver a cadeia de uma disciplina · clique para focar nela"
+         : "O PPC deste curso não define pré-requisitos entre disciplinas, por isso não há conexões para mostrar"}</span>`;
 }
 $("#tree-crumbs").addEventListener("click", (event) => {
   if (event.target.closest("[data-crumb=course]")) showCourse();
 });
 
 // Painel de detalhes ao lado da árvore: pode ser fechado para a árvore ocupar a tela toda
+// Estado do desenho do fluxograma (declarado antes de setInfoVisible, que roda no carregamento)
+let lastTreeSize = "";
+let lastCanvasW = 0;
+let treeGeom = null; // {width, offset} do último desenho, para deslizar o fluxograma sem redesenhar
+
 const INFO_KEY = "ppchat-tree-info";
 const PANEL_ICON = '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>';
 function setInfoVisible(visible) {
@@ -828,8 +842,9 @@ function setInfoVisible(visible) {
   toggle.innerHTML = `${PANEL_ICON}${visible ? "Ocultar painel" : "Mostrar painel"}`;
   storage.set(INFO_KEY, visible);
   // Fechado, o painel some só na largura (para animar): inert tira os botões dele do Tab e do leitor de tela.
-  // O fluxograma se redesenha sozinho na largura final, pelo ResizeObserver do canvas.
   syncInfoInert();
+  // O fluxograma não se mexe: só a área de rolagem cresce para dar acesso ao que fica embaixo do painel
+  if (treeGeom) sizeTreeScroll($("#tree-canvas").clientWidth);
 }
 // No celular o painel é uma folha que abre pelo botão flutuante, então só fica inerte no computador
 const DESKTOP_INFO = matchMedia("(min-width: 901px)");
@@ -841,17 +856,41 @@ setInfoVisible(storage.get(INFO_KEY) ?? true);
 $("#toggle-info").addEventListener("click", () => setInfoVisible($("#view-tree").classList.contains("info-hidden")));
 $("#open-info").addEventListener("click", () => setInfoVisible(true));
 
-let lastTreeSize = "";
+// Largura que o painel de detalhes cobre por cima do fluxograma (só no computador, com o painel aberto)
+const panelCover = () => (DESKTOP_INFO.matches && !$("#view-tree").classList.contains("info-hidden") ? 360 : 0);
+
+// Centraliza o fluxograma já desenhado numa área visível de largura canvasW, deslizando (sem redesenhar);
+// a área de rolagem inclui o que o painel cobre, para nada ficar inalcançável
+function placeTree(canvasW) {
+  if (!treeGeom) return;
+  const inner = $("#tree-inner");
+  const target = Math.max(0, (canvasW - treeGeom.width) / 2);
+  treeGeom.delta = target - treeGeom.offset;
+  inner.style.transform = treeGeom.delta ? `translateX(${treeGeom.delta}px)` : "";
+  sizeTreeScroll(canvasW);
+}
+// Área de rolagem: até o fim do fluxograma mais a faixa coberta pelo painel
+function sizeTreeScroll(canvasW) {
+  if (!treeGeom) return;
+  const delta = treeGeom.delta || 0;
+  $("#tree-inner").style.width = `${Math.max(treeGeom.offset + treeGeom.width + panelCover(), canvasW - delta)}px`;
+}
+
+// O fluxograma tem tamanho fixo, calculado pela largura da janela: abrir o painel de detalhes ou a barra
+// de conversas não o redesenha (eles ficam por cima ou dão rolagem); só redimensionar a janela redesenha
+const treeLayoutWidth = () => innerWidth; // a janela inteira: não muda com barras de rolagem que aparecem e somem
+const treeLayoutKey = () => `${innerWidth}x${innerHeight}`;
 
 function renderTree({ animate = true } = {}) {
   const canvas = $("#tree-canvas");
   const graph = state.focus ? buildFocusGraph(state.focus) : buildCourseGraph();
   const { levels, columns, edges, level } = graph;
-  TREE = canvas.clientWidth < 640 ? TREE_NARROW : state.focus ? TREE_WIDE : TREE_COURSE;
-  if (!state.focus && canvas.clientWidth >= 640) {
-    // Curso inteiro: as colunas dividem a largura disponível, sem rolagem lateral em telas comuns
-    const reserved = DESKTOP_INFO.matches && $("#view-tree").classList.contains("info-hidden") ? 40 : 0; // aba "Painel" na borda
-    const available = canvas.clientWidth - 2 * TREE.padX - reserved - (levels.length - 1) * TREE.gapX;
+  const layoutW = treeLayoutWidth();
+  TREE = layoutW < 640 ? TREE_NARROW : state.focus ? TREE_WIDE : TREE_COURSE;
+  if (!state.focus && layoutW >= 640) {
+    // Curso inteiro: as colunas dividem a largura da janela (fixa); painel e conversas abertos dão rolagem
+    const reserved = DESKTOP_INFO.matches ? 40 : 0; // aba "Painel" na borda direita
+    const available = layoutW - 2 * TREE.padX - reserved - (levels.length - 1) * TREE.gapX;
     const nodeW = Math.max(124, Math.min(210, Math.floor(available / levels.length)));
     TREE = { ...TREE, nodeW, focusW: nodeW };
   }
@@ -881,7 +920,8 @@ function renderTree({ animate = true } = {}) {
   const width = x - TREE.gapX + TREE.padX;
   const heights = new Map(levels.map((l) => [l, columns.get(l).reduce((s, c) => s + nodes.get(c).offsetHeight, 0) + TREE.gapY * (columns.get(l).length - 1)]));
   const height = Math.max(Math.max(...heights.values()) + TREE.padTop + TREE.padBottom, canvas.clientHeight);
-  const offset = Math.max(0, (canvas.clientWidth - width) / 2); // centraliza quando sobra espaço
+  // Centraliza na área do fluxograma (o painel fica por cima e não conta); se não cabe, começa à esquerda
+  const offset = Math.max(0, (canvas.clientWidth - width) / 2);
   const boxes = new Map();
   for (const l of levels) {
     let y = TREE.padTop + (height - TREE.padTop - TREE.padBottom - heights.get(l)) / 2;
@@ -900,7 +940,13 @@ function renderTree({ animate = true } = {}) {
     }
     $(`.col-label[data-level="${l}"]`, inner).style.left = `${left + w / 2}px`;
   }
-  inner.style.width = `${Math.max(width, canvas.clientWidth)}px`;
+  // Redesenho completo: zera o deslize sem animar (a animação é só para abrir/fechar as conversas)
+  inner.style.transition = "none";
+  inner.style.transform = "";
+  void inner.offsetWidth;
+  inner.style.transition = "";
+  inner.style.width = `${Math.max(offset + width + panelCover(), canvas.clientWidth)}px`;
+  treeGeom = { width, offset, delta: 0 };
   inner.style.height = `${height}px`;
 
   // Setas
@@ -933,11 +979,12 @@ function renderTree({ animate = true } = {}) {
   // Foco: centraliza a disciplina; curso inteiro: começa do 1º semestre
   if (graph.focus) {
     const f = boxes.get(graph.focus);
-    canvas.scrollTo({ left: f.x + f.w / 2 - canvas.clientWidth / 2, top: f.y + f.h / 2 - canvas.clientHeight / 2 });
+    canvas.scrollTo({ left: f.x + f.w / 2 - (canvas.clientWidth - panelCover()) / 2, top: f.y + f.h / 2 - canvas.clientHeight / 2 });
   } else {
     canvas.scrollTo({ left: 0, top: 0 }); // do topo, para os títulos dos semestres aparecerem
   }
-  lastTreeSize = `${canvas.clientWidth}x${canvas.clientHeight}`;
+  lastTreeSize = treeLayoutKey();
+  lastCanvasW = canvas.clientWidth;
 }
 
 $("#tree-inner").addEventListener("click", (event) => {
@@ -983,14 +1030,20 @@ $("#tree-inner").addEventListener("mouseleave", () => {
   $("#tree-edges")?.classList.remove("has-hover");
 });
 
-// Só redesenha quando o tamanho realmente muda (janela redimensionada), e sem repetir as animações
+// A legenda fica no pé do fluxograma: quando aparece a barra de rolagem horizontal (ex.: conversas abertas),
+// ela sobe a altura da barra para não ficar por cima dela
+new ResizeObserver(() => {
+  const canvas = $("#tree-canvas");
+  $(".tree-wrap").style.setProperty("--hscroll", `${canvas.offsetHeight - canvas.clientHeight}px`);
+}).observe($("#tree-canvas"));
+
+// Só redesenha quando a janela muda de tamanho (não ao abrir painel ou conversas), sem repetir as animações
 let resizeTimer = 0;
-new ResizeObserver(([entry]) => {
-  if (!entry.contentRect.width || state.view !== "tree" || !$(".node", $("#tree-inner"))) return;
-  if (`${$("#tree-canvas").clientWidth}x${$("#tree-canvas").clientHeight}` === lastTreeSize) return;
+addEventListener("resize", () => {
+  if (state.view !== "tree" || !$(".node", $("#tree-inner")) || treeLayoutKey() === lastTreeSize) return;
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => renderTree({ animate: false }), 120);
-}).observe($("#tree-canvas"));
+});
 
 const INFO_CLOSE = `<button class="icon-btn info-close" data-act="hide-info" title="Fechar painel" aria-label="Fechar painel">${ICON.close}</button>`;
 const goChips = (codes, extra = () => "") =>
@@ -1596,7 +1649,13 @@ document.addEventListener("click", (event) => {
 const SIDEBAR_KEY = "ppchat-sidebar";
 const isMobile = () => matchMedia("(max-width: 900px)").matches;
 function setSidebar(open) {
+  const wasOpen = document.body.classList.contains("sidebar-open");
+  const canvasW = $("#tree-canvas").clientWidth;
   document.body.classList.toggle("sidebar-open", open);
+  // No computador a área do fluxograma perde/ganha a largura da barra: o fluxograma desliza até o novo centro
+  if (!isMobile() && wasOpen !== open && state.view === "tree" && $(".node", $("#tree-inner"))) {
+    placeTree(canvasW + (open ? -268 : 268));
+  }
   $("#sidebar-toggle").setAttribute("aria-expanded", open);
   $("#sidebar-scrim").hidden = !(open && isMobile());
   if (!isMobile()) storage.set(SIDEBAR_KEY, open);

@@ -386,13 +386,19 @@ kbd {
 /* Painel de detalhes fechado: a árvore ocupa a largura toda */
 /* No computador o painel desliza ao abrir e fechar; no celular ele é uma folha flutuante (regras do 900px) */
 @media (min-width: 901px) {
-  .tree-info {
+  /* O painel fica por cima do fluxograma (não o empurra), para o fluxograma manter o tamanho */
+  .view-tree { position: relative; }
+  .view-tree .tree-info {
+    position: absolute; top: 0; right: 0; bottom: 0; z-index: 4; box-shadow: var(--shadow-lg);
     overflow-x: hidden;
     transition: width .45s cubic-bezier(.45, 0, .2, 1), padding .45s cubic-bezier(.45, 0, .2, 1),
       opacity .3s ease, border-color .45s ease;
   }
   /* O conteúdo não se espreme enquanto o painel fecha (o X de fechar fica de fora: é posicionado) */
-  .tree-info > *:not(.info-close) { min-width: 300px; }
+  .tree-info > *:not(.info-close):not(.back-btn) { min-width: 300px; }
+  /* A barra de cima abre espaço para o painel, para o botão "Ocultar painel" não ficar embaixo dele */
+  .tree-bar { transition: padding-right .45s cubic-bezier(.45, 0, .2, 1); }
+  .view-tree:not(.info-hidden) .tree-bar { padding-right: 376px; }
   .view-tree.info-hidden .tree-info {
     width: 0; padding-left: 0; padding-right: 0; opacity: 0; border-left-color: transparent;
     overflow: hidden; pointer-events: none;
@@ -417,7 +423,7 @@ kbd {
 .tree-info { position: relative; }
 .info-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; }
 .tree-info h3 { padding-right: 30px; }
-.tree-info .back-btn { max-width: calc(100% - 40px); }
+.tree-info .back-btn { display: flex; width: fit-content; max-width: calc(100% - 40px); margin-bottom: 16px; } /* linha própria: o código da disciplina vem embaixo */
 .crumb { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 4px 8px; border-radius: 8px; font-weight: 600; color: var(--muted); }
 button.crumb:hover { background: var(--surface); color: var(--ink); }
 button.crumb svg { width: 14px; height: 14px; }
@@ -503,7 +509,8 @@ button.crumb svg { width: 14px; height: 14px; }
 .tree-empty { position: absolute; left: 50%; transform: translateX(-50%); font-size: 13px; color: var(--muted); text-align: center; width: 320px; }
 
 .tree-legend {
-  position: absolute; left: 14px; bottom: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+  position: absolute; left: 14px; bottom: calc(14px + var(--hscroll, 0px)); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+  transition: bottom .2s ease;
   padding: 7px 12px; border-radius: 12px; font-size: 11.5px; color: var(--ink-2);
   background: color-mix(in oklab, var(--surface) 88%, transparent); border: 1px solid var(--line); backdrop-filter: blur(6px);
   max-width: calc(100% - 28px);
@@ -1181,6 +1188,11 @@ body.sidebar-open .sidebar { width: 268px; border-right-color: var(--line); }
 .lead-name { font: 700 17px/1 var(--display); letter-spacing: -.02em; margin-right: 4px; }
 body.sidebar-open .topbar-lead { display: none; }
 body.sidebar-open .drawer { left: 268px; }
+@media (min-width: 901px) {
+  .drawer.is-open { transition: opacity .16s ease, transform .2s ease, left .2s ease; }
+  #tree-inner { transition: transform .2s ease; }
+  .view-tree:not(.info-hidden) .tree-legend { max-width: calc(100% - 28px - 360px); }
+}
 
 @media (max-width: 900px) {
   .sidebar {
