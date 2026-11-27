@@ -1,8 +1,9 @@
 import asyncio
 import json
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncIterator, Dict, List, Literal, Optional
+from typing import Literal
 from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -20,8 +21,23 @@ from src.modules.knowledge.services.knowledge_base import (
 )
 from src.modules.observability import recorder
 from src.modules.observability.records import valid_event
+from src.modules.response.services.answer_cache import (
+    CachedAnswer,
+    answer_cache,
+    cacheable,
+)
 from src.modules.response.services.chat_service import ChatSession
-from src.modules.response.services.providers import claude_provider
+from src.modules.response.services.fallback import (
+    USER_MESSAGES,
+    FallbackProvider,
+    UserFacingError,
+)
+from src.modules.response.services.model_options import (
+    OPTIONS,
+    ModelOption,
+    provider_chain,
+    public_options,
+)
 from src.modules.shared.services.courses import (
     LEGACY_COURSE,
     Course,
@@ -86,18 +102,25 @@ app.add_middleware(
     allow_methods=["POST"],
     allow_headers=["Content-Type"],
 )
-rate_limiter = RateLimiter(settings.rate_limit_per_hour, settings.global_rate_limit_per_hour)
+
+
+def build_limiters() -> dict[str, RateLimiter]:
+    """Um contador por opção de IA: trocar de opção não esvazia o limite de outra (nem o Claude do dono)."""
+    return {o.id: RateLimiter(o.per_ip, o.global_limit or 0) for o in OPTIONS.values()}
+
+
+limiters = build_limiters()
 import_limiter = RateLimiter(per_ip=20, global_limit=300)
 event_limiter = RateLimiter(per_ip=120, global_limit=5000)
 suap_imports = ImportStore()
 # Respostas em andamento, para o botão "parar"; só vivem durante a requisição
-running: Dict[str, asyncio.Task] = {}
+running: dict[str, asyncio.Task] = {}
 
 
 class HistoryTurn(BaseModel):
     role: Literal["user", "assistant"]
     text: str = Field(max_length=MAX_TEXT)
-    disciplinas: List[str] = Field(default_factory=list, max_length=12)
+    disciplinas: list[str] = Field(default_factory=list, max_length=12)
 
 
 class ChatRequest(BaseModel):
@@ -105,19 +128,25 @@ class ChatRequest(BaseModel):
     # Slug do curso aberto no navegador; clientes antigos não mandam e caem em Engenharia de Software
     curso: str = Field(default=LEGACY_COURSE, max_length=64)
     # A API não guarda conversas: o navegador reenvia o histórico a cada pergunta
-    history: List[HistoryTurn] = Field(default_factory=list, max_length=MAX_HISTORY)
+    history: list[HistoryTurn] = Field(default_factory=list, max_length=MAX_HISTORY)
     # Códigos das disciplinas selecionadas no chat; a ficha delas vai junto da pergunta
-    disciplinas: List[str] = Field(default_factory=list, max_length=12)
+    disciplinas: list[str] = Field(default_factory=list, max_length=12)
     # Gerado pelo navegador para poder cancelar esta resposta em /chat/cancel/{request_id}
-    request_id: Optional[str] = Field(default=None, max_length=64)
+    request_id: str | None = Field(default=None, max_length=64)
     # Resumo acadêmico do aluno (importado do SUAP e guardado só no navegador dele)
-    perfil: Optional[str] = Field(default=None, max_length=30_000)
+    perfil: str | None = Field(default=None, max_length=30_000)
     # Id aleatório da conversa no navegador: liga as perguntas de uma conversa nos registros
     conversa: UUID | None = None
+    # Opção de IA (ver /models); clientes antigos não mandam e ficam no gratuito
+    modelo: str = Field(default="gratis", max_length=32)
+    # Chave do próprio aluno (só nas opções "Minha chave"): usada nesta pergunta e descartada
+    chave: str | None = Field(default=None, max_length=300, repr=False)
+    # Aceite de mandar os dados do SUAP ao gratuito (o nível grátis pode usar os dados)
+    consentimento_gratis: bool = False
 
     @field_validator("history")
     @classmethod
-    def alternating(cls, history: List[HistoryTurn]) -> List[HistoryTurn]:
+    def alternating(cls, history: list[HistoryTurn]) -> list[HistoryTurn]:
         roles = [turn.role for turn in history]
         expected = ["user", "assistant"] * (len(roles) // 2)
         if roles != expected:
@@ -128,18 +157,41 @@ class ChatRequest(BaseModel):
 class Usage(BaseModel):
     model: str
     input_tokens: int
-    cache_read_input_tokens: int
-    cache_creation_input_tokens: int
+    cache_read_input_tokens: int | None = None  # só o Claude informa cache
+    cache_creation_input_tokens: int | None = None
     output_tokens: int
 
 
 class ChatResponse(BaseModel):
     answer: str
-    usage: Optional[Usage] = None
+    usage: Usage | None = None
+    modelo: str = "gratis"
+    provedor: str | None = None  # quem de fato respondeu: "Gratuito · Gemini", "Claude (teste)"...
+    cache: bool = False
 
 
-def _check_rate_limit(http_request: Request) -> None:
-    if error := rate_limiter.check(client_ip(http_request)):
+def _option(request: ChatRequest) -> ModelOption:
+    """Valida a opção de IA e ajusta o pedido a ela (antes de gastar limite ou chamar a IA)."""
+    option = OPTIONS.get(request.modelo)
+    if option is None:
+        raise HTTPException(status_code=400, detail="Opção de IA desconhecida.")
+    if option.own_key and not (request.chave or "").strip():
+        raise HTTPException(status_code=400, detail="Informe sua chave para usar esta opção.")
+    if not option.own_key:
+        request.chave = None  # a chave do aluno nunca vai para as opções com chave do dono
+    if option.id == "gratis" and not request.consentimento_gratis:
+        request.perfil = None  # sem aceite, os dados do SUAP não vão para o serviço gratuito
+    return option
+
+
+def _cached(request: ChatRequest) -> CachedAnswer | None:
+    if not cacheable(request.modelo, request.perfil, request.history, request.disciplinas):
+        return None
+    return answer_cache.get(request.curso, request.question)
+
+
+def _check_rate_limit(option: ModelOption, http_request: Request) -> None:
+    if error := limiters[option.id].check(client_ip(http_request)):
         raise HTTPException(status_code=429, detail=error)
 
 
@@ -156,19 +208,26 @@ def _knowledge_base(slug: str) -> KnowledgeBase:
 
 
 def _session(request: ChatRequest) -> ChatSession:
-    return ChatSession(_knowledge_base(request.curso), claude_provider(),
+    provider = FallbackProvider(provider_chain(request.modelo, request.chave))
+    return ChatSession(_knowledge_base(request.curso), provider,
                        history=[turn.model_dump() for turn in request.history])
 
 
-def _usage(session: ChatSession) -> Optional[Usage]:
+def _remember(request: ChatRequest, session: ChatSession, answer: str) -> None:
+    """Guarda a resposta do gratuito para a próxima pergunta igual (só sem dados pessoais ou de contexto)."""
+    if answer and cacheable(request.modelo, request.perfil, request.history, request.disciplinas):
+        answer_cache.put(request.curso, request.question, CachedAnswer(answer, session.provider.label))
+
+
+def _usage(session: ChatSession) -> Usage | None:
     usage = session.provider.usage
     if usage is None:
         return None
     return Usage(
         model=usage.model,
         input_tokens=usage.input_tokens,
-        cache_read_input_tokens=usage.cache_read_input_tokens or 0,
-        cache_creation_input_tokens=usage.cache_creation_input_tokens or 0,
+        cache_read_input_tokens=usage.cache_read_input_tokens,
+        cache_creation_input_tokens=usage.cache_creation_input_tokens,
         output_tokens=usage.output_tokens,
     )
 
@@ -177,37 +236,52 @@ def _tracker(request: ChatRequest, http_request: Request) -> recorder.AnswerTrac
     current = get_settings()
     return recorder.AnswerTracker(
         request_id=request.request_id, curso=request.curso, conversa=request.conversa,
-        turno=len(request.history) // 2, pergunta=request.question, modelo=current.llm_model,
+        turno=len(request.history) // 2, pergunta=request.question, modelo=OPTIONS[request.modelo].label,
         tinha_suap=bool(request.perfil), disciplinas=len(request.disciplinas),
         ip=client_ip(http_request), secret=current.log_secret or "",
     )
 
 
-async def _stream_answer(request: ChatRequest, http_request: Request) -> AsyncIterator[str]:
+async def _stream_answer(request: ChatRequest, http_request: Request,
+                         cached: CachedAnswer | None = None) -> AsyncIterator[str]:
     """Emite NDJSON: {"type": "thinking"} com o resumo do raciocínio, {"type": "text"} com a
     resposta, e por fim {"type": "done"} com o uso de tokens ou {"type": "error"}.
 
     A resposta roda numa task separada: cancelá-la (botão "parar" ou cliente desconectado)
     fecha a conexão com a API na hora, mesmo enquanto o modelo ainda está pensando.
     """
-    session = _session(request)
     tracker = _tracker(request, http_request)
     events: asyncio.Queue = asyncio.Queue()
 
     async def produce():
         # O tracker grava ao sair do bloco: parada e cliente desconectado também ficam registrados
         try:
+            if cached:
+                async with tracker.track(lambda: (f"{cached.label} · guardada", None)):
+                    tracker.add_text(cached.text)
+                    events.put_nowait({"type": "text", "text": cached.text})
+                events.put_nowait({"type": "done", "usage": None, "modelo": request.modelo,
+                                   "provedor": cached.label, "cache": True})
+                return
+            session = _session(request)
+            parts = []
             async with tracker.track(lambda: session.answered_by):
                 async for kind, text in session.stream_events(request.question, request.disciplinas, request.perfil):
                     if kind == "text":
                         tracker.add_text(text)
+                        parts.append(text)
                     events.put_nowait({"type": kind, "text": text})
+            _remember(request, session, "".join(parts))
             usage = _usage(session)
-            events.put_nowait({"type": "done", "usage": usage.model_dump() if usage else None})
+            events.put_nowait({"type": "done", "usage": usage.model_dump() if usage else None,
+                               "modelo": request.modelo, "provedor": session.provider.label, "cache": False})
         except asyncio.CancelledError:
             pass
-        except Exception as error:
-            events.put_nowait({"type": "error", "message": str(error)})
+        except UserFacingError as error:
+            events.put_nowait({"type": "error", "message": error.message})
+        except Exception as error:  # noqa: BLE001 — o texto da exceção pode ter dados internos ou a chave
+            recorder.logger.warning("resposta falhou: %s", type(error).__name__)
+            events.put_nowait({"type": "error", "message": USER_MESSAGES["unavailable"]})
         finally:
             events.put_nowait(None)
 
@@ -218,7 +292,7 @@ async def _stream_answer(request: ChatRequest, http_request: Request) -> AsyncIt
         while True:
             try:
                 event = await asyncio.wait_for(events.get(), timeout=0.5)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # O Starlette não cancela este gerador quando o cliente some; checa aqui
                 if await http_request.is_disconnected():
                     break
@@ -296,24 +370,43 @@ def curriculum(curso: str = LEGACY_COURSE) -> dict:
     }
 
 
+@app.get("/models")
+def models() -> dict:
+    """Opções de IA para o seletor do chat."""
+    return {"opcoes": public_options()}
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
-    _check_rate_limit(http_request)
-    session = _session(request)
+    option = _option(request)
     tracker = _tracker(request, http_request)
+    if cached := _cached(request):  # resposta guardada não conta no limite
+        async with tracker.track(lambda: (f"{cached.label} · guardada", None)):
+            tracker.add_text(cached.text)
+        return ChatResponse(answer=cached.text, modelo=option.id, provedor=cached.label, cache=True)
+    _check_rate_limit(option, http_request)
+    session = _session(request)
     parts = []
-    async with tracker.track(lambda: session.answered_by):
-        async for text in session.stream(request.question, request.disciplinas, request.perfil):
-            parts.append(text)
-            tracker.add_text(text)
-    return ChatResponse(answer="".join(parts), usage=_usage(session))
+    try:
+        async with tracker.track(lambda: session.answered_by):
+            async for text in session.stream(request.question, request.disciplinas, request.perfil):
+                parts.append(text)
+                tracker.add_text(text)
+    except UserFacingError as error:
+        raise HTTPException(status_code=503, detail=error.message) from None
+    _remember(request, session, "".join(parts))
+    return ChatResponse(answer="".join(parts), usage=_usage(session), modelo=option.id,
+                        provedor=session.provider.label)
 
 
 @app.post("/chat/stream")
 async def chat_stream(request: ChatRequest, http_request: Request) -> StreamingResponse:
-    _check_rate_limit(http_request)
+    option = _option(request)
+    cached = _cached(request)
+    if not cached:  # resposta guardada não conta no limite
+        _check_rate_limit(option, http_request)
     return StreamingResponse(
-        _stream_answer(request, http_request),
+        _stream_answer(request, http_request, cached),
         media_type="application/x-ndjson",
         # Desliga o buffer de proxies (nginx e afins) para o streaming chegar em tempo real
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},

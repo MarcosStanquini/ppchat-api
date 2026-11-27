@@ -60,6 +60,7 @@ def test_stream_records_ok_without_suap_data(client, store, fake_answer):
     rid, conv = uuid4(), uuid4()
     history = [{"role": "user", "text": "HIST-SECRETO"}, {"role": "assistant", "text": "b"}]
     status, _ = ask(client, request_id=str(rid), conversa=str(conv), perfil="DADOS-SUAP", history=history,
+                    consentimento_gratis=True,
                     disciplinas=["X1", "X2"])
     assert status == 200
     record = wait_for_record(store, rid)
@@ -171,7 +172,7 @@ def test_no_database_means_events_204(client):
 def test_answer_with_suap_data_is_not_stored(client, store, fake_answer):
     fake_answer(["Você já concluiu", " Banco de Dados com nota 8,5"])
     rid = uuid4()
-    ask(client, request_id=str(rid), perfil="Matrícula 123")
+    ask(client, request_id=str(rid), perfil="Matrícula 123", consentimento_gratis=True)
     record = wait_for_record(store, rid)
     assert record.tinha_suap and record.resposta == ""
 

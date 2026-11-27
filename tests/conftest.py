@@ -135,3 +135,16 @@ class OpenAIMock:
 @pytest.fixture
 def httpx_mock_openai():
     return OpenAIMock()
+
+
+@pytest.fixture(autouse=True)
+def fresh_chat_state(monkeypatch):
+    """Cada teste começa com o cache de respostas e os limites de perguntas zerados."""
+    from src.modules.api import app as app_module
+    from src.modules.response.services import answer_cache as cache_module
+    from src.modules.response.services.answer_cache import AnswerCache
+
+    fresh = AnswerCache()
+    monkeypatch.setattr(cache_module, "answer_cache", fresh)
+    monkeypatch.setattr(app_module, "answer_cache", fresh)
+    monkeypatch.setattr(app_module, "limiters", app_module.build_limiters())

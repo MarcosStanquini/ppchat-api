@@ -1,4 +1,8 @@
-from src.modules.response.services.answer_cache import AnswerCache, CachedAnswer, cacheable
+from src.modules.response.services.answer_cache import (
+    AnswerCache,
+    CachedAnswer,
+    cacheable,
+)
 
 
 def test_normalized_key_matches_variants():
