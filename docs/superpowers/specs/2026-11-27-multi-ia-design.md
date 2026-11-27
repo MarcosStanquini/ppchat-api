@@ -3,17 +3,23 @@
 ## Por quê
 Hoje toda pergunta usa o Claude pela chave da API do dono, que paga por cada pergunta. O objetivo é
 **cortar custos** e **dar liberdade** ao aluno: por padrão um modelo gratuito, o Claude do dono disponível
-para teste, e a opção de o aluno usar a própria chave (Claude, GPT ou Gemini).
+para teste, e a opção de o aluno usar a própria chave (GPT, Gemini ou Groq).
 
 ## Objetivos
 - Modelo padrão **gratuito**, sem o aluno escolher nada: Gemini Flash (Google AI Studio, chave do dono,
-  nível grátis). Quando a cota do Gemini acabar, cai num modelo grátis do OpenRouter com contexto longo.
+  nível grátis). Quando a cota do Flash acabar, revezamento: Gemini Flash-Lite (cota própria) e depois um modelo
+  grátis do OpenRouter com contexto longo.
+- **Respostas guardadas**: pergunta ao gratuito sem dados do SUAP e sem histórico (ex.: as perguntas prontas da
+  tela Explorar) é respondida uma vez e guardada por curso + pergunta normalizada; as próximas iguais saem do
+  cache, sem chamar a IA.
 - **Claude (teste)**: o Claude atual com a chave do dono, com limite de uso mais apertado.
-- **Chave do aluno** (opcional): Claude, GPT ou Gemini, escolhendo o provedor e colando a chave.
+- **Chave do aluno** (opcional): GPT, Gemini ou Groq, escolhendo o provedor e colando a chave. Sem Claude por
+  enquanto, porque o Claude (teste) do dono já está disponível.
 - O PPC inteiro continua indo no contexto (mesma qualidade de resposta e citações [Página N]).
 
 ## Não-objetivos
-- Groq (o limite de tokens por minuto do nível grátis não comporta o PPC inteiro de ~140 mil tokens).
+- Chave do aluno para o Claude (por enquanto).
+- PPC enxuto e histórico encurtado para o gratuito (ficaram de fora desta versão).
 - Busca por trechos (RAG); contas de usuário; guardar chaves no servidor.
 - Trocar a ingestão (extração do currículo continua com Claude, rodada pelo dono).
 
@@ -31,7 +37,8 @@ para teste, e a opção de o aluno usar a própria chave (Claude, GPT ou Gemini)
 ## Decisões do usuário
 - Liberdade de escolha + corte de custos; o padrão é gratuito e não exige escolha.
 - O Claude do dono fica disponível para teste.
-- Chaves do aluno: Claude, GPT, Gemini (Groq fica de fora).
+- Chaves do aluno: GPT, Gemini e Groq, sem aviso sobre limites do nível grátis do Groq; sem Claude por enquanto.
+- Otimizações do gratuito: respostas guardadas e revezamento entre modelos do Gemini.
 - Abordagem A.
 - **Gratuito esgotado** (Gemini e OpenRouter): só a mensagem "o gratuito atingiu o limite agora, tente mais
   tarde ou use sua chave". Nunca cai automaticamente no Claude do dono.
@@ -46,23 +53,23 @@ para teste, e a opção de o aluno usar a própria chave (Claude, GPT ou Gemini)
 system prompt e histórico, e informar o uso de tokens no fim. Dois adaptadores:
 - `AnthropicProvider`: o código atual (cache de 1 h, raciocínio resumido, fallback de recusa).
 - `OpenAICompatibleProvider`: um só adaptador, com o SDK `openai`, para **OpenAI**, **Gemini** (endpoint
-  compatível com OpenAI do Google) e **OpenRouter** — muda só a URL base, a chave e o modelo. Dependência nova:
+  compatível com OpenAI do Google), **Groq** e **OpenRouter** — muda só a URL base, a chave e o modelo. Dependência nova:
   `openai`. Nesses provedores não há resumo de raciocínio na tela.
 
 **Opções de IA.** Registro fixo no servidor (`/models` devolve a lista para o front):
 | id | rótulo | chave | limite |
 |---|---|---|---|
-| `gratis` | Gratuito (Gemini) | dono (`GEMINI_API_KEY`), reserva OpenRouter (`OPENROUTER_API_KEY`) | limite atual por IP/global |
+| `gratis` | Gratuito | dono (`GEMINI_API_KEY`): Flash → Flash-Lite; reserva OpenRouter (`OPENROUTER_API_KEY`) | limite atual por IP/global; respostas guardadas não contam |
 | `claude-teste` | Claude (teste) | dono (`ANTHROPIC_API_KEY`) | mais apertado por IP (ex.: 10/h) |
-| `anthropic` / `openai` / `gemini` | Minha chave · Claude/GPT/Gemini | do aluno | só um limite leve por IP para proteger o servidor |
+| `openai` / `gemini` / `groq` | Minha chave · GPT/Gemini/Groq | do aluno | só um limite leve por IP para proteger o servidor |
 Modelos de cada opção vêm de variáveis de ambiente, com padrões no código.
 
 **Pergunta.** `/chat` e `/chat/stream` ganham `modelo` (id da opção, padrão `gratis`) e `chave` (só para as
 opções do aluno). A chave é usada naquela requisição e descartada: não vai para log, nem para mensagens de
 erro, nem fica em memória depois da resposta. Clientes antigos sem `modelo` caem em `gratis`.
 
-**Reserva do gratuito.** Se o Gemini responder cota esgotada (429), a mesma pergunta vai para o OpenRouter
-grátis. Se os dois falharem, o aluno vê uma mensagem clara: "O modelo gratuito atingiu o limite de uso agora.
+**Reserva do gratuito.** Se o Gemini Flash responder cota esgotada (429), a mesma pergunta vai para o Gemini
+Flash-Lite e, se também esgotar, para o OpenRouter grátis. Se os dois falharem, o aluno vê uma mensagem clara: "O modelo gratuito atingiu o limite de uso agora.
 Tente mais tarde ou use sua própria chave."
 
 **Erros da chave do aluno.** Chave inválida (401/403) → "Sua chave do <provedor> foi recusada"; sem crédito/cota
