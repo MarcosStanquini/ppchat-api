@@ -53,7 +53,7 @@ function renderStats(s) {
     [s.perguntas, "perguntas"],
     [s.visitantes, "visitantes (por dia)"],
     [pct(s.positivas, s.votadas), `de 👍 entre ${s.votadas} votadas`],
-    [pct(s.paradas, s.perguntas), "paradas no meio"],
+    [pct(s.paradas, s.perguntas), "interrompidas"],
     [pct(s.reformuladas, s.perguntas), "reformuladas"],
     [s.erros, "erros"],
   ];
@@ -66,18 +66,42 @@ function renderTop(rows) {
   list.replaceChildren(...rows.map((r) => el("li", {}, r.pergunta, el("span", { class: "count" }, `${r.vezes}×`))));
 }
 
+// Marcas de cada pergunta: nome curto na etiqueta e a explicação (no toque/mouse e na legenda)
+const TAGS = {
+  up: { label: "👍", cls: "good", desc: "O aluno gostou da resposta." },
+  down: { label: "👎", cls: "bad", desc: "O aluno não gostou da resposta." },
+  interrompida: { label: "interrompida", cls: "bad", desc: "A resposta não chegou ao fim: o aluno parou ou saiu da página no meio. \"(sem resposta)\" = parou antes de aparecer qualquer texto." },
+  erro: { label: "erro", cls: "bad", desc: "Deu erro ao gerar a resposta." },
+  reformulou: { label: "reformulou", cls: "bad", desc: "Perguntou de novo na mesma conversa até 2 min depois, sem dar 👍: a resposta provavelmente não atendeu." },
+  ultima: { label: "última da conversa", cls: "", desc: "Foi a última pergunta e o aluno saiu sem votar nem copiar. Não quer dizer que foi ruim: muitas vezes a dúvida foi resolvida." },
+  copiou: { label: "copiou", cls: "good", desc: "O aluno copiou a resposta." },
+  pagina: { label: "abriu página", cls: "good", desc: "O aluno clicou num [p. N] para conferir no PPC." },
+  suap: { label: "com SUAP", cls: "", desc: "O aluno tinha importado os dados do SUAP (a resposta não é guardada)." },
+};
+
+function tag(key, extra = "") {
+  const info = TAGS[key];
+  return el("span", { class: `tag ${info.cls}`.trim(), title: info.desc }, info.label + extra);
+}
+
 function signalTags(q) {
   const tags = [];
-  if (q.voto === "up") tags.push(el("span", { class: "tag good" }, "👍"));
-  if (q.voto === "down") tags.push(el("span", { class: "tag bad" }, "👎"));
-  if (q.status === "parada") tags.push(el("span", { class: "tag bad" }, "parada"));
-  if (q.status === "erro") tags.push(el("span", { class: "tag bad" }, `erro${q.erro ? ` · ${q.erro}` : ""}`));
-  if (q.reformulou) tags.push(el("span", { class: "tag bad" }, "reformulou"));
-  if (q.abandonou) tags.push(el("span", { class: "tag" }, "saiu depois"));
-  if (q.copiou) tags.push(el("span", { class: "tag good" }, "copiou"));
-  if (q.abriu_pagina) tags.push(el("span", { class: "tag good" }, "abriu página"));
-  if (q.tinha_suap) tags.push(el("span", { class: "tag" }, "com SUAP"));
+  if (q.voto === "up") tags.push(tag("up"));
+  if (q.voto === "down") tags.push(tag("down"));
+  if (q.status === "parada") tags.push(tag("interrompida"));
+  if (q.status === "erro") tags.push(tag("erro", q.erro ? ` · ${q.erro}` : ""));
+  if (q.reformulou) tags.push(tag("reformulou"));
+  if (q.abandonou) tags.push(tag("ultima"));
+  if (q.copiou) tags.push(tag("copiou"));
+  if (q.abriu_pagina) tags.push(tag("pagina"));
+  if (q.tinha_suap) tags.push(tag("suap"));
   return tags;
+}
+
+function renderLegend() {
+  $("#legend-list").replaceChildren(...Object.keys(TAGS).flatMap((key) => [
+    el("dt", {}, tag(key)), el("dd", {}, TAGS[key].desc),
+  ]));
 }
 
 function questionItem(q) {
@@ -113,28 +137,44 @@ const shortDay = (iso) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 
 function renderCosts(c) {
   const box = $("#costs");
-  $("#saldo-form").hidden = !c.configurado;
+  $("#saldo-form").hidden = true;
   if (!c.configurado) {
     $("#costs-note").textContent = "";
     return box.replaceChildren(el("p", { class: "admin-empty" },
       "Não configurado: falta a variável ANTHROPIC_ADMIN_KEY (chave de administração) no servidor."));
   }
   $("#costs-note").textContent = c.dados_ate ? `dados até ${when(c.dados_ate)}` : "";
+  const edit = el("button", { class: "admin-link cost-edit", type: "button", "aria-controls": "saldo-form" },
+    c.saldo ? "atualizar" : "informar saldo");
+  edit.addEventListener("click", () => {
+    const form = $("#saldo-form");
+    form.hidden = !form.hidden;
+    if (!form.hidden) $("#saldo").focus();
+  });
   const saldo = c.saldo
-    ? el("div", { class: "admin-stat" }, el("b", {}, money(c.saldo.estimado_usd)), el("span", {}, "saldo estimado"),
+    ? el("div", { class: "admin-stat" }, edit, el("b", {}, money(c.saldo.estimado_usd)), el("span", {}, "saldo estimado"),
         el("div", { class: "cost-sub" },
           `${money(c.saldo.informado_usd)} informado em ${when(c.saldo.em)}, menos ${money(c.saldo.gasto_desde_usd)} gastos desde então`))
-    : el("div", { class: "admin-stat" }, el("b", {}, "—"), el("span", {}, "saldo estimado"),
-        el("div", { class: "cost-sub" }, "Informe o saldo do Console abaixo para estimar."));
+    : el("div", { class: "admin-stat" }, edit, el("b", {}, "—"), el("span", {}, "saldo estimado"),
+        el("div", { class: "cost-sub" }, "Informe o saldo que o Console mostra para estimar."));
   const top = el("div", { class: "cost-top" },
     el("div", { class: "admin-stat" }, el("b", {}, money(c.total_usd)), el("span", {}, `gastos nos últimos ${state.dias} dias`)),
     saldo);
 
+  // Todos os dias do período, com zero onde não houve gasto (as barras ficam do mesmo tamanho)
+  const byDay = Object.fromEntries(c.por_dia.map((d) => [d.dia, d.usd]));
+  const today = new Date();
+  c.por_dia = Array.from({ length: state.dias }, (_, i) => {
+    const day = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - (state.dias - 1 - i)));
+    const iso = day.toISOString().slice(0, 10);
+    return { dia: iso, usd: byDay[iso] || 0 };
+  });
   const max = Math.max(...c.por_dia.map((d) => d.usd), 0);
   const bars = el("div", { class: "cost-bars", role: "img", "aria-label": "Gasto por dia" },
     ...c.por_dia.map((d) => {
       const bar = el("i", { title: `${shortDay(d.dia)}: ${money(d.usd)}` });
-      bar.style.height = `${max ? Math.max(2, (d.usd / max) * 100) : 2}%`;
+      bar.style.height = d.usd && max ? `${Math.max(3, (d.usd / max) * 100)}%` : "2px";
+      if (!d.usd) bar.classList.add("zero");
       return bar;
     }));
   const days = c.por_dia.length
@@ -241,4 +281,5 @@ $("#busca").addEventListener("input", (event) => {
 $("#prev").addEventListener("click", () => { state.pagina -= 1; loadList(); });
 $("#next").addEventListener("click", () => { state.pagina += 1; loadList(); });
 
+renderLegend();
 token ? showPanel() : showLogin();
