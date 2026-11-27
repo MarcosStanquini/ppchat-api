@@ -131,7 +131,7 @@ async def test_survives_dropped_connection(record):
 
 async def test_balance_reference_keeps_only_the_last(pg):
     assert await pg.get_balance() is None
-    await pg.set_balance(Decimal("50"))
+    await pg.set_balance(Decimal(50))
     await pg.set_balance(Decimal("42.37"))
     ref = await pg.get_balance()
     assert ref["valor_usd"] == Decimal("42.37")

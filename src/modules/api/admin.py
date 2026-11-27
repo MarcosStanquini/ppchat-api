@@ -127,7 +127,7 @@ async def custos(dias: int = Depends(_dias)) -> dict:
     try:
         report, saldo = await asyncio.wait_for(
             asyncio.gather(service.report(dias), _balance(service)), COSTS_TIMEOUT)
-    except Exception as exc:  # só o tipo vai ao log: a mensagem pode trazer dados da conta
+    except Exception as exc:  # noqa: BLE001 — qualquer falha (Anthropic, rede, banco) vira 502; só o tipo vai ao log
         logger.warning("custos da Anthropic indisponíveis: %s", type(exc).__name__)
         raise HTTPException(status_code=502, detail="Não foi possível carregar os custos agora.") from None
     return {"configurado": True, **report, "saldo": saldo}

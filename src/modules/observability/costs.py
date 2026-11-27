@@ -3,7 +3,6 @@
 Precisa de uma chave de administração (ANTHROPIC_ADMIN_KEY), usada só aqui e só para ler custos.
 O relatório chega com algumas horas de atraso e aceita no máximo 31 dias por consulta.
 """
-import time
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta

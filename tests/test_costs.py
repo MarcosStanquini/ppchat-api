@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from itertools import pairwise
 from types import SimpleNamespace
 
 import pytest
@@ -45,7 +46,7 @@ def test_windows_split_long_range_without_overlap():
     parts = windows(start, start + timedelta(days=90))
     assert len(parts) == 3
     assert parts[0][0] == start and parts[-1][1] == start + timedelta(days=90)
-    assert all(a[1] == b[0] for a, b in zip(parts, parts[1:]))
+    assert all(a[1] == b[0] for a, b in pairwise(parts))
     assert all(e - s <= timedelta(days=31) for s, e in parts)
 
 
