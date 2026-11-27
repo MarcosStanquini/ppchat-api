@@ -170,3 +170,17 @@ def test_missing_free_keys_warn_at_startup(monkeypatch, caplog):
     caplog.set_level(logging.WARNING)
     app_module.warn_missing_free_keys()
     assert "GEMINI_API_KEY" in caplog.text
+
+
+def test_cut_off_answer_is_not_cached(client, monkeypatch, fake_provider):
+    calls = []
+
+    def chain(option, key):
+        provider = fake_provider(["meia resposta"], label="Gratuito · Gemini", complete=False)
+        calls.append(provider)
+        return [provider]
+
+    monkeypatch.setattr(app_module, "provider_chain", chain)
+    for _ in range(2):
+        stream(client, question="Como funciona o estágio?")
+    assert len(calls) == 2

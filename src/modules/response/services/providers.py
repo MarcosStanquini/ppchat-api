@@ -65,6 +65,7 @@ async def _guarded(events: AsyncIterator[StreamEvent]) -> AsyncIterator[StreamEv
 class ChatProvider(Protocol):
     label: str  # quem respondeu, como o aluno vê: "Gratuito · Gemini", "Claude (teste)"...
     usage: ProviderUsage | None  # preenchido ao fim da resposta
+    complete: bool  # terminou normalmente (não cortada por limite de tokens ou filtro)
 
     def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]: ...
 
@@ -75,6 +76,7 @@ class AnthropicProvider:
     def __init__(self, client, model: str, effort: str, label: str, max_tokens: int = 64000):
         self.client, self.model, self.effort, self.label, self.max_tokens = client, model, effort, label, max_tokens
         self.usage: ProviderUsage | None = None
+        self.complete = False
 
     def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
         return _guarded(self._stream(system, context, messages))
@@ -82,7 +84,7 @@ class AnthropicProvider:
     async def _stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
         from anthropic import BetaFallbackState
 
-        self.usage = None
+        self.usage, self.complete = None, False
         with BetaFallbackState():  # fixa a resposta no modelo de reserva se o principal recusar
             async with self.client.beta.messages.stream(
                 model=self.model,
@@ -113,6 +115,7 @@ class AnthropicProvider:
             cache_read_input_tokens=message.usage.cache_read_input_tokens or 0,
             cache_creation_input_tokens=message.usage.cache_creation_input_tokens or 0,
         )
+        self.complete = message.stop_reason == "end_turn"
         if message.stop_reason == "refusal":
             yield "text", "\n\n[O modelo não pôde responder a esta pergunta.]"
         elif message.stop_reason == "max_tokens":
@@ -135,12 +138,14 @@ class OpenAICompatibleProvider:
                                    http_client=http_client)
         self.model, self.label = model, label
         self.usage: ProviderUsage | None = None
+        self.complete = False
 
     def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
         return _guarded(self._stream(system, context, messages))
 
     async def _stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
-        self.usage = None
+        self.usage, self.complete = None, False
+        finish = None
         response = await self._client.chat.completions.create(
             model=self.model,
             messages=[{"role": "system", "content": f"{system}\n\n{context}"}, *messages],
@@ -152,8 +157,10 @@ class OpenAICompatibleProvider:
                 self.usage = ProviderUsage(model=chunk.model or self.model, input_tokens=chunk.usage.prompt_tokens,
                                            output_tokens=chunk.usage.completion_tokens)
             for choice in chunk.choices:
+                finish = choice.finish_reason or finish
                 if choice.delta and choice.delta.content:
                     yield "text", choice.delta.content
+        self.complete = finish == "stop"
 
 
 def claude_provider(label: str = "Claude (teste)", model: str | None = None) -> AnthropicProvider:

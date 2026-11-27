@@ -228,7 +228,9 @@ def _session(request: ChatRequest) -> ChatSession:
 
 def _remember(request: ChatRequest, session: ChatSession, answer: str) -> None:
     """Guarda a resposta do gratuito para a próxima pergunta igual (só sem dados pessoais ou de contexto)."""
-    if answer and cacheable(request.modelo, request.perfil, request.history, request.disciplinas):
+    # Resposta cortada (limite de tokens, filtro) não é guardada: seria servida a todos por dias
+    if answer and session.provider.complete and cacheable(request.modelo, request.perfil, request.history,
+                                                         request.disciplinas):
         answer_cache.put(request.curso, request.question, CachedAnswer(answer, session.provider.label))
 
 

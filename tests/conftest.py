@@ -73,8 +73,9 @@ async def pg():
 class FakeProvider:
     """Provedor de IA falso: devolve `chunks` e grava o que recebeu."""
 
-    def __init__(self, chunks=(), error=None, error_after_first=None, label="Falso"):
+    def __init__(self, chunks=(), error=None, error_after_first=None, label="Falso", complete=True):
         self.chunks, self.error, self.error_after_first, self.label = list(chunks), error, error_after_first, label
+        self.complete_when_done, self.complete = complete, False
         self.calls, self.usage, self.last_system, self.last_context, self.last_messages = 0, None, None, None, None
 
     async def stream(self, system, context, messages):
@@ -89,6 +90,7 @@ class FakeProvider:
             if i == 0 and self.error_after_first is not None:
                 raise self.error_after_first
         self.usage = ProviderUsage(model="falso", input_tokens=1, output_tokens=len(self.chunks))
+        self.complete = self.complete_when_done
 
 
 @pytest.fixture
@@ -110,7 +112,7 @@ class OpenAIMock:
     def __init__(self):
         import httpx2
 
-        self.last_request_json, self.status, self.body = None, 200, None
+        self.last_request_json, self.status, self.body, self.finish_reason = None, 200, None, "stop"
         self.client = httpx2.AsyncClient(transport=httpx2.MockTransport(self._handle))
 
     def _handle(self, request):
@@ -126,6 +128,8 @@ class OpenAIMock:
              "choices": [{"index": 0, "delta": {"content": text}, "finish_reason": None}]}
             for text in ("Olá", " mundo")
         ]
+        chunks.append({"id": "1", "object": "chat.completion.chunk", "created": 0, "model": "m",
+                       "choices": [{"index": 0, "delta": {}, "finish_reason": self.finish_reason}]})
         chunks.append({"id": "1", "object": "chat.completion.chunk", "created": 0, "model": "m", "choices": [],
                        "usage": {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12}})
         sse = "".join(f"data: {json.dumps(c)}\n\n" for c in chunks) + "data: [DONE]\n\n"
