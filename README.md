@@ -41,9 +41,38 @@ PDF ──► texto limpo com [Página N] ────────────�
    O bloco grande tem cache de 1 h; o histórico também é cacheado a cada turno. O modelo cita `[Página N]`
    e separa o que está no PPC do que é inferência (dificuldade, por exemplo).
 
-### Modelo e custo
+### Modelos de IA
 
-- Padrão: **Claude Opus 5.5** (`claude-opus-5-5`) pela API da Anthropic, com esforço `medium` no chat e `high` na extração.
+O aluno escolhe quem responde num seletor discreto no campo de pergunta ("Gratuito ▾"):
+
+| Opção | Quem paga | Limite por hora |
+|---|---|---|
+| **Gratuito** (padrão) | chaves do dono no nível grátis: Gemini Flash → Gemini Flash-Lite → OpenRouter grátis | 30 por IP, 400 no total |
+| **Claude (teste)** | o dono, pela `ANTHROPIC_API_KEY` | 10 por IP, 100 no total |
+| **Minha chave** (GPT, Gemini ou Groq) | o aluno, com a própria chave | 60 por IP |
+
+- **Gratuito:** se a cota de um modelo acabar antes de sair texto, a pergunta vai para o próximo. Se todos
+  esgotarem, o aluno vê "O modelo gratuito atingiu o limite de uso agora. Tente mais tarde ou use sua própria
+  chave." Nunca cai no Claude do dono. Perguntas sem SUAP, sem histórico e sem disciplinas em foco (como as da
+  tela Explorar) são respondidas uma vez e guardadas em memória por 7 dias; as repetidas não chamam a IA nem
+  contam no limite.
+- **SUAP no gratuito:** o nível grátis do Google pode usar os dados enviados. Na primeira pergunta ao gratuito
+  com o SUAP importado o aluno escolhe se manda os dados; sem o aceite (`consentimento_gratis`), o servidor
+  descarta o `perfil`.
+- **Chave do aluno:** passa pelo servidor só naquela pergunta; não vai para log, banco nem mensagem de erro. No
+  navegador fica só na aba, ou no `localStorage` se o aluno marcar "lembrar neste navegador".
+- **Contexto:** o PPC inteiro (~140 mil tokens) vai em todas as opções. Os modelos estáveis do Groq aceitam no
+  máximo 131 mil tokens, por isso o padrão do Groq é o `minimaxai/minimax-m2.7` (prévia, 196 mil); troque com
+  `GROQ_MODEL` se ele sair do ar.
+- **Chaves do dono para o gratuito:** `GEMINI_API_KEY` em <https://aistudio.google.com> (Get API key; sem cartão)
+  e, opcional, `OPENROUTER_API_KEY` em <https://openrouter.ai/keys>. Sem `GEMINI_API_KEY` nem
+  `OPENROUTER_API_KEY`, o gratuito responde com o aviso de indisponível.
+- As cotas grátis do Gemini por modelo aparecem em <https://aistudio.google.com/rate-limit>. Como cada pergunta
+  manda o PPC inteiro, o limite de tokens por minuto costuma ser o primeiro a acabar.
+
+### Claude: modelo e custo
+
+- Padrão do Claude (teste): **Claude Opus 5.5** (`claude-opus-5-5`) pela API da Anthropic, com esforço `medium` no chat e `high` na extração.
 - Se o modelo recusar uma pergunta, o middleware do SDK repete a requisição no `FALLBACK_MODEL` (Opus 4.8).
 - Custo aproximado (Opus 5.5: US$ 4 / 1M tokens de entrada, US$ 20 / 1M de saída, US$ 0,20 / 1M lidos do cache):
   cada pergunta lê ~140 mil tokens do cache (~US$ 0,03) mais a resposta. A primeira pergunta de cada hora grava o
@@ -104,8 +133,9 @@ Ao rodar `serve`, abra <http://localhost:8000>. Não há build nem login: é HTM
 | GET | `/health` | — | status e número de disciplinas |
 | GET | `/curriculum` | — | currículo estruturado com a análise do grafo (usado pelo mapa) |
 | GET | `/pdf` | — | o PPC em PDF (aceita `#page=N`) |
-| POST | `/chat` | `{"question", "history", "disciplinas", "request_id"}` (só `question` é obrigatório) | `{"answer", "usage"}` |
-| POST | `/chat/stream` | igual ao `/chat` | NDJSON: `thinking`, `text`, e por fim `done` (com `usage`) ou `error` |
+| GET | `/models` | — | opções de IA do seletor (`id`, `label`, `own_key`) |
+| POST | `/chat` | `{"question", "history", "disciplinas", "request_id", "modelo", "chave", "consentimento_gratis"}` (só `question` é obrigatório; sem `modelo` = `gratis`) | `{"answer", "usage", "modelo", "provedor", "cache"}` |
+| POST | `/chat/stream` | igual ao `/chat` | NDJSON: `thinking`, `text`, e por fim `done` (com `usage`, `modelo`, `provedor`, `cache`) ou `error` |
 | POST | `/chat/cancel/{request_id}` | — | 204; interrompe a resposta em andamento |
 
 A API **não guarda conversas**: para continuar uma, mande em `history` as trocas anteriores
@@ -162,7 +192,7 @@ deploy não roda a ingestão nem gasta API.
 
 1. Faça push do repositório para o GitHub.
 2. No Render: **New → Blueprint**, escolha o repositório e confirme.
-3. Quando ele pedir, cole a `ANTHROPIC_API_KEY`.
+3. Quando ele pedir, cole a `ANTHROPIC_API_KEY` e a `GEMINI_API_KEY` (e, se quiser, a `OPENROUTER_API_KEY`).
 4. Defina um **limite de gastos** no console da Anthropic: o site é público e não tem login.
 
 O plano gratuito dorme após 15 min sem uso; o primeiro acesso depois disso leva até 1 minuto, e o front mostra
@@ -177,7 +207,12 @@ O plano gratuito dorme após 15 min sem uso; o primeiro acesso depois disso leva
 | `EXTRACTION_MODEL` | igual ao `LLM_MODEL` | modelo da extração do currículo (roda uma vez por PDF) |
 | `FALLBACK_MODEL` | `claude-opus-4-8` | usado só se o principal recusar |
 | `CHAT_EFFORT` / `EXTRACTION_EFFORT` | `medium` / `high` | profundidade de raciocínio (`low` a `max`) |
-| `RATE_LIMIT_PER_HOUR` / `GLOBAL_RATE_LIMIT_PER_HOUR` | `30` / `400` | perguntas por IP e teto do site inteiro por hora (`0` desliga) |
+| `RATE_LIMIT_PER_HOUR` / `GLOBAL_RATE_LIMIT_PER_HOUR` | `30` / `400` | limite do gratuito: perguntas por IP e teto do site inteiro por hora (`0` desliga) |
+| `GEMINI_API_KEY` | — | chave do dono no Google AI Studio, para o gratuito |
+| `GEMINI_MODELS` | `["gemini-flash-latest","gemini-3.5-flash-lite"]` | modelos do gratuito, tentados em ordem |
+| `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | — / `openrouter/free` | reserva do gratuito (opcional) |
+| `CLAUDE_TESTE_MODEL` | igual ao `LLM_MODEL` | modelo do Claude (teste) |
+| `OPENAI_MODEL` / `GEMINI_BYOK_MODEL` / `GROQ_MODEL` | `gpt-6-luna` / `gemini-flash-latest` / `minimaxai/minimax-m2.7` | modelos usados com a chave do aluno |
 | `DATABASE_URL` | — | Postgres das perguntas (string *pooled* do Neon); vazio = não grava |
 | `ADMIN_TOKEN` | — | senha da página `/admin`; vazio = `/admin` não existe |
 | `LOG_SECRET` | — | chave do código diário de visitante; obrigatória com `DATABASE_URL` |
