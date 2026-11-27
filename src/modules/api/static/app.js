@@ -951,6 +951,13 @@ function renderTree({ animate = true } = {}) {
     }
     $(`.col-label[data-level="${l}"]`, inner).style.left = `${left + w / 2}px`;
   }
+  // Disciplina sem pré-requisitos nem dependentes: o aviso fica logo abaixo do card em foco
+  const empty = $(".tree-empty", inner);
+  const focusBox = graph.focus && boxes.get(graph.focus);
+  if (empty && focusBox) {
+    empty.style.top = `${focusBox.y + focusBox.h + 20}px`;
+    empty.style.left = `${focusBox.x + focusBox.w / 2}px`;
+  }
   // Redesenho completo: zera o deslize sem animar (a animação é só para abrir/fechar as conversas)
   inner.style.transition = "none";
   inner.style.transform = "";
