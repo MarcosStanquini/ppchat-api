@@ -96,10 +96,15 @@ body.admin { display: block; overflow: auto; min-height: 100%; height: auto; }
 /* Botão "?" e janelinhas */
 .with-help { display: inline-flex; align-items: center; gap: 8px; }
 .help-btn {
-  width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-2); background: none;
-  color: var(--muted); font: 600 12px/1 var(--font); cursor: pointer; padding: 0;
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 5px; border-radius: 99px;
+  border: 1px solid var(--accent); background: var(--accent-soft); color: var(--ink);
+  font: 600 12.5px/1 var(--font); cursor: pointer;
 }
-.help-btn:hover { color: var(--ink); border-color: var(--muted); }
+.help-btn span {
+  display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); font-size: 12px;
+}
+.help-btn:hover { filter: brightness(1.12); }
 .admin-modal { width: min(520px, calc(100vw - 32px)); }
 .admin-modal-sm { width: min(380px, calc(100vw - 32px)); }
 .legend { display: grid; grid-template-columns: max-content 1fr; gap: 10px 12px; margin: 0; align-items: baseline; font-size: 13.5px; }
