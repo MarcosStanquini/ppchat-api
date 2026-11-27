@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from uuid import uuid4
 
 
@@ -126,3 +127,13 @@ async def test_survives_dropped_connection(record):
         assert await store.fetch_value("select count(*) from perguntas") == 1
     finally:
         await store.close()
+
+
+async def test_balance_reference_keeps_only_the_last(pg):
+    assert await pg.get_balance() is None
+    await pg.set_balance(Decimal("50"))
+    await pg.set_balance(Decimal("42.37"))
+    ref = await pg.get_balance()
+    assert ref["valor_usd"] == Decimal("42.37")
+    assert datetime.now(UTC) - ref["em"] < timedelta(minutes=1)
+    assert await pg.fetch_value("select count(*) from saldo_referencia") == 1

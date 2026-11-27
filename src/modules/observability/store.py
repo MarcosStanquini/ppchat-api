@@ -1,4 +1,5 @@
 """Onde as perguntas são guardadas: Postgres em produção, memória nos testes, nada sem banco."""
+from decimal import Decimal
 from typing import Protocol, runtime_checkable
 from uuid import UUID
 
@@ -29,6 +30,12 @@ class AdminQueries(Protocol):
 
     async def questions(self, dias: int, curso: str | None, busca: str | None, pagina: int,
                         por_pagina: int = 30) -> dict: ...
+
+    async def set_balance(self, valor_usd: Decimal) -> None: ...
+
+    async def get_balance(self) -> dict | None:
+        """{"valor_usd": Decimal, "em": datetime} ou None se o dono nunca informou."""
+        ...
 
 
 class MemoryStore:

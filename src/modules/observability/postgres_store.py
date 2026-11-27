@@ -7,6 +7,7 @@ import asyncio
 from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -138,6 +139,18 @@ class PostgresStore:
     async def close(self) -> None:
         await asyncio.get_running_loop().run_in_executor(self.executor, self.pool.close)
         self.executor.shutdown(wait=False)
+
+    # ── Saldo de referência (para o saldo estimado no /admin) ──
+    async def set_balance(self, valor_usd: Decimal) -> None:
+        await self._run(
+            "insert into saldo_referencia (id, valor_usd, em) values (1, %s, now()) "
+            "on conflict (id) do update set valor_usd = excluded.valor_usd, em = excluded.em",
+            (valor_usd,),
+        )
+
+    async def get_balance(self) -> dict | None:
+        row = await self._run("select valor_usd, em from saldo_referencia where id = 1", fetch="one")
+        return dict(row) if row else None
 
     # ── Consultas do /admin ──
     async def summary(self, dias: int, curso: str | None) -> dict:

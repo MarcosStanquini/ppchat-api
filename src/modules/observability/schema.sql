@@ -29,3 +29,10 @@ create table if not exists eventos (
   valor text not null default ''
 );
 create index if not exists eventos_pergunta on eventos (pergunta_id, criado_em);
+
+-- Saldo que o dono viu no Console da Anthropic e quando (uma linha só): base do saldo estimado no /admin
+create table if not exists saldo_referencia (
+  id int primary key default 1 check (id = 1),
+  valor_usd numeric(12, 2) not null,
+  em timestamptz not null default now()
+);

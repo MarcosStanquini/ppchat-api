@@ -64,6 +64,6 @@ async def pg():
 
     store = await PostgresStore.open(TEST_DATABASE_URL)
     await require_test_database(store)
-    await store.execute("truncate perguntas cascade")
+    await store.execute("truncate perguntas, saldo_referencia cascade")
     yield store
     await store.close()
