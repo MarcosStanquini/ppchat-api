@@ -7,7 +7,11 @@
 """
 from dataclasses import dataclass
 
-from src.modules.response.services.providers import ChatProvider, OpenAICompatibleProvider, claude_provider
+from src.modules.response.services.providers import (
+    ChatProvider,
+    OpenAICompatibleProvider,
+    claude_provider,
+)
 from src.modules.shared.services.settings import get_settings
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"

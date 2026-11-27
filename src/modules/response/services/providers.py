@@ -30,6 +30,38 @@ class ProviderError(Exception):
         self.before_first_token = before_first_token
 
 
+def classify(error: Exception) -> ErrorKind:
+    """Tipo da falha a partir da exceção dos SDKs (Anthropic e OpenAI têm a mesma família de erros)."""
+    name = type(error).__name__
+    status = getattr(error, "status_code", None)
+    if name in ("AuthenticationError", "PermissionDeniedError") or status in (401, 403):
+        return "auth"
+    if name == "RateLimitError" or status in (402, 429):
+        return "quota"
+    if name in ("APITimeoutError", "APIConnectionError", "TimeoutError") or (status or 0) >= 500:
+        return "unavailable"
+    return "other"
+
+
+async def _guarded(events: AsyncIterator[StreamEvent]) -> AsyncIterator[StreamEvent]:
+    """Converte qualquer falha do provedor em ProviderError, dizendo se já tinha saído texto.
+
+    A exceção original não é encadeada: a mensagem dela pode trazer a chave ou o corpo da resposta.
+    """
+    started = False
+    failure: ErrorKind | None = None
+    try:
+        async for event in events:
+            started = True
+            yield event
+    except ProviderError:
+        raise
+    except Exception as error:  # noqa: BLE001 — classificado abaixo, sem guardar o texto
+        failure = classify(error)
+    if failure is not None:
+        raise ProviderError(failure, before_first_token=not started)
+
+
 class ChatProvider(Protocol):
     label: str  # quem respondeu, como o aluno vê: "Gratuito · Gemini", "Claude (teste)"...
     usage: ProviderUsage | None  # preenchido ao fim da resposta
@@ -44,7 +76,10 @@ class AnthropicProvider:
         self.client, self.model, self.effort, self.label, self.max_tokens = client, model, effort, label, max_tokens
         self.usage: ProviderUsage | None = None
 
-    async def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
+    def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
+        return _guarded(self._stream(system, context, messages))
+
+    async def _stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
         from anthropic import BetaFallbackState
 
         self.usage = None
@@ -101,7 +136,10 @@ class OpenAICompatibleProvider:
         self.model, self.label = model, label
         self.usage: ProviderUsage | None = None
 
-    async def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
+    def stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
+        return _guarded(self._stream(system, context, messages))
+
+    async def _stream(self, system: str, context: str, messages: list[dict]) -> AsyncIterator[StreamEvent]:
         self.usage = None
         response = await self._client.chat.completions.create(
             model=self.model,

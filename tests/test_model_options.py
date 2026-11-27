@@ -1,6 +1,10 @@
 import pytest
 
-from src.modules.response.services.model_options import OPTIONS, provider_chain, public_options
+from src.modules.response.services.model_options import (
+    OPTIONS,
+    provider_chain,
+    public_options,
+)
 from src.modules.shared.services.settings import get_settings
 
 
