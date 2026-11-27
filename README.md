@@ -148,6 +148,10 @@ tempo, desfecho (`ok`, `parada` ou `erro`) e os sinais do aluno: 👍/👎 embai
 - **Ver:** abra `/admin` e entre com o `ADMIN_TOKEN` (fica só na aba). Sem `ADMIN_TOKEN` configurado, `/admin`
   responde 404. Mostra números do período (7/30/90 dias), perguntas mais feitas, 👎 recentes e todas as
   perguntas com busca.
+- **Custos da Anthropic:** com `ANTHROPIC_ADMIN_KEY` (chave de administração, criada no Console em Settings →
+  Admin keys), o `/admin` mostra o gasto real do período, por dia e por modelo (com 4 a 24 h de atraso; guardado
+  em memória por 30 min). A API não informa o saldo: digite no `/admin` o saldo que o Console mostra e o painel
+  passa a mostrar esse valor menos o gasto desde então. A chave fica só no servidor e só lê custos.
 - **Testes:** `pip install -r requirements-dev.txt` e `pytest`. Os testes de Postgres usam `TEST_DATABASE_URL`
   (um branch separado do Neon) e são pulados sem ela; eles apagam as tabelas desse banco a cada teste.
 
@@ -177,6 +181,7 @@ O plano gratuito dorme após 15 min sem uso; o primeiro acesso depois disso leva
 | `DATABASE_URL` | — | Postgres das perguntas (string *pooled* do Neon); vazio = não grava |
 | `ADMIN_TOKEN` | — | senha da página `/admin`; vazio = `/admin` não existe |
 | `LOG_SECRET` | — | chave do código diário de visitante; obrigatória com `DATABASE_URL` |
+| `ANTHROPIC_ADMIN_KEY` | — | chave de administração da Anthropic, só para os custos no `/admin`; vazio = cartão "não configurado" |
 | `LOG_RETENTION_DAYS` | `180` | dias até os registros serem apagados |
 
 ## Estrutura

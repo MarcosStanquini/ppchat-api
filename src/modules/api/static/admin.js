@@ -22,9 +22,15 @@ function el(tag, attrs = {}, ...children) {
   return node;
 }
 
-async function api(path, params = {}) {
+async function api(path, params = {}, body = undefined) {
   const query = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== "" && v != null));
-  const response = await fetch(`/admin/api/${path}?${query}`, { headers: { Authorization: `Bearer ${token}` } });
+  const init = { headers: { Authorization: `Bearer ${token}` } };
+  if (body !== undefined) {
+    init.method = "POST";
+    init.headers["Content-Type"] = "application/json";
+    init.body = JSON.stringify(body);
+  }
+  const response = await fetch(`/admin/api/${path}?${query}`, init);
   if (response.status === 401 || response.status === 429) {
     const body = await response.json().catch(() => ({}));
     const error = new Error(body.detail || "Senha incorreta.");
@@ -35,7 +41,7 @@ async function api(path, params = {}) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.detail || `Erro ${response.status}`);
   }
-  return response.json();
+  return response.status === 204 ? null : response.json();
 }
 
 const pct = (part, whole) => (whole ? `${Math.round((part / whole) * 100)}%` : "—");
@@ -101,7 +107,57 @@ async function loadList() {
   renderPager();
 }
 
+const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const money = (v) => usd.format(v);
+const shortDay = (iso) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
+
+function renderCosts(c) {
+  const box = $("#costs");
+  $("#saldo-form").hidden = !c.configurado;
+  if (!c.configurado) {
+    $("#costs-note").textContent = "";
+    return box.replaceChildren(el("p", { class: "admin-empty" },
+      "Não configurado: falta a variável ANTHROPIC_ADMIN_KEY (chave de administração) no servidor."));
+  }
+  $("#costs-note").textContent = c.dados_ate ? `dados até ${when(c.dados_ate)}` : "";
+  const saldo = c.saldo
+    ? el("div", { class: "admin-stat" }, el("b", {}, money(c.saldo.estimado_usd)), el("span", {}, "saldo estimado"),
+        el("div", { class: "cost-sub" },
+          `${money(c.saldo.informado_usd)} informado em ${when(c.saldo.em)}, menos ${money(c.saldo.gasto_desde_usd)} gastos desde então`))
+    : el("div", { class: "admin-stat" }, el("b", {}, "—"), el("span", {}, "saldo estimado"),
+        el("div", { class: "cost-sub" }, "Informe o saldo do Console abaixo para estimar."));
+  const top = el("div", { class: "cost-top" },
+    el("div", { class: "admin-stat" }, el("b", {}, money(c.total_usd)), el("span", {}, `gastos nos últimos ${state.dias} dias`)),
+    saldo);
+
+  const max = Math.max(...c.por_dia.map((d) => d.usd), 0);
+  const bars = el("div", { class: "cost-bars", role: "img", "aria-label": "Gasto por dia" },
+    ...c.por_dia.map((d) => {
+      const bar = el("i", { title: `${shortDay(d.dia)}: ${money(d.usd)}` });
+      bar.style.height = `${max ? Math.max(2, (d.usd / max) * 100) : 2}%`;
+      return bar;
+    }));
+  const days = c.por_dia.length
+    ? el("div", {}, bars, el("div", { class: "cost-axis" }, el("span", {}, shortDay(c.por_dia[0].dia)),
+        el("span", {}, shortDay(c.por_dia.at(-1).dia))))
+    : el("p", { class: "admin-empty" }, "Nenhum gasto no período.");
+  const models = el("ul", { class: "cost-models" },
+    ...c.por_modelo.map((m) => el("li", {}, el("span", {}, m.modelo), el("b", {}, money(m.usd)))));
+  box.replaceChildren(top, el("div", { class: "cost-cols" }, days, models));
+}
+
+async function loadCosts() {
+  try {
+    renderCosts(await api("custos", { dias: state.dias }));
+  } catch (error) {
+    if (error.auth) return showLogin(error.message);
+    $("#saldo-form").hidden = true;
+    $("#costs").replaceChildren(el("p", { class: "admin-error" }, error.message));
+  }
+}
+
 async function loadAll() {
+  loadCosts(); // independente: se a Anthropic falhar, o resto do painel aparece igual
   $("#panel-error").hidden = true;
   try {
     const [stats, top, negatives] = await Promise.all([
@@ -151,6 +207,21 @@ $("#login-form").addEventListener("submit", (event) => {
   showPanel();
 });
 $("#logout").addEventListener("click", () => showLogin());
+
+$("#saldo-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const error = $("#saldo-error");
+  error.hidden = true;
+  try {
+    await api("saldo", {}, { valor_usd: $("#saldo").value });
+    $("#saldo").value = "";
+    loadCosts();
+  } catch (err) {
+    if (err.auth) return showLogin(err.message);
+    error.textContent = "Valor inválido: use um número entre 0 e 100000.";
+    error.hidden = false;
+  }
+});
 
 for (const button of document.querySelectorAll("[data-dias]")) {
   button.addEventListener("click", () => {

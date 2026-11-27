@@ -31,3 +31,5 @@ services:
         sync: false
       - key: LOG_SECRET
         sync: false
+      - key: ANTHROPIC_ADMIN_KEY
+        sync: false
