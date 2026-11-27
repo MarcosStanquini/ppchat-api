@@ -26,9 +26,20 @@ class Settings(BaseSettings):
     extraction_effort: Effort = "high"
     max_output_tokens: int = 64000
 
-    # Proteção dos créditos da API quando o site é público (0 desliga)
+    # Limite do modelo gratuito (0 desliga); o Claude (teste) e a chave do aluno têm limites próprios
     rate_limit_per_hour: int = 30  # perguntas por IP
     global_rate_limit_per_hour: int = 400  # teto para o site inteiro, vale mesmo se alguém forjar o IP
+
+    # Multi-IA. Gratuito: chaves do dono no nível grátis, tentadas em ordem (cada modelo do Gemini tem cota própria)
+    gemini_api_key: str | None = None
+    gemini_models: list[str] = ["gemini-flash-latest", "gemini-3.5-flash-lite"]
+    openrouter_api_key: str | None = None
+    openrouter_model: str = "openrouter/free"  # roteador que escolhe um modelo grátis
+    claude_teste_model: str | None = None  # vazio = llm_model
+    # Modelos usados com a chave do aluno (precisam aceitar o PPC inteiro, ~140 mil tokens)
+    openai_model: str = "gpt-6-luna"
+    gemini_byok_model: str = "gemini-flash-latest"
+    groq_model: str = "minimaxai/minimax-m2.7"  # os modelos estáveis do Groq param em 131 mil tokens
 
     # Origens do SUAP de onde o bookmarklet pode enviar os dados do aluno (CORS)
     suap_origins: List[str] = ["https://suap.ifsp.edu.br"]

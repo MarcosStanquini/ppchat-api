@@ -24,6 +24,11 @@ services:
         value: "30"
       - key: GLOBAL_RATE_LIMIT_PER_HOUR
         value: "400"
+      # Multi-IA: chaves do dono para o modelo gratuito (ver README → Modelos de IA)
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
       # Observabilidade: secretas, o Render pede o valor (ver README → Observabilidade)
       - key: DATABASE_URL
         sync: false
