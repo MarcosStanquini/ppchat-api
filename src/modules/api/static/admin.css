@@ -85,20 +85,29 @@ body.admin { display: block; overflow: auto; min-height: 100%; height: auto; }
 .cost-models { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13px; }
 .cost-models li { display: flex; justify-content: space-between; gap: 8px; overflow-wrap: anywhere; }
 .cost-models b { font-weight: 600; white-space: nowrap; }
-.cost-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
-.cost-form label { font-size: 13px; font-weight: 600; }
-.cost-form input { width: 140px; font: 500 14px var(--font); color: var(--ink); background: var(--surface);
-  border: 1px solid var(--line-2); border-radius: 10px; padding: 8px 10px; }
 .cost-bars i.zero { background: var(--line-2); opacity: 1; }
 .cost-top .admin-stat { position: relative; }
-.cost-edit { position: absolute; top: 8px; right: 8px; font-size: 12px; padding: 2px 4px; }
-.cost-form { margin-top: 10px; padding-top: 10px; }
+.cost-edit {
+  position: absolute; top: 10px; right: 10px; border: 1px solid var(--line-2); background: var(--surface-2);
+  color: var(--ink-2); font: 600 12px var(--font); padding: 4px 10px; border-radius: 99px; cursor: pointer;
+}
+.cost-edit:hover { color: var(--ink); border-color: var(--muted); }
 
-/* Legenda das marcas */
-.admin-legend { margin: -4px 0 12px; font-size: 13px; }
-.admin-legend summary { cursor: pointer; color: var(--muted); width: fit-content; }
-.admin-legend summary:hover { color: var(--ink); }
-.admin-legend dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px; margin: 10px 0 0; align-items: baseline; }
-.admin-legend dd { margin: 0; color: var(--ink-2); }
+/* Botão "?" e janelinhas */
+.with-help { display: inline-flex; align-items: center; gap: 8px; }
+.help-btn {
+  width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-2); background: none;
+  color: var(--muted); font: 600 12px/1 var(--font); cursor: pointer; padding: 0;
+}
+.help-btn:hover { color: var(--ink); border-color: var(--muted); }
+.admin-modal { width: min(520px, calc(100vw - 32px)); }
+.admin-modal-sm { width: min(380px, calc(100vw - 32px)); }
+.legend { display: grid; grid-template-columns: max-content 1fr; gap: 10px 12px; margin: 0; align-items: baseline; font-size: 13.5px; }
+.legend dd { margin: 0; color: var(--ink-2); }
+.saldo-form { display: grid; gap: 10px; }
+.saldo-form label { font-size: 13px; font-weight: 600; }
+.saldo-form p { margin: 0; }
+.saldo-form input { font: 500 15px var(--font); color: var(--ink); background: var(--surface-2);
+  border: 1px solid var(--line-2); border-radius: 10px; padding: 9px 11px; }
 .tag[title] { cursor: help; }
-@media (max-width: 560px) { .admin-legend dl { grid-template-columns: 1fr; gap: 2px; } .admin-legend dd { margin-bottom: 8px; } }
+@media (max-width: 560px) { .legend { grid-template-columns: 1fr; gap: 2px; } .legend dd { margin-bottom: 8px; } }

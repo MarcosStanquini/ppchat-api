@@ -137,19 +137,17 @@ const shortDay = (iso) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 
 function renderCosts(c) {
   const box = $("#costs");
-  $("#saldo-form").hidden = true;
   if (!c.configurado) {
     $("#costs-note").textContent = "";
     return box.replaceChildren(el("p", { class: "admin-empty" },
       "Não configurado: falta a variável ANTHROPIC_ADMIN_KEY (chave de administração) no servidor."));
   }
   $("#costs-note").textContent = c.dados_ate ? `dados até ${when(c.dados_ate)}` : "";
-  const edit = el("button", { class: "admin-link cost-edit", type: "button", "aria-controls": "saldo-form" },
-    c.saldo ? "atualizar" : "informar saldo");
+  const edit = el("button", { class: "cost-edit", type: "button" }, c.saldo ? "Atualizar saldo" : "Informar saldo");
   edit.addEventListener("click", () => {
-    const form = $("#saldo-form");
-    form.hidden = !form.hidden;
-    if (!form.hidden) $("#saldo").focus();
+    $("#saldo-error").hidden = true;
+    $("#saldo-modal").showModal();
+    $("#saldo").focus();
   });
   const saldo = c.saldo
     ? el("div", { class: "admin-stat" }, edit, el("b", {}, money(c.saldo.estimado_usd)), el("span", {}, "saldo estimado"),
@@ -191,7 +189,6 @@ async function loadCosts() {
     renderCosts(await api("custos", { dias: state.dias }));
   } catch (error) {
     if (error.auth) return showLogin(error.message);
-    $("#saldo-form").hidden = true;
     $("#costs").replaceChildren(el("p", { class: "admin-error" }, error.message));
   }
 }
@@ -255,6 +252,7 @@ $("#saldo-form").addEventListener("submit", async (event) => {
   try {
     await api("saldo", {}, { valor_usd: $("#saldo").value });
     $("#saldo").value = "";
+    $("#saldo-modal").close();
     loadCosts();
   } catch (err) {
     if (err.auth) return showLogin(err.message);
@@ -282,4 +280,11 @@ $("#prev").addEventListener("click", () => { state.pagina -= 1; loadList(); });
 $("#next").addEventListener("click", () => { state.pagina += 1; loadList(); });
 
 renderLegend();
+$("#legend-open").addEventListener("click", () => $("#legend-modal").showModal());
+for (const dialog of document.querySelectorAll("dialog")) {
+  dialog.addEventListener("click", (event) => {
+    // Fecha no X ou ao clicar fora da caixa (no fundo escurecido)
+    if (event.target.closest("[data-close]") || event.target === dialog) dialog.close();
+  });
+}
 token ? showPanel() : showLogin();

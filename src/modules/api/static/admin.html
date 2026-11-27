@@ -54,12 +54,6 @@
         <span class="admin-muted" id="costs-note"></span>
       </div>
       <div id="costs"><p class="admin-empty">Carregando…</p></div>
-      <form class="cost-form" id="saldo-form" hidden>
-        <label for="saldo">Saldo que aparece no Console agora (US$)</label>
-        <input id="saldo" type="number" min="0" max="100000" step="0.01" inputmode="decimal" required>
-        <button class="admin-btn" type="submit">Salvar saldo</button>
-        <span class="admin-error" id="saldo-error" role="alert" hidden></span>
-      </form>
     </section>
 
     <div class="admin-cols">
@@ -75,13 +69,11 @@
 
     <section class="admin-card">
       <div class="admin-card-head">
-        <h2>Todas as perguntas</h2>
+        <h2 class="with-help">Todas as perguntas
+          <button class="help-btn" id="legend-open" type="button" aria-label="O que significam as marcas?" title="O que significam as marcas?">?</button>
+        </h2>
         <input id="busca" type="search" placeholder="Buscar na pergunta…" maxlength="200" aria-label="Buscar na pergunta">
       </div>
-      <details class="admin-legend">
-        <summary>O que significam as marcas?</summary>
-        <dl id="legend-list"></dl>
-      </details>
       <div id="list"></div>
       <nav class="admin-pager" aria-label="Páginas">
         <button class="admin-link" id="prev" type="button">← Anteriores</button>
@@ -90,6 +82,28 @@
       </nav>
     </section>
   </main>
+
+  <dialog class="modal admin-modal" id="legend-modal" aria-labelledby="legend-title">
+    <div class="modal-head">
+      <h3 id="legend-title">Marcas das perguntas</h3>
+      <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="modal-body"><dl class="legend" id="legend-list"></dl></div>
+  </dialog>
+
+  <dialog class="modal admin-modal admin-modal-sm" id="saldo-modal" aria-labelledby="saldo-title">
+    <div class="modal-head">
+      <h3 id="saldo-title">Atualizar saldo</h3>
+      <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <form class="modal-body saldo-form" id="saldo-form">
+      <label for="saldo">Saldo que aparece agora em Billing, no Console da Anthropic (US$)</label>
+      <input id="saldo" type="number" min="0" max="100000" step="0.01" inputmode="decimal" placeholder="ex.: 9.56" required>
+      <p class="admin-muted">Daqui pra frente o painel desconta o que for gasto. Atualize quando recarregar crédito.</p>
+      <span class="admin-error" id="saldo-error" role="alert" hidden></span>
+      <button class="admin-btn" type="submit">Salvar</button>
+    </form>
+  </dialog>
 
   <script src="/static/admin.js"></script>
 </body>
